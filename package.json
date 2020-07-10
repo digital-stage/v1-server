@@ -1,0 +1,48 @@
+{
+  "name": "@digitalstage/server",
+  "version": "0.0.1",
+  "description": "Stage and device orchestration server for digital-stage.org",
+  "main": "index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon --watch './src/**/*.ts' --exec 'ts-node' ./src/index.ts",
+    "build": "tsc",
+    "start": "NODE_ENV=development tsc && node ./dist/index.js",
+    "deploy-production": "NODE_ENV=production pm2 deploy ecosystem.config.js production --force",
+    "reload-production": "NODE_ENV=production pm2 deploy ecosystem.config.js production exec 'pm2 reload sdp-server'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digital-stage/server.git"
+  },
+  "keywords": [
+    "video",
+    "realtime",
+    "mediasoup",
+    "node"
+  ],
+  "author": "Tobias Hegemann <tobias.hegemann@googlemail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/digital-stage/server/issues"
+  },
+  "homepage": "https://github.com/digital-stage/server#readme",
+  "devDependencies": {
+    "@types/node": "^14.0.20",
+    "@types/socket.io": "^2.1.8",
+    "@types/cors": "^2.8.6",
+    "@types/express": "^4.17.7",
+    "ts-node": "^8.10.2",
+    "nodemon": "^2.0.4",
+    "process": "^0.11.10",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.6"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "firebase-admin": "^8.13.0",
+    "node": "^14.5.0",
+    "socket.io": "^2.3.0",
+    "uuid": "^8.2.0"
+  }
+}
