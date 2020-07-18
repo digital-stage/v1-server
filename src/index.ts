@@ -1,6 +1,19 @@
 import * as socketIO from "socket.io";
 import * as admin from "firebase-admin";
 import * as r from "rethinkdb";
+import {IDatabase} from "./IDatabase";
+import {
+    COMMANDS,
+    EVENTS,
+    RemoteDevicePayload,
+    RemoteTrackPayload,
+    RemoteUserPayload,
+    Stage,
+    StagePayload,
+    Track,
+    User,
+    UserPayload
+} from "./data.model";
 
 const authorizeSocket = (socket: socketIO.Socket): Promise<admin.auth.UserRecord> => {
     return new Promise<admin.auth.UserRecord>((resolve, reject) => {
@@ -15,6 +28,8 @@ const authorizeSocket = (socket: socketIO.Socket): Promise<admin.auth.UserRecord
     })
 }
 
+const database: IDatabase;
+
 const initializeWebsocket = (): socketIO.Server => {
     const io: socketIO.Server = socketIO(4000);
 
@@ -26,18 +41,100 @@ const initializeWebsocket = (): socketIO.Server => {
     io.on("connection", (socket: socketIO.Socket) => {
         authorizeSocket(socket)
             .then(async firebaseUser => {
+                const uid: string = firebaseUser.uid;
                 const sendToDevice = (event: string, payload: any) => {
                     socket.emit(event, payload);
                 }
 
                 // Socket has been authorized
                 // Check if user is already in database
+                let user: User = await database.getUser(uid);
+                if (!user) {
+                    user = await database.createUser(uid, firebaseUser.displayName, firebaseUser.photoURL);
+                }
 
-                // Send message to all stage participants, if stage has changed
+                if (user.stageId) {
+                    const stage: Stage = await database.getStage(user.stageId);
+                    sendToDevice(EVENTS.STAGE_CHANGED, stage);
+                    const remoteUsers: RemoteUserPayload[] = await database.getRemoteUsersByStage(stage.id);
+                    remoteUsers.forEach(remoteUser => {
+                        sendToDevice(EVENTS.REMOTE_USER_ADDED, remoteUser);
+                    });
+                    const remoteDevices: RemoteDevicePayload[] = await database.getRemoteDevicesByStage(stage.id);
+                    remoteDevices.forEach(remoteDevice => {
+                        sendToDevice(EVENTS.REMOTE_DEVICE_ADDED, remoteDevice);
+                    });
+                    const remoteTracks: RemoteTrackPayload[] = await database.getRemoteTracksByStageForUser(stage.id, user.id);
+                    remoteTracks.forEach(remoteTrack => {
+                        sendToDevice(EVENTS.REMOTE_TRACK_ADDED, remoteTrack);
+                    });
+                }
 
+                // Add listeners
+                socket.on(COMMANDS.ADD_TRACK, () => {
 
-                r.table("")
+                });
+                socket.on(COMMANDS.REMOVE_TRACK, (payload: string) => {
+                    return database.getTrack(payload)
+                        .then((track) => {
+                            if (track.userId === uid) {
+                                return database.removeTrack(track.id)
+                                    .then(() => sendToUser(uid, EVENTS.TRACK_REMOVED, payload))
+                            }
+                        });
+                });
+                socket.on(COMMANDS.CREATE_STAGE, () => {
 
+                });
+                socket.on(COMMANDS.JOIN_STAGE, () => {
+
+                });
+                socket.on(COMMANDS.LEAVE_STAGE, () => {
+
+                });
+                socket.on(COMMANDS.REGISTER_DEVICE, () => {
+
+                });
+                socket.on(COMMANDS.UNREGISTER_DEVICE, () => {
+
+                });
+                socket.on(COMMANDS.UPDATE_DEVICE, () => {
+
+                });
+                socket.on(COMMANDS.UPDATE_REMOTE_TRACK, () => {
+
+                });
+                socket.on(COMMANDS.UPDATE_STAGE, (payload: StagePayload) => {
+                    return database.getStage(payload.id)
+                        .then(stage => {
+                            if (stage.adminId === uid) {
+                                database.updateStage(stage.id, payload)
+                                    .then(() => {
+                                        // WE HAVE TO INFORM ALL MEMBERS OF THIS STAGE
+
+                                        // OK, STOP - vielleicht doch alles gleiche für alle in die stage (bis auf volumes und sowas) und dann nen listener drauf schicken?
+                                        // Denn unten bei UPDATE_TRACK müsste man das ja auch machen. eigentlich immer. Fast keine Daten sind "privat"
+                                    });
+                            }
+                        })
+                });
+                socket.on(COMMANDS.UPDATE_TRACK, (payload: Track) => {
+                    return database.getTrack(payload.id)
+                        .then((track) => {
+                            if (track.userId === uid) {
+                                return database.updateTrack(track.id, payload)
+                                    .then(() => sendToUser(uid, EVENTS.TRACK_CHANGED, payload))
+                            }
+                        });
+                });
+                socket.on(COMMANDS.UPDATE_USER, (payload: UserPayload) => {
+                    if (payload.id === uid) {
+                        return database.updateUser(uid, payload)
+                            .then(() => sendToUser(uid, EVENTS.USER_CHANGED, payload))
+                    }
+                });
+
+                sendToDevice(EVENTS.READY, true);
             })
             .catch((error) => {
                 socket.error(error.message);

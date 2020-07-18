@@ -10,6 +10,7 @@ export interface Stage {
     height: number;
     absorption: number;
     reflection: number;
+    adminId: string;
 }
 
 export interface User {
@@ -95,6 +96,8 @@ export enum EVENTS {
     REMOTE_TRACK_ADDED = "remote-track-added",
     REMOTE_TRACK_CHANGED = "remote-track-changed",
     REMOTE_TRACK_REMOVED = "remote-track-removed",
+
+    READY = "ready"
 }
 
 export enum COMMANDS {
