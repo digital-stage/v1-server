@@ -1,19 +1,6 @@
 import * as socketIO from "socket.io";
 import * as admin from "firebase-admin";
 import * as r from "rethinkdb";
-import {IDatabase} from "./IDatabase";
-import {
-    COMMANDS,
-    EVENTS,
-    RemoteDevicePayload,
-    RemoteTrackPayload,
-    RemoteUserPayload,
-    Stage,
-    StagePayload,
-    Track,
-    User,
-    UserPayload
-} from "./data.model";
 
 const authorizeSocket = (socket: socketIO.Socket): Promise<admin.auth.UserRecord> => {
     return new Promise<admin.auth.UserRecord>((resolve, reject) => {
@@ -144,19 +131,3 @@ const initializeWebsocket = (): socketIO.Server => {
 
     return io;
 }
-
-// INIT FIREBASE
-const adminConfig = require('./../../firebase-adminsdk.json');
-admin.initializeApp({
-    ...adminConfig,
-    databaseURL: "https://digitalstage-wirvsvirus.firebaseio.com"
-});
-
-// INIT REALTIMEDB
-r.connect({
-    host: "46.101.146.123",
-    port: 28015
-}).then(conn => {
-    // INIT WEBSOCKET
-    initializeWebsocket();
-});
