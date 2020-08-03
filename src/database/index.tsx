@@ -3,17 +3,24 @@ import {Device, Track, User} from "../model";
 import * as r from "rethinkdb";
 import {v4 as uuidv4} from 'uuid';
 
-enum DatabaseEvents {
+export enum DatabaseEvents {
+    USER_CHANGED = "user-changed",
     TRACK_ADDED = "track-added",
     TRACK_CHANGED = "track-changed",
     TRACK_REMOVED = "track-removed",
+    STAGE_TRACK_ADDED = "stage-track-added",
+    STAGE_TRACK_CHANGED = "stage-track-changed",
+    STAGE_TRACK_REMOVED = "stage-track-removed",
+    USER_STAGE_TRACK_ADDED = "user-stage-track-added",
+    USER_STAGE_TRACK_CHANGED = "user-stage-track-changed",
+    USER_STAGE_TRACK_REMOVED = "stage-track-removed",
     DEVICE_ADDED = "device-added",
     DEVICE_CHANGED = "device-changed",
     DEVICE_REMOVED = "device-removed"
 }
 
 
-class Database extends EventEmitter {
+export default class Database extends EventEmitter {
     private connection;
 
     constructor() {
@@ -151,5 +158,3 @@ class Database extends EventEmitter {
 
     }
 }
-
-export default Database;
