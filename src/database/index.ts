@@ -40,6 +40,7 @@ class Database extends EventEmitter {
     }
 
     private addHandler() {
+        /*
         r.table("tracks")
             .changes()
             .run(this.connection)
@@ -109,7 +110,7 @@ class Database extends EventEmitter {
                         }   // else = ?!?
                     }
                 })
-            )
+            )*/
     }
 
     storeUser(user: User): Promise<User> {
@@ -126,10 +127,25 @@ class Database extends EventEmitter {
             .then(user => user as User);
     }
 
-    addDevice(userId: string, mac?: string) {
+    addDevice(userId: string, initialDevice?: Partial<Device>): Promise<Device> {
+        const id: string = uuidv4();
+        const device: Device = {
+            name: "Unnamed",
+            canAudio: false,
+            canVideo: false,
+            receiveVideo: false,
+            receiveAudio: false,
+            sendVideo: false,
+            sendAudio: false,
+            ...initialDevice,
+            id: id,
+            userId: userId
+        }
+        console.log(device);
         return r.table("devices")
-            .insert({})
-
+            .insert(device)
+            .run(this.connection)
+            .then(() => device);
     }
 
     getDeviceByMac(mac: string): Promise<Device> {
@@ -145,6 +161,13 @@ class Database extends EventEmitter {
                 }
                 throw new Error("Not found");
             })
+    }
+
+    removeDevice(deviceId: string): Promise<any> {
+        return r.table("devices")
+            .get(deviceId)
+            .delete()
+            .run(this.connection);
     }
 
     addTrack(deviceId: string, kind: "audio" | "video" | "ov-audio", routerId?: string, producerId?: string): Promise<Track> {

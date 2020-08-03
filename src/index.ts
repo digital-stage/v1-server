@@ -1,12 +1,12 @@
 import * as socketIO from "socket.io";
 import {IAuthentication} from "./auth/IAuthentication";
-import GoogleAuthentication from "./auth/GoogleAuthentication";
 import {Device} from "./model";
 import Database, {DatabaseEvents} from "./database";
 import {ServerEvents} from "./events";
+import DummyAuthentication from "./auth/DummyAuthentication";
 
 const database: Database = new Database();
-const authentication: IAuthentication = new GoogleAuthentication();
+const authentication: IAuthentication = new DummyAuthentication();
 
 const io: socketIO.Server = socketIO(4000);
 
@@ -28,6 +28,7 @@ database.on(DatabaseEvents.DEVICE_REMOVED, (device: Device) =>
 io.on("connection", (socket: socketIO.Socket) => {
     authentication.authorizeSocket(socket)
         .then(async user => {
+            console.log("NEW CONNECTION");
             const sendToDevice = (event: string, payload?: any) => {
                 socket.emit(event, payload);
             }
@@ -41,10 +42,30 @@ io.on("connection", (socket: socketIO.Socket) => {
                 user = existingUser;
             }
 
-            sendToDevice(ServerEvents.READY);
+            // Create device
+            let initialDevice = undefined;
+            let device;
+            if (socket.handshake.query && socket.handshake.query.device) {
+                initialDevice = JSON.parse(socket.handshake.query.device);
+                if (initialDevice.mac) {
+                    device = await database.getDeviceByMac(socket.handshake.query.device.mac);
+                }
+            }
+            if (!device) {
+                device = await database.addDevice(user.id, initialDevice);
+            }
+
+            socket.on("disconnect", () => {
+                console.log("Remove device")
+                database.removeDevice(device.id);
+            })
+
+            console.log(device);
+            socket.emit(ServerEvents.READY, device);
         })
         .catch((error) => {
             socket.error(error.message);
+            console.error("INVALID CONNECTION ATTEMPT");
             socket.disconnect();
         });
 });

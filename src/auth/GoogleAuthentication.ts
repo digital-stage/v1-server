@@ -12,11 +12,11 @@ admin.initializeApp({
 class GoogleAuthentication implements IAuthentication {
     authorizeSocket(socket: socketIO.Socket): Promise<User> {
         return new Promise<User>((resolve, reject) => {
-            if (!socket.handshake.query || !socket.handshake.query.authorization) {
+            if (!socket.handshake.query || !socket.handshake.query.token) {
                 reject(new Error("Missing authorization"));
             }
             return admin.auth()
-                .verifyIdToken(socket.handshake.query.authorization)
+                .verifyIdToken(socket.handshake.query.token)
                 .then(decodedIDToken => admin.auth().getUser(decodedIDToken.uid))
                 .then(user => resolve({
                     id: user.uid,
