@@ -8,6 +8,9 @@ export enum DatabaseEvents {
     TRACK_ADDED = "track-added",
     TRACK_CHANGED = "track-changed",
     TRACK_REMOVED = "track-removed",
+    STAGE_MEMBER_ADDED = "stage-member-added",
+    STAGE_MEMBER_CHANGED = "stage-member-added",
+    STAGE_MEMBER_REMOVED = "stage-member-removed",
     STAGE_TRACK_ADDED = "stage-track-added",
     STAGE_TRACK_CHANGED = "stage-track-changed",
     STAGE_TRACK_REMOVED = "stage-track-removed",
@@ -20,7 +23,7 @@ export enum DatabaseEvents {
 }
 
 
-export default class Database extends EventEmitter {
+class Database extends EventEmitter {
     private connection;
 
     constructor() {
@@ -91,34 +94,57 @@ export default class Database extends EventEmitter {
                 cursor.each((err, row) => {
                     const oldStageMember: Device = row.old_val;
                     const newStageMember: Device = row.new_val;
-                    if (newDevice) {
-                        if (oldDevice) {
+                    if (newStageMember) {
+                        if (oldStageMember) {
                             // Track changed
-                            this.emit(DatabaseEvents.DEVICE_CHANGED, newDevice);
+                            this.emit(DatabaseEvents.STAGE_MEMBER_CHANGED, newStageMember);
                         } else {
                             // Track added
-                            this.emit(DatabaseEvents.DEVICE_ADDED, newDevice);
+                            this.emit(DatabaseEvents.STAGE_MEMBER_ADDED, newStageMember);
                         }
                     } else {
-                        if (oldDevice) {
+                        if (oldStageMember) {
                             // Track removed
-                            this.emit(DatabaseEvents.DEVICE_REMOVED, oldDevice);
+                            this.emit(DatabaseEvents.STAGE_MEMBER_REMOVED, oldStageMember);
                         }   // else = ?!?
                     }
                 })
             )
     }
 
-    storeUser(user: User) {
+    storeUser(user: User): Promise<User> {
+        return r.table("users")
+            .update(user)
+            .run(this.connection)
+            .then(() => user);
+    }
+
+    getUser(userId: string): Promise<User> {
+        return r.table("users")
+            .get(userId)
+            .run(this.connection)
+            .then(user => user as User);
+    }
+
+    addDevice(userId: string, mac?: string) {
+        return r.table("devices")
+            .insert({})
 
     }
 
-    getUser(userId: string) {
-
-    }
-
-    addDevice(userId: string) {
-
+    getDeviceByMac(mac: string): Promise<Device> {
+        return r.table("devices")
+            .getAll(mac, {
+                index: "mac"
+            })
+            .filter(r.row("mac").eq(mac))
+            .run(this.connection)
+            .then(cursor => {
+                if (cursor.hasNext()) {
+                    return cursor.toArray<Device>()[0];
+                }
+                throw new Error("Not found");
+            })
     }
 
     addTrack(deviceId: string, kind: "audio" | "video" | "ov-audio", routerId?: string, producerId?: string): Promise<Track> {
@@ -158,3 +184,5 @@ export default class Database extends EventEmitter {
 
     }
 }
+
+export default Database;
