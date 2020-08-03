@@ -24,7 +24,6 @@ database.on(DatabaseEvents.DEVICE_REMOVED, (device: Device) =>
     sendToUser(device.userId, ServerEvents.DEVICE_REMOVED, device)
 );
 
-
 io.on("connection", (socket: socketIO.Socket) => {
     authentication.authorizeSocket(socket)
         .then(async user => {

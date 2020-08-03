@@ -1,5 +1,5 @@
 import * as socketIO from "socket.io";
-import {IAuthentication} from "./IAuthentication";
+import {IAuthentication, IAuthenticationMiddleware} from "./IAuthentication";
 import {User} from "../model";
 
 class DummyAuthentication implements IAuthentication {
@@ -18,7 +18,17 @@ class DummyAuthentication implements IAuthentication {
             reject(new Error("Invalid credentials, try 123"))
         })
     }
-
 }
+
+const isValid = (token: string) => {
+    return token === "123";
+}
+export const DummyAuthenticationMiddleware: IAuthenticationMiddleware = ((socket, next) => {
+    let token = socket.handshake.query.token;
+    if (isValid(token)) {
+        return next();
+    }
+    return next(new Error('authentication error'));
+})
 
 export default DummyAuthentication;
