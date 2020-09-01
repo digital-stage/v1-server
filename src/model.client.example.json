@@ -1,0 +1,20 @@
+{
+  "id": "1234",
+  "name": "My Stage",
+  "admins": [
+    {
+
+    }
+  ],
+  "groups": [
+    {
+      "id": "ew2_3",
+      "name": "Sopranos",
+      "members": {
+        "id": "982",
+        "name": "William"
+
+      }
+    }
+  ]
+}

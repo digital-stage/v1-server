@@ -1,10 +1,9 @@
-import * as socketIO from "socket.io";
-import Auth, {IAuthentication, IAuthenticationMiddleware} from "./IAuthentication";
-import Server from "../model.server";
-
-class DummyAuthentication implements IAuthentication {
-    authorizeSocket(socket: socketIO.Socket): Promise<Server.User> {
-        return new Promise<Auth.User>((resolve, reject) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DummyAuthenticationMiddleware = void 0;
+class DummyAuthentication {
+    authorizeSocket(socket) {
+        return new Promise((resolve, reject) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 reject(new Error("Missing authorization"));
             }
@@ -14,20 +13,19 @@ class DummyAuthentication implements IAuthentication {
                     name: "Test",
                     avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de"
                 });
-            reject(new Error("Invalid credentials, try 123"))
-        })
+            reject(new Error("Invalid credentials, try 123"));
+        });
     }
 }
-
-const isValid = (token: string) => {
+const isValid = (token) => {
     return token === "123";
-}
-export const DummyAuthenticationMiddleware: IAuthenticationMiddleware = ((socket, next) => {
+};
+exports.DummyAuthenticationMiddleware = ((socket, next) => {
     let token = socket.handshake.query.token;
     if (isValid(token)) {
         return next();
     }
     return next(new Error('authentication error'));
-})
-
-export default DummyAuthentication;
+});
+exports.default = DummyAuthentication;
+//# sourceMappingURL=DummyAuthentication.js.map

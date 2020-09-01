@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/Database.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/IDatabase.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/model.client.example.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/model.client.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/model.common.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/model.server.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/auth/IAuthentication.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/IAuthentication.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/auth/IAuthentication.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/IAuthentication.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/index.js.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/DummyAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DummyAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/GoogleAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/GoogleAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/IAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/IAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/backup/database/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/backup/events.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/backup/model.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1gs2aKxFNqN7mL4syjTKQN3j1FH" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="ts.external.directory.path" value="$PROJECT_DIR$/node_modules/typescript/lib" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/src/backup" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="" />
+      <created>1598889041503</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1598889041503</updated>
+      <workItem from="1598889042602" duration="1714000" />
+      <workItem from="1598948881669" duration="10801000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser" timestamp="1598962831846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1598962831846" />
+  </component>
+</project>

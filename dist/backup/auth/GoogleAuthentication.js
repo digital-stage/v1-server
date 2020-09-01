@@ -15,7 +15,8 @@ class GoogleAuthentication {
                 .then(user => resolve({
                 id: user.uid,
                 name: user.displayName,
-                avatarUrl: user.photoURL
+                avatarUrl: user.photoURL,
+                stageId: null
             }))
                 .catch(() => reject(new Error("Invalid authorization")));
         });

@@ -1,0 +1,9 @@
+export type StageId = string;
+export type GroupId = string;
+export type UserId = string;
+export type GroupUserId = string;
+export type DeviceId = string;
+export type RouterId = string;
+export type ProducerId = string;
+export type GroupVolumeId = string;
+export type GroupUserVolumeId = string;

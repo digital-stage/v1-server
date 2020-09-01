@@ -1,31 +1,29 @@
-import {EventEmitter} from "events";
-import {Device, Track, User} from "../model";
-import * as r from "rethinkdb";
-import {v4 as uuidv4} from 'uuid';
-
-export enum DatabaseEvents {
-    USER_CHANGED = "user-changed",
-    TRACK_ADDED = "track-added",
-    TRACK_CHANGED = "track-changed",
-    TRACK_REMOVED = "track-removed",
-    STAGE_MEMBER_ADDED = "stage-member-added",
-    STAGE_MEMBER_CHANGED = "stage-member-added",
-    STAGE_MEMBER_REMOVED = "stage-member-removed",
-    STAGE_TRACK_ADDED = "stage-track-added",
-    STAGE_TRACK_CHANGED = "stage-track-changed",
-    STAGE_TRACK_REMOVED = "stage-track-removed",
-    USER_STAGE_TRACK_ADDED = "user-stage-track-added",
-    USER_STAGE_TRACK_CHANGED = "user-stage-track-changed",
-    USER_STAGE_TRACK_REMOVED = "stage-track-removed",
-    DEVICE_ADDED = "device-added",
-    DEVICE_CHANGED = "device-changed",
-    DEVICE_REMOVED = "device-removed"
-}
-
-
-class Database extends EventEmitter {
-    private connection;
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DatabaseEvents = void 0;
+const r = require("rethinkdb");
+const uuid_1 = require("uuid");
+const EventEmitter = require("events");
+var DatabaseEvents;
+(function (DatabaseEvents) {
+    DatabaseEvents["USER_CHANGED"] = "user-changed";
+    DatabaseEvents["TRACK_ADDED"] = "track-added";
+    DatabaseEvents["TRACK_CHANGED"] = "track-changed";
+    DatabaseEvents["TRACK_REMOVED"] = "track-removed";
+    DatabaseEvents["STAGE_MEMBER_ADDED"] = "stage-member-added";
+    DatabaseEvents["STAGE_MEMBER_CHANGED"] = "stage-member-added";
+    DatabaseEvents["STAGE_MEMBER_REMOVED"] = "stage-member-removed";
+    DatabaseEvents["STAGE_TRACK_ADDED"] = "stage-track-added";
+    DatabaseEvents["STAGE_TRACK_CHANGED"] = "stage-track-changed";
+    DatabaseEvents["STAGE_TRACK_REMOVED"] = "stage-track-removed";
+    DatabaseEvents["USER_STAGE_TRACK_ADDED"] = "user-stage-track-added";
+    DatabaseEvents["USER_STAGE_TRACK_CHANGED"] = "user-stage-track-changed";
+    DatabaseEvents["USER_STAGE_TRACK_REMOVED"] = "stage-track-removed";
+    DatabaseEvents["DEVICE_ADDED"] = "device-added";
+    DatabaseEvents["DEVICE_CHANGED"] = "device-changed";
+    DatabaseEvents["DEVICE_REMOVED"] = "device-removed";
+})(DatabaseEvents = exports.DatabaseEvents || (exports.DatabaseEvents = {}));
+class Database extends EventEmitter.EventEmitter {
     constructor() {
         super();
         // INIT REALTIMEDB
@@ -38,8 +36,7 @@ class Database extends EventEmitter {
             this.addHandler();
         });
     }
-
-    private addHandler() {
+    addHandler() {
         /*
         r.table("tracks")
             .changes()
@@ -112,67 +109,50 @@ class Database extends EventEmitter {
                 })
             )*/
     }
-
-    storeUser(user: User): Promise<User> {
+    storeUser(user) {
         return r.table("users")
             .update(user)
             .run(this.connection)
             .then(() => user);
     }
-
-    getUser(userId: string): Promise<User> {
+    getUser(userId) {
         return r.table("users")
             .get(userId)
             .run(this.connection)
-            .then(user => user as User);
+            .then(user => user);
     }
-
-    addDevice(userId: string, initialDevice?: Partial<Device>): Promise<Device> {
-        const id: string = uuidv4();
-        const device: Device = {
-            name: "Unnamed",
-            canAudio: false,
-            canVideo: false,
-            receiveVideo: false,
-            receiveAudio: false,
-            sendVideo: false,
-            sendAudio: false,
-            ...initialDevice,
-            id: id,
-            userId: userId
-        }
+    addDevice(userId, initialDevice) {
+        const id = uuid_1.v4();
+        const device = Object.assign(Object.assign({ name: "Unnamed", canAudio: false, canVideo: false, receiveVideo: false, receiveAudio: false, sendVideo: false, sendAudio: false }, initialDevice), { id: id, userId: userId });
         console.log(device);
         return r.table("devices")
             .insert(device)
             .run(this.connection)
             .then(() => device);
     }
-
-    getDeviceByMac(mac: string): Promise<Device> {
+    getDeviceByMac(mac) {
         return r.table("devices")
             .getAll(mac, {
-                index: "mac"
-            })
+            index: "mac"
+        })
             .filter(r.row("mac").eq(mac))
             .run(this.connection)
             .then(cursor => {
-                if (cursor.hasNext()) {
-                    return cursor.toArray<Device>()[0];
-                }
-                throw new Error("Not found");
-            })
+            if (cursor.hasNext()) {
+                return cursor.toArray()[0];
+            }
+            throw new Error("Not found");
+        });
     }
-
-    removeDevice(deviceId: string): Promise<any> {
+    removeDevice(deviceId) {
         return r.table("devices")
             .get(deviceId)
             .delete()
             .run(this.connection);
     }
-
-    addTrack(deviceId: string, kind: "audio" | "video" | "ov-audio", routerId?: string, producerId?: string): Promise<Track> {
-        const id: string = uuidv4();
-        const track: Track = {
+    addTrack(deviceId, kind, routerId, producerId) {
+        const id = uuid_1.v4();
+        const track = {
             id: id,
             deviceId: deviceId,
             kind: kind,
@@ -183,29 +163,18 @@ class Database extends EventEmitter {
             .run(this.connection)
             .then(() => track);
     }
-
-    updateTrack(trackId: string, track: Partial<Track>): Promise<boolean> {
-        return r.table("tracks").update({
-            ...track,
-            id: trackId
-        })
+    updateTrack(trackId, track) {
+        return r.table("tracks").update(Object.assign(Object.assign({}, track), { id: trackId }))
             .run(this.connection)
             .then(() => true);
     }
-
-    removeTrack(trackId: string, track: Partial<Track>): Promise<boolean> {
-        return r.table("tracks").update({
-            ...track,
-            id: trackId
-        })
+    removeTrack(trackId, track) {
+        return r.table("tracks").update(Object.assign(Object.assign({}, track), { id: trackId }))
             .run(this.connection)
             .then(() => true);
     }
-
-
-    getStageById(stageId: string) {
-
+    getStageById(stageId) {
     }
 }
-
-export default Database;
+exports.default = Database;
+//# sourceMappingURL=index.js.map
