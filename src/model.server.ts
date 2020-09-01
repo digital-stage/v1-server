@@ -63,12 +63,13 @@ namespace Server {
     export interface User {
         id: UserId;
         name: string;
-        avatarUrl?: string;
+        avatarUrl: string | null;
     }
 
     export interface Device {
         id: DeviceId;
         userId: UserId;
+        online: boolean;
         mac?: string;
         name: string;
         canVideo: boolean;

@@ -42,9 +42,11 @@ export interface IDatabase extends EventEmitter.EventEmitter {
 
     readStage(id: StageId): Promise<Server.Stage>;
 
+    readStages(): Promise<Server.Stage[]>;
+
     deleteStage(id: StageId): Promise<boolean>;
 
-    createUser(user: Omit<Server.User, "id">): Promise<Server.User>;
+    createUser(user: Server.User): Promise<Server.User>;
 
     updateUser(id: UserId, user: Partial<Omit<Server.User, "id">>): Promise<boolean>;
 
@@ -57,6 +59,8 @@ export interface IDatabase extends EventEmitter.EventEmitter {
     updateGroup(id: GroupId, group: Partial<Omit<Server.Group, "id">>): Promise<boolean>;
 
     readGroup(id: GroupId): Promise<Server.Group>;
+
+    readGroupsByStage(stageId: StageId): Promise<Server.Group[]>;
 
     deleteGroup(id: GroupId): Promise<boolean>;
 

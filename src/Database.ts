@@ -13,6 +13,7 @@ import Device = Server.Device;
 import Router = Server.Router;
 import Producer = Server.Producer;
 import {v4 as uuidv4} from 'uuid';
+import {IndexFunction} from "rethinkdb";
 
 export class Database extends EventEmitter.EventEmitter implements IDatabase {
     private connection;
@@ -43,13 +44,22 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
                 if (list.indexOf("ds") === -1) {
                     await r.dbCreate('ds').run(this.connection);
                 }
-                const tables: string[] = await r.db('ds').tableList().run(this.connection);
+                const existingTables: string[] = await r.db('ds').tableList().run(this.connection);
                 const createIfNotExists = (tableName: string) => {
-                    if (tables.indexOf(tableName) === -1) {
+                    if (existingTables.indexOf(tableName) === -1) {
                         return r.db('ds').tableCreate(tableName).run(this.connection);
                     }
                 };
+                const createIndiciesIfNotExists = async (tableName: string, indicies: { name: string, index?: IndexFunction<any> }[]) => {
+                    const existingIndicies: string[] = await r.db('ds').table(tableName).indexList().run(this.connection);
+                    indicies.forEach(index => {
+                        if (existingIndicies.indexOf(index.name) === -1) {
+                            return r.db('ds').table(tableName).indexCreate(index.name, index.index).run(this.connection);
+                        }
+                    })
+                };
                 return Promise.all([
+                    // Tables
                     createIfNotExists("routers"),
                     createIfNotExists("users"),
                     createIfNotExists("devices"),
@@ -59,7 +69,13 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
                     createIfNotExists("group_volumes"),
                     createIfNotExists("group_users"),
                     createIfNotExists("group_user_volumes"),
-                ]);
+                ]).then(() => Promise.all([
+                    // Additional Indexes
+                    createIndiciesIfNotExists("devices", [{
+                        name: "user_mac",
+                        index: [r.row("userId"), r.row("mac")]
+                    }])
+                ]));
             })
     }
 
@@ -99,6 +115,13 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
             .then((model: any) => model as ModelType);
     }
 
+    private readAll<ModelType>(tableName: string, filter: { [key: string]: any }): Promise<ModelType[]> {
+        return r.db('ds').table(tableName)
+            .filter(filter)
+            .run(this.connection)
+            .then(cursor => cursor.toArray<ModelType>());
+    }
+
     private update<ModelType>(tableName: string, id: string, model: Partial<Omit<ModelType, "id">>): Promise<boolean> {
         return r.db('ds').table(tableName)
             .update({
@@ -112,6 +135,14 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
     private delete<ModelType>(tableName: string, id: string): Promise<boolean> {
         return r.db('ds').table(tableName)
             .get(id)
+            .delete()
+            .run(this.connection)
+            .then(value => value.deleted > 0);
+    }
+
+    private deleteAll<ModelType>(tableName: string, filter: { [key: string]: any }): Promise<boolean> {
+        return r.db('ds').table(tableName)
+            .filter(filter)
             .delete()
             .run(this.connection)
             .then(value => value.deleted > 0);
@@ -173,8 +204,11 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
         return this.create<Server.Group>("groups", group);
     }
 
-    createUser(user: Omit<Server.User, "id">): Promise<Server.User> {
-        return this.create<Server.User>("users", user);
+    createUser(user: Server.User): Promise<Server.User> {
+        return r.db('ds').table('users')
+            .insert(user)
+            .run(this.connection)
+            .then(() => user);
     }
 
     readGroup(id: GroupId): Promise<Server.Group> {
@@ -190,11 +224,25 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
     }
 
     deleteGroup(id: GroupId): Promise<boolean> {
-        return this.delete<Server.Group>("groups", id);
+        return this.delete<Server.Group>("groups", id)
+            .then(() => Promise.all([
+                this.deleteAll("group_volumes", [{groupId: id}]),
+                this.deleteAll("group_users", [{groupId: id}]),
+                this.deleteAll("group_user_volumes", [{groupId: id}])
+            ]))
+            .then(results => results.every(result => result === true));
     }
 
     deleteStage(id: StageId): Promise<boolean> {
-        return this.delete<Server.Stage>("stages", id);
+        return this.delete<Server.Stage>("stages", id)
+            .then(result => {
+                if (result) {
+                    return this.readGroupsByStage(id)
+                        .then(groups => groups.forEach(group => this.deleteGroup(group.id)))
+                        .then(() => true);
+                }
+                return false;
+            });
     }
 
     deleteUser(id: UserId): Promise<boolean> {
@@ -230,16 +278,28 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
     }
 
     readDeviceByUserAndMac(userId: UserId, mac: string): Promise<Server.Device> {
-        return r.db('ds').table("devices")
-            .filter(
-                r.row('userId').eq(userId)
-            )
-            .filter(
-                r.row('mac').eq(mac)
-            )
+        return r.db('ds').table("devices")  // TODO: Replace with compound index of userId and mac
+            .getAll([userId, mac], {index: "user_mac"})
             .run(this.connection)
-            .then((model: any) => model as Server.Device);
+            .then(async cursor => {
+                const devices: Server.Device[] = await cursor.toArray<Server.Device>();
+                if (devices.length > 0) {
+                    return devices[0];
+                }
+                return undefined;
+            });
     }
 
+    readStages(): Promise<Server.Stage[]> {
+        return r.db('ds').table("stages")
+            .run(this.connection)
+            .then(cursor => cursor.toArray<Server.Stage>());
+    }
 
+    readGroupsByStage(stageId: StageId): Promise<Server.Group[]> {
+        return r.db('ds').table('groups')
+            .filter({stageId: stageId})
+            .run(this.connection)
+            .then(cursor => cursor.toArray<Server.Group>());
+    }
 }

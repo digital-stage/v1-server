@@ -20,26 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Database.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/IDatabase.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/model.client.example.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/model.client.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/model.common.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/model.server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/GoogleAuthentication.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/auth/IAuthentication.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/IAuthentication.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/auth/IAuthentication.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/auth/IAuthentication.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/auth/DummyAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DummyAuthentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/auth/GoogleAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/GoogleAuthentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/auth/IAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/IAuthentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/backup/database/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/backup/events.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/trash/testDatabase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/backup/model.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +65,7 @@
       <option name="presentableId" value="Default" />
       <updated>1598889041503</updated>
       <workItem from="1598889042602" duration="1714000" />
-      <workItem from="1598948881669" duration="10801000" />
+      <workItem from="1598948881669" duration="10913000" />
     </task>
     <servers />
   </component>
