@@ -1,20 +1,25 @@
 import * as socketIO from "socket.io";
-import {IDatabase} from "../IDatabase";
-import Auth, {IAuthentication} from "../auth/IAuthentication";
+import Auth from "../auth/IAuthentication";
 import Server from "../model.server";
 import {ServerEvents} from "../events";
+import {IStorage} from "../storage/IStorage";
+import Client from "../model.client";
+import {Device} from "../model.common";
 
-export default (io: socketIO.Server, database: IDatabase, authentication: IAuthentication) => {
-    const sendToUser = (uid: string, event: string, payload?: any) => {
-        io.to(uid).send(event, payload);
+
+export default (io: socketIO.Server, storage: IStorage, authentication: Auth.IAuthentication) => {
+    const sendToUser = (_id: string, event: string, payload?: any) => {
+        console.log("SEND TO USER '" + _id + "': " + event + " --> " + JSON.stringify(payload));
+        io.to(_id).emit(event, payload);
     };
 
     io.on("connection", (socket: socketIO.Socket) => {
         authentication.authorizeSocket(socket)
-            .then(async (user: Auth.User) => {
+            .then(async (authUser: Auth.User) => {
                 try {
                     console.log("NEW CONNECTION");
                     const sendToDevice = (event: string, payload?: any) => {
+                        console.log("SEND TO DEVICE: " + event + " --> " + JSON.stringify(payload));
                         socket.emit(event, payload);
                     }
 
@@ -22,63 +27,86 @@ export default (io: socketIO.Server, database: IDatabase, authentication: IAuthe
                      * USER MANAGEMENT
                      */
                         // Check if user is already in database
-                    let existingUser = await database.readUser(user.id);
-                    if (!existingUser) {
-                        await database.createUser(user);
-                    } else {
-                        user = existingUser;
+                    let user: Server.User = await storage.getUserByUid(authUser.id);
+                    if (!user) {
+                        user = await storage.createUser(authUser.id, authUser.name, authUser.avatarUrl);
                     }
 
                     /**
                      * DEVICE MANAGEMENT
                      */
-                    let commitedDevice: Server.Device = undefined;
-                    let device;
+                    let commitedDevice: Device = undefined;
+                    let device: Device = null;
                     if (socket.handshake.query && socket.handshake.query.device) {
                         commitedDevice = JSON.parse(socket.handshake.query.device);
                         if (commitedDevice.mac) {
-                            device = await database.readDeviceByUserAndMac(user.id, commitedDevice.mac);
+                            console.log(user._id);
+                            device = await storage.getDeviceByUserAndMac(user._id, commitedDevice.mac);
                             if (device) {
-                                console.log("Device found with mac and user: " + user.id + " " + commitedDevice.mac);
-                                await database.updateDevice(device.id, {
+                                console.log("Device found with mac and user: " + user._id + " " + commitedDevice.mac);
+                                await storage.updateDevice(device._id, {
                                     online: true
                                 });
                                 device.online = true;
+                                sendToUser(user._id, ServerEvents.DEVICE_CHANGED, device);
                             } else {
-                                console.log("Device NOT found with mac and user: " + user.id + " " + commitedDevice.mac);
+                                console.log("Device NOT found with mac and user: " + user._id + " " + commitedDevice.mac);
                             }
                         }
                     }
                     if (!device) {
-                        const initialDevice: Omit<Server.Device, "id"> = {
+                        const initialDevice: Omit<Device, "id"> = {
                             ...commitedDevice,
                             online: true,
-                            userId: user.id,
                             videoProducer: [],
                             audioProducer: [],
                             ovProducer: []
                         }
-                        device = await database.createDevice(initialDevice);
+                        device = await storage.createDevice(user._id, initialDevice);
+                        sendToUser(user._id, ServerEvents.DEVICE_ADDED, device);
                     }
 
                     socket.on("disconnect", () => {
                         if (!device.mac) {
                             console.log("Remove device")
-                            database.deleteDevice(device.id);
+                            storage.removeDevice(device._id);
+                            sendToUser(user._id, ServerEvents.DEVICE_REMOVED, device);
                         } else {
                             console.log("Keep device, but switch offline")
-                            database.updateDevice(device.id, {
+                            storage.updateDevice(device._id, {
                                 online: false
                             });
+                            device.online = false;
+                            sendToUser(user._id, ServerEvents.DEVICE_CHANGED, device);
                         }
                     });
 
+                    socket.on("update-device", (d: Partial<Device>) => {
+                        sendToUser(user._id, ServerEvents.DEVICE_CHANGED, d);
+                        storage.updateDevice(d._id, d).then(updated => {
+                            console.log("Finished writing");
+                        });
+                        console.log("Finished sending");
+                        // Don't wait:
+                    })
+
                     /**
-                     * STAGE MANAGEMENT
+                     * SEND INITIAL DATA
                      */
+                    sendToDevice(ServerEvents.INIT, device);
+                    let stage: Client.Stage = null;
+                    if (user.stageId) {
+                        stage = await storage.generateStage(user._id, user.stageId);
+                    }
 
+                    sendToDevice(ServerEvents.READY, stage);
 
-                    socket.emit(ServerEvents.READY, device);
+                    // Finally join user stream
+                    socket.join(user._id, err => {
+                        if (err)
+                            console.error(err)
+                        console.log("Joined room: " + user._id);
+                    });
                 } catch (error) {
                     socket.error(error.message);
                     console.error("Internal error");

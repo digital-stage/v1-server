@@ -1,20 +1,38 @@
 import {
+    CustomGroupVolumeId,
+    CustomStageMemberVolumeId,
     DeviceId, GroupId,
-    GroupUserId,
-    GroupUserVolumeId,
-    GroupVolumeId,
     ProducerId, RouterId,
-    StageId,
+    StageId, StageMemberId,
     UserId
 } from "./model.common";
 
+/***
+ *
+ * A stage can have several groups
+ * A stage can have several directors
+ * A stage can have several admins
+ *
+ *
+ * A group can have several group users
+ * A group has one master volume (controlled by admins of the stage)
+ * A group can have different custom group volumes (for other users)
+ *
+ * A group user has one master volume (controlled by admins of the stage)
+ * A group user can have different custom group user volumes (for other users)
+ *
+ * A user can be a group user (only at once)
+ *
+ * A user can have several devices
+ * A device can have several producers
+ *
+ */
 
 namespace Server {
     export interface Stage {
-        id: StageId;
+        _id: StageId;
         name: string;
         password?: string;
-        directors: UserId[];
         admins: UserId[];
         groups: GroupId[];
 
@@ -27,25 +45,19 @@ namespace Server {
     }
 
     export interface Group {
-        id: GroupId;
+        _id: GroupId;
+        stageId: StageId;
         name: string;
         volume: number;
-        members: GroupUserId[];
-        customVolumes: GroupVolumeId[];
     }
 
-    export interface GroupVolume {
-        id: string;
+    export interface StageMember {
+        _id: StageMemberId;
+        stageId: StageId;
         userId: UserId;
         groupId: GroupId;
         volume: number;
-    }
-
-    export interface GroupUser extends Coordinates {
-        id: GroupUserId;
-        userId: UserId;
-        volume: number;
-        customVolumes: GroupUserVolume[];
+        isDirector: boolean;
 
         // 3D Room specific
         x: number;
@@ -53,53 +65,42 @@ namespace Server {
         z: number;
     }
 
-    export interface GroupUserVolume {
-        id: GroupUserVolumeId;
+    // Custom volume of user for a group
+    export interface CustomGroupVolume {
+        _id: CustomGroupVolumeId;
+        userId: string;
+        groupId: string;
+        volume: number;
+    }
+
+    // Custom volume of user for a group member
+    export interface CustomStageMemberVolume {
+        _id: CustomStageMemberVolumeId;
         userId: UserId;
-        groupUserId: GroupUserId;
+        stageMemberId: string;
         volume: number;
     }
 
     export interface User {
-        id: UserId;
+        _id: UserId;
+        uid: string;
         name: string;
         avatarUrl: string | null;
+        stageId: StageId | null;
+        lastStageIds: StageId[];
     }
 
-    export interface Device {
-        id: DeviceId;
-        userId: UserId;
-        online: boolean;
-        mac?: string;
-        name: string;
-        canVideo: boolean;
-        canAudio: boolean;
-        sendVideo: boolean;
-        sendAudio: boolean;
-        receiveVideo: boolean;
-        receiveAudio: boolean;
-        audioDevices?: {
-            [id: string]: {
-                name: string;
-            }
-        }
-        inputAudioDevice?: string;
-        outputAudioDevice?: string;
-        videoProducer: ProducerId[];
-        audioProducer: ProducerId[];
-        ovProducer: ProducerId[];
-    }
 
     export interface Producer {
-        id: ProducerId;
-        deviceId: DeviceId;
+        _id: ProducerId;
         userId: UserId;
+        deviceId: DeviceId;
         kind: "audio" | "video" | "ov";
         routerId?: RouterId;
     }
 
     export interface Router {
-        id: RouterId;
+        _id: RouterId;
         ipv4: string;
         ipv6: string;
         port: number;

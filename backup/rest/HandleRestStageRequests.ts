@@ -1,7 +1,7 @@
-import Server from "../model.server";
+import Server from "../../src/model.server";
 import * as core from "express-serve-static-core";
-import {IAuthentication} from "../auth/IAuthentication";
-import {IDatabase} from "../IDatabase";
+import {IAuthentication} from "../../src/auth/IAuthentication";
+import {IDatabase} from "../database/IDatabase";
 
 export default (app: core.Express, database: IDatabase, authentication: IAuthentication) => {
 
@@ -20,7 +20,17 @@ export default (app: core.Express, database: IDatabase, authentication: IAuthent
                 ) {
                     return res.sendStatus(400);
                 }
-
+                // Check if password matches
+                return database.readStage(req.params.stageId)
+                    .then(stage => {
+                        if (stage.password) {
+                            if (!req.params.password || typeof req.params.password !== 'string' || req.params.password !== stage.password) {
+                                return res.sendStatus(401);
+                            }
+                        }
+                        return database.joinGroup(user.id, req.params.groupId)
+                            .then(result => result ? res.sendStatus(200) : res.sendStatus(404));
+                    });
             })
             .catch((error) => {
                 console.log(error);
@@ -31,7 +41,8 @@ export default (app: core.Express, database: IDatabase, authentication: IAuthent
     app.post('/stages/leave', function (req, res) {
         authentication.authorizeRequest(req)
             .then(user => {
-                
+                return database.leaveGroup(user.id)
+                    .then(() => res.sendStatus(200));
             })
             .catch((error) => {
                 console.log(error);
@@ -74,6 +85,30 @@ export default (app: core.Express, database: IDatabase, authentication: IAuthent
         authentication.authorizeRequest(req)
             .then(user => {
                 return database.readStages()
+                    .then(stages => {
+                        console.log(stages);
+                        return res.status(200).send(JSON.stringify(stages.map(stage => ({
+                            ...stage,
+                            password: stage.admins.indexOf(user.id) !== -1 ? stage.password : undefined
+                        }))));
+                    });
+            })
+            .catch((error) => {
+                console.log(error);
+                return res.sendStatus(401);
+            });
+    });
+
+    app.get('/user/:userId/stages', function (req, res) {
+        authentication.authorizeRequest(req)
+            .then(user => {
+                if (
+                    !req.params.userId
+                    || typeof req.params.userId !== 'string'
+                ) {
+                    return res.sendStatus(400);
+                }
+                return database.readUserStages(req.params.userId)
                     .then(stages => {
                         console.log(stages);
                         return res.status(200).send(JSON.stringify(stages.map(stage => ({

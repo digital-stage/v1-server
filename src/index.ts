@@ -1,6 +1,3 @@
-import {Database} from "./Database";
-import {IDatabase} from "./IDatabase";
-import {IAuthentication} from "./auth/IAuthentication";
 import * as socketIO from "socket.io";
 import GoogleAuthentication from "./auth/GoogleAuthentication";
 import * as https from "https";
@@ -8,8 +5,10 @@ import * as fs from "fs";
 import * as path from "path";
 import * as express from "express";
 import * as cors from "cors";
-import HandleRestStageRequests from "./rest/HandleRestStageRequests";
 import HandleSocketRequests from "./socket/HandleSocketRequests";
+import {MongoStorage} from "./storage/mongo/MongoStorage";
+import {IStorage} from "./storage/IStorage";
+import Auth from "./auth/IAuthentication";
 
 // Express server
 const app = express();
@@ -32,21 +31,21 @@ const server = process.env.NODE_ENV === "development" ? app.listen(4000) : https
 const io: socketIO.Server = socketIO(server);
 
 // Database API
-const database: IDatabase = new Database();
+const storage: IStorage = new MongoStorage();
 
 // Auth API
-const authentication: IAuthentication = new GoogleAuthentication();
+const authentication: Auth.IAuthentication = new GoogleAuthentication();
 
 // Call necessary init methods
 const init = () => Promise.all([
-    database.init()
+    storage.init()
 ]);
 
 init()
     .then(() => {
         // REST HANDLING
-        HandleRestStageRequests(app, database, authentication);
+        //HandleRestStageRequests(app, storage, authentication);
 
         // SOCKET HANDLING
-        HandleSocketRequests(io, database, authentication);
+        HandleSocketRequests(io, storage, authentication);
     });

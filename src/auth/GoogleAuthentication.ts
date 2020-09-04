@@ -1,8 +1,7 @@
 import * as socketIO from "socket.io";
-import {IAuthentication} from "./IAuthentication";
 import * as admin from "firebase-admin";
-import Server from "../model.server";
 import {Request} from "express";
+import Auth from "./IAuthentication";
 
 const serviceAccount = require('./../../firebase-adminsdk.json');
 admin.initializeApp({
@@ -10,9 +9,9 @@ admin.initializeApp({
     databaseURL: "https://digitalstage-wirvsvirus.firebaseio.com"
 });
 
-class GoogleAuthentication implements IAuthentication {
-    authorizeSocket(socket: socketIO.Socket): Promise<Server.User> {
-        return new Promise<Server.User>((resolve, reject) => {
+class GoogleAuthentication implements Auth.IAuthentication {
+    authorizeSocket(socket: socketIO.Socket): Promise<Auth.User> {
+        return new Promise<Auth.User>((resolve, reject) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 reject(new Error("Missing authorization"));
             }
@@ -21,14 +20,14 @@ class GoogleAuthentication implements IAuthentication {
                 .then(decodedIDToken => admin.auth().getUser(decodedIDToken.uid))
                 .then(user => resolve({
                     id: user.uid,
-                    name: user.displayName,
+                    name: user.displayName ? user.displayName : user.email,
                     avatarUrl: user.photoURL ? user.photoURL : null
                 }))
         })
     }
 
-    authorizeRequest(req: Request): Promise<Server.User> {
-        return new Promise<Server.User>((resolve, reject) => {
+    authorizeRequest(req: Request): Promise<Auth.User> {
+        return new Promise<Auth.User>((resolve, reject) => {
             if (!req.headers.authorization) {
                 reject(new Error("Missing authorization"));
             }

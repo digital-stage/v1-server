@@ -1,4 +1,4 @@
-import {DatabaseEvents, IDatabase} from "../IDatabase";
+import {DatabaseEvents, IDatabase} from "../../backup/database/IDatabase";
 
 export default async (database: IDatabase) => {
     database.on(DatabaseEvents.StageAdded, () => {

@@ -1,21 +1,19 @@
 import {DatabaseEvents, IDatabase} from "./IDatabase";
-import Server from "./model.server";
-import {DeviceId, GroupId, StageId, UserId} from "./model.common";
-import * as EventEmitter from "events";
+import Server from "../../src/model.server";
+import {
+    DeviceId,
+    GroupId,
+    ProducerId,
+    StageId, StageMemberId,
+    UserGroupVolumeId,
+    UserId, UserStageMemberVolumeId
+} from "../../src/model.common";
 import * as r from "rethinkdb";
-import Stage = Server.Stage;
-import User = Server.User;
-import Group = Server.Group;
-import GroupVolume = Server.GroupVolume;
-import GroupUser = Server.GroupUser;
-import GroupUserVolume = Server.GroupUserVolume;
-import Device = Server.Device;
-import Router = Server.Router;
-import Producer = Server.Producer;
 import {v4 as uuidv4} from 'uuid';
 import {IndexFunction} from "rethinkdb";
+import * as EventEmitter from "server/src/events";
 
-export class Database extends EventEmitter.EventEmitter implements IDatabase {
+export class RethinkDatabase extends EventEmitter.EventEmitter implements IDatabase {
     private connection;
 
     constructor() {
@@ -66,15 +64,27 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
                     createIfNotExists("producers"),
                     createIfNotExists("stages"),
                     createIfNotExists("groups"),
-                    createIfNotExists("group_volumes"),
-                    createIfNotExists("group_users"),
-                    createIfNotExists("group_user_volumes"),
+                    createIfNotExists("stage_members"),
+                    createIfNotExists("user_group_volumes"),
+                    createIfNotExists("user_stage_member_volumes"),
                 ]).then(() => Promise.all([
                     // Additional Indexes
                     createIndiciesIfNotExists("devices", [{
                         name: "user_mac",
                         index: [r.row("userId"), r.row("mac")]
-                    }])
+                    }]),
+                    createIndiciesIfNotExists("stage_members", [{
+                        name: "group_user",
+                        index: [r.row("groupId"), r.row("userId")]
+                    }]),
+                    createIndiciesIfNotExists("user_group_volumes", [{
+                        name: "user_group",
+                        index: [r.row("userId"), r.row("groupId")]
+                    }]),
+                    createIndiciesIfNotExists("user_stage_member_volumes", [{
+                        name: "user_group-member",
+                        index: [r.row("userId"), r.row("groupMemberId")]
+                    }]),
                 ]));
             })
     }
@@ -82,17 +92,18 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
     attachHandler() {
         console.log("Attach handlers");
         return Promise.all([
-            this.attachEventsToTable<Router>("routers", DatabaseEvents.RouterAdded, DatabaseEvents.RouterChanged, DatabaseEvents.RouterRemoved),
+            this.attachEventsToTable<Server.Router>("routers", DatabaseEvents.RouterAdded, DatabaseEvents.RouterChanged, DatabaseEvents.RouterRemoved),
 
-            this.attachEventsToTable<User>("users", DatabaseEvents.UserAdded, DatabaseEvents.UserChanged, DatabaseEvents.UserRemoved),
-            this.attachEventsToTable<Device>("devices", DatabaseEvents.DeviceAdded, DatabaseEvents.DeviceChanged, DatabaseEvents.DeviceRemoved),
-            this.attachEventsToTable<Producer>("producers", DatabaseEvents.ProducerAdded, DatabaseEvents.ProducerChanged, DatabaseEvents.ProducerRemoved),
+            this.attachEventsToTable<Server.User>("users", DatabaseEvents.UserAdded, DatabaseEvents.UserChanged, DatabaseEvents.UserRemoved),
+            this.attachEventsToTable<Server.Device>("devices", DatabaseEvents.DeviceAdded, DatabaseEvents.DeviceChanged, DatabaseEvents.DeviceRemoved),
+            this.attachEventsToTable<Server.Producer>("producers", DatabaseEvents.ProducerAdded, DatabaseEvents.ProducerChanged, DatabaseEvents.ProducerRemoved),
 
-            this.attachEventsToTable<Stage>("stages", DatabaseEvents.StageAdded, DatabaseEvents.StageChanged, DatabaseEvents.StageRemoved),
-            this.attachEventsToTable<Group>("groups", DatabaseEvents.GroupAdded, DatabaseEvents.GroupChanged, DatabaseEvents.GroupRemoved),
-            this.attachEventsToTable<GroupVolume>("group_volumes", DatabaseEvents.GroupVolumeAdded, DatabaseEvents.GroupVolumeChanged, DatabaseEvents.GroupVolumeRemoved),
-            this.attachEventsToTable<GroupUser>("group_users", DatabaseEvents.GroupUserAdded, DatabaseEvents.GroupUserChanged, DatabaseEvents.GroupUserRemoved),
-            this.attachEventsToTable<GroupUserVolume>("group_user_volumes", DatabaseEvents.GroupUserVolumeAdded, DatabaseEvents.GroupUserVolumeChanged, DatabaseEvents.GroupUserVolumeRemoved)
+            this.attachEventsToTable<Server.Stage>("stages", DatabaseEvents.StageAdded, DatabaseEvents.StageChanged, DatabaseEvents.StageRemoved),
+            this.attachEventsToTable<Server.Group>("groups", DatabaseEvents.GroupAdded, DatabaseEvents.GroupChanged, DatabaseEvents.GroupRemoved),
+            this.attachEventsToTable<Server.StageMember>("stage_members", DatabaseEvents.StageMemberAdded, DatabaseEvents.StageMemberChanged, DatabaseEvents.StageMemberRemoved),
+
+            this.attachEventsToTable<Server.UserGroupVolume>("user_group_volumes", DatabaseEvents.UserGroupVolumeAdded, DatabaseEvents.UserGroupVolumeChanged, DatabaseEvents.UserGroupVolumeRemoved),
+            this.attachEventsToTable<Server.UserStageMemberVolume>("user_stage_member_volumes", DatabaseEvents.UserStageMemberVolumeAdded, DatabaseEvents.UserStageMemberVolumeChanged, DatabaseEvents.UserStageMemberVolumeRemoved)
         ])
     }
 
@@ -302,4 +313,77 @@ export class Database extends EventEmitter.EventEmitter implements IDatabase {
             .run(this.connection)
             .then(cursor => cursor.toArray<Server.Group>());
     }
+
+    readUserStages(userId: UserId): Promise<Server.Stage[]> {
+        return r.db('ds').table("user_stages")
+            .getAll(userId, {index: "userId"})
+            .eqJoin('stageId', r.table('stages'))
+            .run(this.connection)
+            .then(cursor => cursor.toArray<Server.Stage>());
+    }
+
+    createStageMember(stageMember: Omit<Server.StageMember, "id">): Promise<Server.StageMember> {
+        return this.create<Server.StageMember>("stage_members", stageMember);
+    }
+
+    createProducer(producer: Omit<Server.Producer, "id">): Promise<Server.Producer> {
+        return this.create<Server.Producer>("producers", producer);
+    }
+
+    createUserStageMemberVolume(userGroupMemberVolume: Omit<Server.UserStageMemberVolume, "id">): Promise<Server.UserStageMemberVolume> {
+        return this.create<Server.UserStageMemberVolume>("user_stage_member_volumes", userGroupMemberVolume);
+    }
+
+    createUserGroupVolume(userGroupVolume: Omit<Server.UserGroupVolume, "id">): Promise<Server.UserGroupVolume> {
+        return this.create<Server.UserGroupVolume>("user_group_volumes", userGroupVolume);
+    }
+
+    deleteStageMember(id: StageMemberId): Promise<boolean> {
+        return this.delete<Server.StageMember>("stage_members", id);
+    }
+
+    deleteProducer(id: ProducerId): Promise<boolean> {
+        return this.delete<Server.Producer>("producers", id);
+    }
+
+    readStageMember(id: StageMemberId): Promise<Server.StageMember> {
+        return this.read<Server.StageMember>("stage_member", id);
+    }
+
+    readProducer(id: ProducerId): Promise<Server.Producer> {
+        return this.read<Server.Producer>("producers", id);
+    }
+
+    readUserStageMemberVolume(id: UserStageMemberVolumeId): Promise<Server.UserStageMemberVolume> {
+        return this.read<Server.UserStageMemberVolume>("user_stage_member_volumes", id);
+    }
+
+    readUserGroupVolume(id: UserGroupVolumeId): Promise<Server.UserGroupVolume> {
+        return this.read<Server.UserGroupVolume>("user_group_volumes", id);
+    }
+
+    deleteUserStageMemberVolume(id: UserStageMemberVolumeId): Promise<boolean> {
+        return this.delete<Server.UserStageMemberVolume>("user_stage_member_volumes", id);
+    }
+
+    deleteUserGroupVolume(id: UserGroupVolumeId): Promise<boolean> {
+        return this.delete<Server.UserGroupVolume>("user_group_volumes", id);
+    }
+
+    updateStageMember(id: StageMemberId, group: Partial<Omit<Server.StageMember, "id">>): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
+    updateProducer(id: ProducerId, producer: Partial<Omit<Server.Producer, "id">>): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
+    updateUserStageMemberVolume(id: UserStageMemberVolumeId, userStageMemberVolume: Omit<Server.UserStageMemberVolume, "id">): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
+    updateUserGroupVolume(id: UserGroupVolumeId, userGroupVolume: Omit<Server.UserGroupVolume, "id">): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
 }

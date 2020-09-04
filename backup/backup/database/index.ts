@@ -1,7 +1,7 @@
 import {Device, Track, User} from "../model";
 import * as r from "rethinkdb";
 import {v4 as uuidv4} from 'uuid';
-import * as EventEmitter from "events";
+import * as EventEmitter from "server/src/events";
 
 export enum DatabaseEvents {
     USER_CHANGED = "user-changed",
