@@ -1,6 +1,6 @@
 import * as mongoose from "mongoose";
 import Server from "../../model.server";
-import {Device} from "../../model.common";
+import {Device, Producer, Router} from "../../model.common";
 
 const StageSchema = new mongoose.Schema({
     name: {type: String},
@@ -18,6 +18,7 @@ const StageSchema = new mongoose.Schema({
     reflection: {type: Number},
 });
 type StageType = Server.Stage & mongoose.Document;
+
 StageSchema.pre('deleteOne', function (next) {
     mongoose.model("Group").deleteMany({'stageId': this["_id"]}, (err) => {
         if (err) {
@@ -51,12 +52,14 @@ export const StageModel = mongoose.model<StageType>('Stage', StageSchema);
 const GroupSchema = new mongoose.Schema({
     name: {type: String},
     stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
+    members: [{type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'}],
 
     volume: {type: Number}
 });
 GroupSchema.pre('deleteMany', function (next) {
     console.log("GroupSchema deleteMany hook: " + this["_id"]);
     mongoose.model('CustomGroupVolume').deleteMany({groupId: this["_id"]}, next);
+    mongoose.model('StageMember').deleteMany({groupId: this["_id"]}, next);
 });
 type GroupType = Server.Group & mongoose.Document;
 export const GroupModel = mongoose.model<GroupType>('Group', GroupSchema);
@@ -74,9 +77,9 @@ export const CustomGroupVolumeModel = mongoose.model<CustomGroupVolumeType>('Cus
 
 const StageMemberSchema = new mongoose.Schema({
     name: {type: String},
-    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-    stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
-    groupId: {type: mongoose.Schema.Types.ObjectId, ref: 'Group'},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    stage: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
+    group: {type: mongoose.Schema.Types.ObjectId, ref: 'Group'},
 
     isDirector: {type: Boolean},
 
@@ -163,7 +166,7 @@ const ProducerSchema = new mongoose.Schema({
     kind: {type: String},
     routerId: {type: mongoose.Schema.Types.ObjectId, ref: 'Router'},
 }, {timestamps: true});
-type ProducerType = Server.Producer & mongoose.Document;
+type ProducerType = Producer & mongoose.Document;
 export const ProducerModel = mongoose.model<ProducerType>('Producer', ProducerSchema);
 
 
@@ -177,5 +180,5 @@ RouterSchema.pre('deleteMany', function (next) {
     console.log("RouterSchema deleteMany hook: " + this["_id"]);
     mongoose.model('Producer').deleteMany({routerId: this["_id"]}, next);
 });
-type RouterType = Server.Router & mongoose.Document;
+type RouterType = Router & mongoose.Document;
 export const RouterModel = mongoose.model<RouterType>('Router', RouterSchema);

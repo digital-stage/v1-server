@@ -1,21 +1,25 @@
-import * as socketIO from "socket.io";
-import GoogleAuthentication from "./auth/GoogleAuthentication";
+import {storage} from "./storage/Storage";
+import * as pino from "pino";
+import SocketServer from "./socket/SocketServer";
+import * as express from "express";
+import * as cors from "cors";
 import * as https from "https";
 import * as fs from "fs";
 import * as path from "path";
-import * as express from "express";
-import * as cors from "cors";
-import HandleSocketRequests from "./socket/HandleSocketRequests";
-import {MongoStorage} from "./storage/mongo/MongoStorage";
-import {IStorage} from "./storage/IStorage";
-import Auth from "./auth/IAuthentication";
+import * as core from "express-serve-static-core";
+import HttpService from "./http/HttpService";
 
-// Express server
-const app = express();
+export const PORT: number = 4000;
+
+const logger = pino({
+    level: process.env.LOG_LEVEL || 'info'
+});
+
+const app: core.Express = express();
 app.use(express.urlencoded({extended: true}));
 app.use(cors({origin: true}));
 app.options('*', cors());
-const server = process.env.NODE_ENV === "development" ? app.listen(4000) : https.createServer({
+const server = process.env.NODE_ENV === "development" ? app.listen(PORT) : https.createServer({
     key: fs.readFileSync(
         path.resolve(process.env.SSL_KEY || './ssl/key.pem')
     ),
@@ -27,25 +31,23 @@ const server = process.env.NODE_ENV === "development" ? app.listen(4000) : https
     rejectUnauthorized: false
 }, app);
 
-// Socket Server
-const io: socketIO.Server = socketIO(server);
+const resetDevices = () => {
+    return storage.getDevices()
+        .then(devices => devices.forEach(async device => await storage.removeDevice(device._id)))
+        .then(() => logger.warn("Removed all devices first!"));
+}
 
-// Database API
-const storage: IStorage = new MongoStorage();
+const init = async () => {
+    return storage.init()
+        .then(() => {
+            return resetDevices()
+        })
+        .then(() => HttpService.init(app))
+        .then(() => SocketServer.init(server))
+}
 
-// Auth API
-const authentication: Auth.IAuthentication = new GoogleAuthentication();
-
-// Call necessary init methods
-const init = () => Promise.all([
-    storage.init()
-]);
-
+export {app, server};
+logger.info("[SERVER] Starting ...");
 init()
-    .then(() => {
-        // REST HANDLING
-        //HandleRestStageRequests(app, storage, authentication);
-
-        // SOCKET HANDLING
-        HandleSocketRequests(io, storage, authentication);
-    });
+    .then(() => logger.info("[SERVER] DONE, running on port " + PORT))
+    .catch(error => logger.error("[SERVER] Could not start:\n" + error));

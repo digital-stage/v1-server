@@ -1,9 +1,9 @@
 import * as socketIO from "socket.io";
 import * as admin from "firebase-admin";
 import {Request} from "express";
-import Auth from "./IAuthentication";
+import Auth from "../IAuthentication";
 
-const serviceAccount = require('./../../firebase-adminsdk.json');
+const serviceAccount = require('../../../firebase-adminsdk.json');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://digitalstage-wirvsvirus.firebaseio.com"

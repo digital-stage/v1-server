@@ -32,3 +32,18 @@ export interface Device {
     audioProducer: ProducerId[];
     ovProducer: ProducerId[];
 }
+
+export interface Producer {
+    _id: ProducerId;
+    userId: UserId;
+    deviceId: DeviceId;
+    kind: "audio" | "video" | "ov";
+    routerId?: RouterId;
+}
+
+export interface Router {
+    _id: RouterId;
+    ipv4: string;
+    ipv6: string;
+    port: number;
+}

@@ -1,6 +1,6 @@
 import * as socketIO from "socket.io";
 import {Request} from "express";
-import Auth from "./IAuthentication";
+import Auth from "../IAuthentication";
 
 class DummyAuthentication implements Auth.IAuthentication {
     authorizeSocket(socket: socketIO.Socket): Promise<Auth.User> {

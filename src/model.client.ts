@@ -1,4 +1,4 @@
-import {DeviceId, GroupId, GroupMemberId, ProducerId, RouterId, StageId, UserId} from "./model.common";
+import {DeviceId, GroupId, GroupMemberId, Producer, ProducerId, RouterId, StageId, UserId} from "./model.common";
 
 /**
  * REST:
@@ -66,28 +66,24 @@ import {DeviceId, GroupId, GroupMemberId, ProducerId, RouterId, StageId, UserId}
  */
 
 namespace Client {
-    export interface UserDescription {
+
+    export interface UserPrototype {
         _id: UserId;
         name: string;
         avatarUrl: string | null;
     }
 
-    export interface User {
-        _id: UserId;
-        name: string;
-        avatarUrl: string | null;
+    export interface User extends UserPrototype {
         stage: Stage | null;
-        lastStageIds: StageDescription[];
+        stages: Stage[];
     }
 
-    export interface StageDescription {
+
+    export interface StagePrototype {
         _id: StageId;
         name: string;
-    }
 
-    export interface Stage {
-        _id: StageId,
-        name: string;
+        password: string | null;    // Will be only set for admins of this stage
 
         // 3D Room specific
         width: number;
@@ -96,34 +92,36 @@ namespace Client {
         absorption: number;
         reflection: number;
 
-        groups: Group[];
-        admins: UserDescription[];
+        groups: GroupPrototype[];
+        admins: UserPrototype[];
     }
 
+    export interface Stage extends StagePrototype {
+        groups: Group[];
+        admins: UserPrototype[];
+    }
 
-    export interface Group {
+    export interface GroupPrototype {
         _id: GroupId;
         name: string;
+
         volume: number;
+
+        members: GroupMemberPrototype[];
+    }
+
+    export interface Group extends GroupPrototype {
         customVolume?: number;
 
         members: GroupMember[];
     }
 
-
-    export interface GroupMember {
+    export interface GroupMemberPrototype extends UserPrototype {
         _id: GroupMemberId;
-        name: string;
-        avatarUrl: string | null;
 
         isDirector: boolean;
 
         volume: number;
-        customVolume?: number;
-
-        videoProducer: Producer[];
-        audioProducer: Producer[];
-        ovProducer: Producer[];
 
         // 3D Room specific
         x: number;
@@ -131,19 +129,13 @@ namespace Client {
         z: number;
     }
 
-    export interface Producer {
-        _id: ProducerId;
-        deviceId: DeviceId;
-        userId: UserId;
-        kind: "audio" | "video" | "ov";
-        routerId?: RouterId;
-    }
+    export interface GroupMember extends GroupMemberPrototype {
+        customVolume?: number;
 
-    export interface Router {
-        _id: RouterId;
-        ipv4: string;
-        ipv6: string;
-        port: number;
+        videoProducer: Producer[];
+        audioProducer: Producer[];
+        ovProducer: Producer[];
+
     }
 }
 

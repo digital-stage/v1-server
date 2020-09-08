@@ -47,15 +47,16 @@ namespace Server {
     export interface Group {
         _id: GroupId;
         stageId: StageId;
+        members: StageMemberId[];
         name: string;
         volume: number;
     }
 
     export interface StageMember {
         _id: StageMemberId;
-        stageId: StageId;
-        userId: UserId;
-        groupId: GroupId;
+        stage: StageId;   //TODO: Remove?
+        user: UserId;
+        group: GroupId;   //TODO: Remove?
         volume: number;
         isDirector: boolean;
 
@@ -86,24 +87,8 @@ namespace Server {
         uid: string;
         name: string;
         avatarUrl: string | null;
-        stageId: StageId | null;
-        lastStageIds: StageId[];
-    }
-
-
-    export interface Producer {
-        _id: ProducerId;
-        userId: UserId;
-        deviceId: DeviceId;
-        kind: "audio" | "video" | "ov";
-        routerId?: RouterId;
-    }
-
-    export interface Router {
-        _id: RouterId;
-        ipv4: string;
-        ipv6: string;
-        port: number;
+        stage: StageId | null;
+        lastStages: StageId[];
     }
 }
 
