@@ -1,4 +1,3 @@
-import {storage} from "./storage/Storage";
 import * as pino from "pino";
 import SocketServer from "./socket/SocketServer";
 import * as express from "express";
@@ -8,6 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as core from "express-serve-static-core";
 import HttpService from "./http/HttpService";
+import {manager} from "./storage/mongo/MongoStageManager";
 
 export const PORT: number = 4000;
 
@@ -32,13 +32,13 @@ const server = process.env.NODE_ENV === "development" ? app.listen(PORT) : https
 }, app);
 
 const resetDevices = () => {
-    return storage.getDevices()
-        .then(devices => devices.forEach(async device => await storage.removeDevice(device._id)))
+    return manager.getDevices()
+        .then(devices => devices.forEach(async device => await manager.removeDevice(device._id)))
         .then(() => logger.warn("Removed all devices first!"));
 }
 
 const init = async () => {
-    return storage.init()
+    return manager.init()
         .then(() => {
             return resetDevices()
         })

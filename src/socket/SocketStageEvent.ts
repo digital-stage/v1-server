@@ -1,22 +1,37 @@
 import * as socketIO from "socket.io";
-import Client from "../model.client";
-import Server from "../model.server";
-import {storage} from "../storage/Storage";
 import SocketServer from "./SocketServer";
-import * as pino from "pino";
-
-const logger = pino({level: process.env.LOG_LEVEL || 'info'});
+import {User} from "../model.common";
+import {manager} from "../storage/mongo/MongoStageManager";
 
 export enum ServerStageEvents {
     STAGE_READY = "stage-ready",
 
-    STAGE_ADDED = "stage-added",
+    STAGE_LEFT = "stage-left",
+    STAGE_JOINED = "stage-joined",
 
+    STAGE_ADDED = "stage-added",
+    STAGE_CHANGED = "stage-changed",
     STAGE_REMOVED = "stage-removed",
 
-    STAGE_LEFT = "stage-left",
+    GROUP_ADDED = "group-added",
+    GROUP_CHANGED = "group-changed",
+    GROUP_REMOVED = "group-removed",
 
-    STAGE_JOINED = "stage-joined"
+    GROUP_MEMBER_ADDED = "group-member-added",
+    GROUP_MEMBER_CHANGED = "group-member-changed",
+    GROUP_MEMBER_REMOVED = "group-member-removed",
+
+    CUSTOM_GROUP_VOLUME_ADDED = "custom-group-volume-added",
+    CUSTOM_GROUP_VOLUME_CHANGED = "custom-group-volume-changed",
+    CUSTOM_GROUP_VOLUME_REMOVED = "custom-group-volume-removed",
+
+    CUSTOM_GROUP_MEMBER_VOLUME_ADDED = "custom-group-member-volume-added",
+    CUSTOM_GROUP_MEMBER_CHANGED = "custom-group-member-volume-changed",
+    CUSTOM_GROUP_MEMBER_REMOVED = "custom-group-member-volume-removed",
+
+    PRODUCER_ADDED = "producer-added",
+    PRODUCER_CHANGED = "producer-changed",
+    PRODUCER_REMOVED = "producer-removed",
 }
 
 export enum ClientStageEvents {
@@ -25,44 +40,59 @@ export enum ClientStageEvents {
     JOIN_STAGE = "join-stage",
     LEAVE_STAGE = "leave-stage",
 
+    SET_CUSTOM_GROUP_VOLUME = "set-custom-group-volume",
+    SET_CUSTOM_GROUP_MEMBER_VOLUME = "set-custom-group-member-volume",
+
+    ADD_PRODUCER = "add-producer",
+    CHANGE_PRODUCER = "add-producer",
+    REMOVE_PRODUCER = "remove-producer",
+
     // Following shall be only possible if client is admin of stage
     UPDATE_STAGE = "update-stage",
     REMOVE_STAGE = "remove-stage",
 
     ADD_GROUP = "add-group",
-    UPDATE_GROUP = "update-group",
+    CHANGE_GROUP = "update-group",
     REMOVE_GROUP = "remove-group",
 
-    UPDATE_STAGE_MEMBER = "update-stage-member",
+    CHANGE_GROUP_MEMBER = "update-group-member",
 }
 
 namespace SocketStageEvent {
 
-    export async function generateStage(user: Server.User, socket: socketIO.Socket) {
-        let stage: Client.Stage = null;
-        if (user.stage) {
-            stage = await storage.generateStage(user._id, user.stage);
-        }
-        SocketServer.sendToDevice(socket, ServerStageEvents.STAGE_READY, stage);
-
-        return storage.getStagesByUser(user._id)
-            .then(stages => {
-                return storage.getStagePrototypes(stages.map(stage => stage._id))
-                    .then(stagePrototypes => stagePrototypes.forEach(stagePrototype =>
-                        SocketServer.sendToDevice(socket, ServerStageEvents.STAGE_ADDED, stagePrototype)
-                    ));
-            });
+    export async function generateStage(user: User, socket: socketIO.Socket): Promise<any> {
+        return Promise.all([
+            // Send active stage
+            manager.getActiveStageSnapshotByUser(user._id)
+                .then(stage => SocketServer.sendToDevice(socket, ServerStageEvents.STAGE_READY, stage)),
+            // Send non-active stages
+            manager.getStagesByUser(user._id)
+                .then(stages => {
+                        stages.forEach(stage => {
+                            // Send stage
+                            SocketServer.sendToDevice(socket, ServerStageEvents.STAGE_ADDED, stage);
+                            // Send associated models
+                            return Promise.all([
+                                // Send groups
+                                manager.getGroupsByStage(stage._id)
+                                    .then(groups =>
+                                        groups.forEach(group => SocketServer.sendToDevice(socket, ServerStageEvents.GROUP_ADDED, group))),
+                                // Send group members
+                                manager.generateGroupMembersByStage(stage._id)
+                                    .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToDevice(socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
+                                // We don't send producers for non-active stages
+                            ]);
+                        });
+                    }
+                )
+        ]);
     }
 
-    export function loadStageEvents(user: Server.User, socket: socketIO.Socket) {
+    export function loadStageEvents(user: User, socket: socketIO.Socket) {
         socket.on(ClientStageEvents.ADD_STAGE, (payload: {
             name: string, password: string | null
         }) => {
-            return storage.createStage(payload.name, payload.password, user._id)
-                .then(stage => storage.getStagePrototype(stage._id))
-                .then(stage => {
-                    SocketServer.sendToUser(user._id, ServerStageEvents.STAGE_ADDED, stage);
-                });
+            return manager.createStage(user._id, payload.name, payload.password);
         });
 
         socket.on(ClientStageEvents.JOIN_STAGE, (payload: {
@@ -71,51 +101,22 @@ namespace SocketStageEvent {
             password: string | null
         }) => {
             console.log(payload);
-            return storage.getStage(payload.stageId)
-                .then(stage => {
-                    if (stage.password && stage.password.length > 0) {
-                        console.error("TODO: Replace Socket with REST and return wrong password message");
-                        if (!payload.password || payload.password.length === 0) {
-                            throw new Error("No password given");
-                        } else if (payload.password !== stage.password) {
-                            throw new Error("Wrong password");
-                        }
-                    }
-                    return storage.getGroup(payload.groupId)
-                        .then(group => {
-                            logger.debug("Adding user " + user.name + " to stage '" + stage.name + "' and group '" + group.name + "'")
-
-                            return storage.generateStage(user._id, payload.stageId)
-                                .then(stage => SocketServer.sendToUser(user._id, ServerStageEvents.STAGE_JOINED, stage));
-                        })
-                })
-                .catch(error => logger.error(error));
+            return manager.joinStage(user._id, payload.stageId, payload.groupId, payload.password);
         });
 
-        socket.on(ClientStageEvents.LEAVE_STAGE, () => {
-            return storage.updateUserByUid(user.uid, {
-                stage: null
-            })
-                .then(() => SocketServer.sendToUser(user._id, ServerStageEvents.STAGE_LEFT));
-        });
+        socket.on(ClientStageEvents.LEAVE_STAGE, () => manager.leaveStage(user._id));
 
         socket.on(ClientStageEvents.REMOVE_STAGE, (id: string) => {
-            return storage.getStage(id)
-                .then(stage => {
-                    if (stage && stage.admins.indexOf(user._id) !== -1) {
-                        return storage.getStageMembersByUser(id)
-                            .then(stageMembers => {
-                                return storage.removeStage(id)
-                                    .then(() => {
-                                        stage.admins.forEach(admin => SocketServer.sendToUser(admin, ServerStageEvents.STAGE_REMOVED, stage._id));
-                                        stageMembers.forEach(stageMember => SocketServer.sendToUser(stageMember.user, ServerStageEvents.STAGE_REMOVED, stage._id));
-                                    });
-                            })
-                    } else {
-                        // no rights
-                        logger.error("Could not find stage with id=" + id);
-                    }
-                })
+            return manager.removeStage(user._id, id);
+        });
+
+        socket.on(ClientStageEvents.ADD_GROUP, (payload: {
+            stageId: string,
+            name: string
+        }) => manager.addGroup(user._id, payload.stageId, payload.name));
+
+        socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) => {
+            return manager.removeGroup(user._id, id);
         });
     }
 }

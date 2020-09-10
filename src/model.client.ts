@@ -1,4 +1,9 @@
 import {DeviceId, GroupId, GroupMemberId, Producer, ProducerId, RouterId, StageId, UserId} from "./model.common";
+import {
+    CustomGroupVolumeId,
+    CustomStageMemberVolumeId,
+    StageMemberId
+} from "../../react-hooks/lib/useSocket/model.common";
 
 /**
  * REST:
@@ -66,24 +71,11 @@ import {DeviceId, GroupId, GroupMemberId, Producer, ProducerId, RouterId, StageI
  */
 
 namespace Client {
-
-    export interface UserPrototype {
-        _id: UserId;
-        name: string;
-        avatarUrl: string | null;
-    }
-
-    export interface User extends UserPrototype {
-        stage: Stage | null;
-        stages: Stage[];
-    }
-
-
     export interface StagePrototype {
         _id: StageId;
         name: string;
 
-        password: string | null;    // Will be only set for admins of this stage
+        password: string | null;
 
         // 3D Room specific
         width: number;
@@ -91,51 +83,59 @@ namespace Client {
         height: number;
         absorption: number;
         reflection: number;
-
-        groups: GroupPrototype[];
-        admins: UserPrototype[];
-    }
-
-    export interface Stage extends StagePrototype {
-        groups: Group[];
-        admins: UserPrototype[];
     }
 
     export interface GroupPrototype {
         _id: GroupId;
         name: string;
-
+        stageId: string;
         volume: number;
-
-        members: GroupMemberPrototype[];
     }
 
-    export interface Group extends GroupPrototype {
-        customVolume?: number;
-
-        members: GroupMember[];
-    }
-
-    export interface GroupMemberPrototype extends UserPrototype {
-        _id: GroupMemberId;
-
+    export interface StageMemberPrototype {
+        _id: StageMemberId;
+        stageId: StageId;
+        groupId: GroupId;
         isDirector: boolean;
-
+        userId: UserId;
         volume: number;
-
-        // 3D Room specific
         x: number;
         y: number;
         z: number;
     }
 
+    export interface CustomGroupVolume {
+        _id: CustomGroupVolumeId;
+        userId: UserId;
+        stageId: StageId;
+        groupId: GroupId;
+        volume: number;
+    }
+
+    export interface CustomStageMemberVolume {
+        _id: CustomStageMemberVolumeId;
+        userId: UserId;
+        stageMemberId: StageMemberId;
+        volume: number;
+    }
+
+    export interface Stage extends StagePrototype {
+        groups: Group[];
+    }
+
+    export interface Group extends GroupPrototype {
+        members: GroupMember[];
+    }
+
+    export interface GroupMemberPrototype extends StageMemberPrototype {
+        name: string;
+        avatarUrl?: string;
+    }
+
     export interface GroupMember extends GroupMemberPrototype {
-        customVolume?: number;
-
-        videoProducer: Producer[];
-        audioProducer: Producer[];
-        ovProducer: Producer[];
-
+        videoProducers: Producer[];
+        audioProducers: Producer[];
+        ovProducers: Producer[];
     }
 }
 

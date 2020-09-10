@@ -1,19 +1,104 @@
 import Client from "../model.client";
-import {Device, DeviceId, GroupId, StageId, StageMemberId, UserId} from "../model.common";
-import Server from "../model.server";
+import {
+    Device,
+    DeviceId,
+    GroupId,
+    Producer,
+    ProducerId,
+    RouterId,
+    StageId,
+    StageMemberId,
+    User,
+    UserId
+} from "../model.common";
 
+export interface IDeviceManagement {
+    init(): Promise<any>;
+
+    // Device management
+    createDevice(userId: UserId, device: Partial<Omit<Device, "_id">>): Promise<Device>;
+
+    getDevicesByUser(userId: UserId): Promise<Device[]>;
+
+    getDeviceByUserAndMac(userId: UserId, mac: string): Promise<Device>;
+
+    updateDevice(deviceId: DeviceId, device: Partial<Omit<Device, "_id">>): Promise<Device>;
+
+    removeDevice(deviceId: DeviceId): Promise<Device>;
+
+    getDevices(): Promise<Device[]>;
+}
+
+export interface IStageManagement {
+    init(): Promise<any>;
+
+    createStage(userId: UserId, name: string, password);
+
+    joinStage(userId: UserId, stageId: StageId, groupId: GroupId, password?: string);
+
+    leaveStage(userId: UserId);
+
+    getStagesByUser(userId: UserId): Promise<Client.StagePrototype[]>;
+
+    updateStage(userId: UserId, stageId: StageId, stage: Partial<Client.StagePrototype>);
+
+    removeStage(userId: UserId, stageId: StageId);
+
+    addGroup(userId: UserId, stageId: StageId, name: string);
+
+    getGroupsByStage(stageId: StageId): Promise<Client.GroupPrototype[]>;
+
+    updateGroup(userId: UserId, groupId: GroupId, group: Partial<Client.GroupPrototype>);
+
+    removeGroup(userId: UserId, groupId: GroupId);
+
+    setCustomGroupVolume(userId: UserId, groupId: GroupId, volume: number);
+
+    setCustomStageMemberVolume(userId: UserId, stageMemberId: StageMemberId, volume: number);
+
+    updateStageMember(id: StageMemberId, groupMember: Partial<Client.StageMemberPrototype>);
+
+    getUsersWithActiveStage(stageId: StageId): Promise<User[]>;
+
+    getUserByUid(uid: string): Promise<User>;
+
+    getUsersByStage(stageId: StageId): Promise<User[]>;
+
+    addProducer(userId: UserId, deviceId: DeviceId, kind: "audio" | "video" | "ov", routerId: RouterId);
+
+
+    updateProducer(userId: UserId, producerId: ProducerId, producer: Partial<Producer>);
+
+    removeProducer(userId: UserId, producerId: ProducerId);
+
+    getActiveStageSnapshotByUser(userId: UserId): Promise<Client.Stage>;
+
+    // Methods for init stage building
+    //TODO: Optimize the data model to support fastest possible fetch
+    getProducersByStage(stageId: StageId): Promise<Producer[]>;
+
+    getCustomGroupVolumesByUserAndStage(userId: UserId, stageId: StageId): Promise<Client.CustomGroupVolume[]>;
+
+    getCustomStageMemberVolumesByUserAndStage(userId: UserId, stageId: StageId): Promise<Client.CustomStageMemberVolume[]>;
+
+    generateGroupMembersByStage(stageId: StageId): Promise<Client.GroupMemberPrototype[]>;
+}
 
 export interface IStorage {
     init(): Promise<any>;
 
-    createUser(uid: string, name: string, avatarUrl: string | null): Promise<Server.User>;
+    // User management
+    createUser(uid: string, name: string, avatarUrl: string | null): Promise<User>;
 
-    updateUserByUid(uid: string, user: Partial<Omit<Server.User, "_id">>): Promise<Server.User>;
+    //updateUser(id: UserId, user: Partial<Omit<User, "_id">>): Promise<User>;
 
-    getUserByUid(uid: string): Promise<Server.User>;
+    updateUserByUid(uid: string, user: Partial<Omit<User, "_id">>): Promise<User>;
 
-    removeUserByUid(uid: string): Promise<Server.User>;
+    getUserByUid(uid: string): Promise<User>;
 
+    removeUserByUid(uid: string): Promise<User>;
+
+    // Device management
     createDevice(userId: UserId, device: Partial<Omit<Device, "_id">>): Promise<Device>;
 
     getDevicesByUser(userId: UserId): Promise<Device[]>;
@@ -28,62 +113,50 @@ export interface IStorage {
 
 
     // User shall be able to create stage
-    createStage(name: string, password: string | null, adminId: UserId): Promise<Server.Stage>;
+    createStage(name: string, password: string | null, adminId: UserId): Promise<Client.StagePrototype>;
 
-    getStage(stageId: StageId): Promise<Server.Stage>;
+    getStage(stageId: StageId): Promise<Client.StagePrototype>;
 
-    // Admin of stage shall be able to modify stage
-    updateStage(stageId: StageId, stage: Partial<Omit<Server.Stage, "_id">>): Promise<Server.Stage>;
+    getStagesByUser(userId: UserId): Promise<Client.StagePrototype[]>;
 
-    // Admin of stage shall be able to remove stage
-    removeStage(stageId: StageId): Promise<Server.Stage>;
+    getManagedStageByUser(stageId: StageId, userId: UserId): Promise<Client.StagePrototype[]>;
+
+    //TODO: Discuss, if we may remove the privileges check and outsource it
+    updateStage(adminUserId: UserId, stageId: StageId, stage: Partial<Omit<Client.StagePrototype, "_id">>): Promise<Client.StagePrototype>;
+
+    //TODO: Discuss, if we may remove the privileges check and outsource it
+    removeStage(adminUserId: UserId, stageId: StageId): Promise<Client.StagePrototype>;
 
 
-    // Admin of stage shall be able to add groups
-    createGroup(stageId: StageId, name: string): Promise<Server.Group>;
+    // Group management
+    //TODO: Discuss, if we may remove the privileges check and outsource it
+    createGroup(adminUserId: UserId, stageId: StageId, name: string): Promise<Client.GroupPrototype>;
 
-    // Admin of stage shall be able to modify groups (mostly name and volume)
-    updateGroup(groupId: GroupId, group: Partial<Omit<Server.Group, "_id">>): Promise<Server.Group>;
+    //TODO: Discuss, if we may remove the privileges check and outsource it
+    updateGroup(adminUserId: UserId, groupId: GroupId, group: Partial<Omit<Client.GroupPrototype, "_id">>): Promise<Client.GroupPrototype>;
 
-    getGroup(groupId: GroupId): Promise<Server.Group>;
+    getGroup(groupId: GroupId): Promise<Client.GroupPrototype>;
 
-    getGroupsByStage(stageId: StageId): Promise<Server.Group[]>;
-
-    // Director and admin of stage shall be able to modify group (usually coordinates and volume) - duplicate of updateGroup
-    setGroupVolume(groupId: GroupId, volume: number): Promise<Server.Group>;
+    getGroupsByStage(stageId: StageId): Promise<Client.GroupPrototype[]>;
 
     // Admin of stage shall be able to remove groups
-    removeGroup(groupId: GroupId): Promise<Server.Group>;
+    removeGroup(groupId: GroupId): Promise<Client.GroupPrototype>;
 
 
-    addStageMember(stageId: StageId, groupId: GroupId, userId: UserId): Promise<Server.StageMember>;
+    // Stage member management
+    createStageMember(stageId: StageId, groupId: GroupId, userId: UserId): Promise<Client.StageMemberPrototype>;
 
-    getStageMembersByStage(stageId: StageId): Promise<Server.StageMember[]>;
-
-    getStageMembersByUser(userId: UserId): Promise<Server.StageMember[]>;
+    getStageMembersByStage(stageId: StageId): Promise<Client.StageMemberPrototype[]>;
 
     // Director and admin of stage shall be able to modify stage member (usually coordinates and volume)
-    updateStageMember(stageMemberId: StageMemberId, stageMember: Partial<Omit<Server.StageMember, "_id">>): Promise<Server.StageMember>;
+    //TODO: Discuss, if we may remove the privileges check and outsource it
+    updateStageMember(adminUserId: UserId, stageMemberId: StageMemberId, stageMember: Partial<Omit<Client.StageMemberPrototype, "_id">>): Promise<Client.StageMemberPrototype>;
 
-    // Director and admin of stage shall be able to modify volume of stage member - duplicate of updateStageMember
-    setStageMemberVolume(stageMemberId: StageMemberId, volume: number): Promise<Server.StageMember>;
+    removeStageMember(stageMemberId: StageMemberId): Promise<Client.StageMemberPrototype>;
 
-    removeStageMember(stageMemberId: StageMemberId): Promise<Server.StageMember>;
+    // Custom Group volume management
+    setCustomGroupVolume(userId: UserId, groupId: GroupId, volume: number): Promise<Client.CustomGroupVolume>;
 
-    // User shall be able to modify personal group volume
-    setCustomGroupVolume(userId: UserId, groupId: GroupId, volume: number): Promise<Server.CustomGroupVolume>;
-
-    // User shall be able to modify personal stage member volume
-    setCustomStageMemberVolume(userId: UserId, stageMemberId: StageMemberId, volume: number): Promise<Server.CustomStageMemberVolume>;
-
-    getStagesByUser(userId: UserId): Promise<Server.Stage[]>;
-
-    getManagedStagesByUser(userId: UserId): Promise<Server.Stage[]>;
-
-    // Send full stage when user connected with device
-    generateStage(userId: UserId, stageId: StageId): Promise<Client.Stage>;
-
-    // Send prototype stages
-    getStagePrototype(stageId: StageId): Promise<Client.StagePrototype>;
-    getStagePrototypes(stageIds: StageId[]): Promise<Client.StagePrototype[]>;
+    // Custom Stage member volume management
+    setCustomStageMemberVolume(userId: UserId, stageMemberId: StageMemberId, volume: number): Promise<Client.CustomStageMemberVolume>;
 }

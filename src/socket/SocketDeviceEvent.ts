@@ -1,11 +1,11 @@
 import {Device} from "../model.common";
-import {storage} from "../storage/Storage";
 import * as socketIO from "socket.io";
 import SocketServer from "./SocketServer";
 import * as pino from "pino";
+import {manager} from "../storage/mongo/MongoStageManager";
 
 export enum ServerDeviceEvents {
-    DEVICE_READY = "device-ready",
+    LOCAL_DEVICE_READY = "local-device-ready",
     DEVICE_ADDED = "device-added",
     DEVICE_CHANGED = "device-changed",
     DEVICE_REMOVED = "device-removed",
@@ -29,14 +29,14 @@ namespace SocketDeviceEvent {
             committedDevice = JSON.parse(socket.handshake.query.device);
             if (committedDevice.mac) {
                 logger.debug("MAC given: " + committedDevice.mac);
-                device = await storage.getDeviceByUserAndMac(userId, committedDevice.mac);
+                device = await manager.getDeviceByUserAndMac(userId, committedDevice.mac);
                 if (device) {
                     console.log("Device found with mac and user: " + userId + " " + committedDevice.mac);
-                    await storage.updateDevice(device._id, {
+                    await manager.updateDevice(device._id, {
                         online: true
                     });
                     device.online = true;
-                    SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, device);
+                    //SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, device);
                 } else {
                     console.log("Device NOT found with mac and user: " + userId + " " + committedDevice.mac);
                 }
@@ -47,33 +47,42 @@ namespace SocketDeviceEvent {
         if (!device) {
             const initialDevice: Omit<Device, "id"> = {
                 ...committedDevice,
-                online: true,
-                videoProducer: [],
-                audioProducer: [],
-                ovProducer: []
+                online: true
             }
             logger.debug("Creating device");
-            device = await storage.createDevice(userId, initialDevice);
-            SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_ADDED, device);
+            device = await manager.createDevice(userId, initialDevice);
+            //SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_ADDED, device);
         }
+
+        socket.on(ClientDeviceEvents.UPDATE_DEVICE, (updatedDevice: Partial<Device>) => {
+            if (updatedDevice._id.toString() === device._id.toString()) {
+                device = {
+                    ...device,
+                    ...updatedDevice
+                };
+            }
+            //SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, updatedDevice);
+            logger.debug("Updating device: " + updatedDevice);
+            return manager.updateDevice(updatedDevice._id, updatedDevice);
+        });
 
         socket.on("disconnect", () => {
             if (!device.mac) {
                 console.log("Remove device")
-                storage.removeDevice(device._id)
-                    .then((device) =>
-                        SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_REMOVED, device)
-                    );
+                manager.removeDevice(device._id)
+                /*.then((device) =>
+                    SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_REMOVED, device)
+                )*/;
             } else {
                 console.log("Keep device, but switch offline")
-                storage.updateDevice(device._id, {
+                manager.updateDevice(device._id, {
                     online: false
                 }).then((device) => {
                     if (!device.online) {
                         console.error("Fix me");
                         device.online = false;
                     }
-                    return SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, device);
+                    //return SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, device);
                 })
             }
         });
@@ -82,10 +91,10 @@ namespace SocketDeviceEvent {
          * SEND INITIAL DATA
          */
         // Send this local device
-        SocketServer.sendToDevice(socket, ServerDeviceEvents.DEVICE_READY, device);
+        SocketServer.sendToDevice(socket, ServerDeviceEvents.LOCAL_DEVICE_READY, device);
 
         // Send other devices
-        storage.getDevicesByUser(userId)
+        manager.getDevicesByUser(userId)
             .then(remoteDevices => {
                 remoteDevices.forEach(remoteDevice => {
                     if (remoteDevice._id.toString() !== device._id.toString()) {
@@ -97,14 +106,6 @@ namespace SocketDeviceEvent {
     }
 
     export function loadDeviceEvents(userId: string, socket: socketIO.Socket) {
-        socket.on(ClientDeviceEvents.UPDATE_DEVICE, (d: Partial<Device>) => {
-            SocketServer.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, d);
-            storage.updateDevice(d._id, d).then(updated => {
-                console.log("Finished writing");
-            });
-            console.log("Finished sending");
-            // Don't wait:
-        });
         logger.info("Device Events registered");
     }
 

@@ -1,35 +1,22 @@
 import {IStorage} from "../IStorage";
-import {Device, DeviceId, GroupId, Producer, StageId, StageMemberId, UserId} from "../../model.common";
-import Server from "../../model.server";
-import Client from "../../model.client";
-import * as mongoose from "mongoose";
 import {Mongoose} from "mongoose";
+import * as mongoose from "mongoose";
 import {
     CustomGroupVolumeModel,
     CustomStageMemberVolumeModel,
     DeviceModel,
     GroupModel,
-    ProducerModel,
     StageMemberModel,
     StageModel,
     UserModel
 } from "./model.mongo";
 import * as pino from "pino";
+import {Device, DeviceId, GroupId, StageId, StageMemberId, User, UserId} from "../../model.common";
+import Client from "../../model.client";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
 const uri = "mongodb://127.0.0.1:4321/digitalstage";
-
-type PopulatedStageMember = Server.StageMember & {
-    user: Server.User
-};
-type PopulatedGroup = Server.Group & {
-    members: PopulatedStageMember[]
-};
-type PopulatedStage = Server.Stage & {
-    admins: Server.User[],
-    groups: PopulatedGroup[]
-};
 
 export class MongoStorage implements IStorage {
     private connection: Mongoose;
@@ -53,173 +40,12 @@ export class MongoStorage implements IStorage {
             });
     }
 
-    addStageMember(stageId: StageId, groupId: GroupId, userId: UserId): Promise<Server.StageMember> {
+    createStageMember(stageId: StageId, groupId: GroupId, userId: UserId): Promise<Client.StageMemberPrototype> {
         const stageMember = new StageMemberModel();
-        stageMember.stage = stageId;
-        stageMember.group = groupId;
-        stageMember.user = userId;
+        stageMember.stageId = stageId;
+        stageMember.groupId = groupId;
+        stageMember.userId = userId;
         return stageMember.save();
-    }
-
-    createGroup(stageId: StageId, name: string): Promise<Server.Group> {
-        const group = new GroupModel();
-        group.stageId = stageId;
-        group.name = name;
-        return group.save();
-    }
-
-    createStage(name: string, password: string | null, adminId: UserId): Promise<Server.Stage> {
-        const stage = new StageModel();
-        stage.name = name;
-        stage.password = password;
-        stage.admins = [adminId];
-        return stage.save();
-    }
-
-    createUser(uid: string, name: string, avatarUrl: string | null): Promise<Server.User> {
-        const user = new UserModel();
-        user.uid = uid;
-        user.name = name;
-        user.avatarUrl = avatarUrl;
-        user.lastStages = [];
-        user.stage = null;
-        return user.save();
-    }
-
-    generateStage(userId: UserId, stageId: StageId): Promise<Client.Stage> {
-        return StageModel.findById(stageId)
-            .populate("admins")
-            .populate("groups")
-            .exec()
-            .then(
-                async sStage => {
-                    logger.debug(sStage);
-                    const sAdmins: Server.User[] = sStage.admins as any;
-                    const sGroups: Server.Group[] = sStage.groups as any;
-                    // Fetch all stage members of this stage
-                    const sStageMembers: Server.StageMember[] = await StageMemberModel.find({stageId: stageId}).populate("userId").exec();
-                    // Fetch all producers inside this stage
-                    const sProducers: Producer[] = await ProducerModel.find({userId: {$in: sStageMembers.map(sStageMember => sStageMember.user)}}).exec();
-                    // Fetch all custom stage member volumes
-                    const sCustomStageMemberVolumes: Server.CustomStageMemberVolume[] = await CustomStageMemberVolumeModel.find({
-                        userId: userId,
-                        stageMemberId: {$in: sStageMembers.map(sStageMember => sStageMember.user)}
-                    }).exec();
-                    // Fetch all custom group volumes
-                    const sCustomGroupVolumes: Server.CustomGroupVolume[] = await CustomGroupVolumeModel.find({
-                        userId: userId,
-                        groupId: {$in: sGroups.map(sGroup => sGroup._id)}
-                    }).exec();
-                    const stage: Client.Stage = {
-                        _id: sStage._id,
-                        name: sStage.name,
-                        password: sStage.password,
-                        width: sStage.width,
-                        length: sStage.length,
-                        height: sStage.height,
-                        absorption: sStage.absorption,
-                        reflection: sStage.reflection,
-                        groups: sGroups.map((sGroup): Client.Group => {
-                            const customVolume: Server.CustomGroupVolume = sCustomGroupVolumes.find(sCustomGroupVolume => sCustomGroupVolume.groupId === sGroup._id);
-                            return {
-                                _id: sGroup._id,
-                                name: sGroup.name,
-                                volume: sGroup.volume,
-                                customVolume: customVolume ? customVolume.volume : undefined,
-                                members: sStageMembers.filter(sStageMember => sStageMember.group === sGroup._id).map(sStageMember => {
-                                    const user: Server.User = sStageMember.user as any;
-                                    const customVolume: Server.CustomStageMemberVolume = sCustomStageMemberVolumes.find(sCustomStageMemberVolume => sCustomStageMemberVolume.stageMemberId === sStageMember._id);
-                                    return {
-                                        _id: sStageMember._id,
-                                        name: user.name,
-                                        avatarUrl: user.avatarUrl,
-                                        isDirector: sStageMember.isDirector,
-                                        x: sStageMember.x,
-                                        y: sStageMember.y,
-                                        z: sStageMember.z,
-                                        volume: sStageMember.volume,
-                                        customVolume: customVolume ? customVolume.volume : undefined,
-                                        videoProducer: sProducers.filter(sProducer => sProducer.userId === user._id),
-                                        audioProducer: sProducers.filter(sProducer => sProducer.userId === user._id),
-                                        ovProducer: sProducers.filter(sProducer => sProducer.userId === user._id),
-                                    }
-                                })
-                            }
-                        }),
-                        admins: sAdmins.map(sAdmin => ({
-                            _id: sAdmin._id,
-                            name: sAdmin.name,
-                            avatarUrl: sAdmin.avatarUrl
-                        }))
-                    };
-                    return stage;
-                }
-            );
-    }
-
-    updateUserByUid(uid: string, user: Partial<Omit<Server.User, "_id">>): Promise<Server.User> {
-        return UserModel.findOneAndUpdate({uid: uid}, user).exec();
-    }
-
-    getUserByUid(uid: UserId): Promise<Server.User> {
-        return UserModel.findOne({uid: uid}).exec();
-    }
-
-    removeGroup(groupId: GroupId): Promise<Server.Group> {
-        return GroupModel.findByIdAndDelete(groupId).exec();
-    }
-
-    removeStage(stageId: StageId): Promise<Server.Stage> {
-        return StageModel.findByIdAndDelete(stageId).exec();
-    }
-
-    removeStageMember(stageMemberId: StageMemberId): Promise<Server.StageMember> {
-        return StageMemberModel.findByIdAndDelete(stageMemberId).exec();
-    }
-
-    removeUserByUid(uid: string): Promise<Server.User> {
-        return UserModel.findOneAndDelete({uid: uid}).exec();
-    }
-
-    setCustomGroupVolume(userId: UserId, groupId: GroupId, volume: number): Promise<Server.CustomGroupVolume> {
-        return CustomGroupVolumeModel.findOneAndUpdate({
-            userId: userId,
-            groupId: groupId
-        }, {volume: volume}, {upsert: true}).exec();
-    }
-
-    setCustomStageMemberVolume(userId: UserId, stageMemberId: StageMemberId, volume: number): Promise<Server.CustomStageMemberVolume> {
-        return CustomStageMemberVolumeModel.findOneAndUpdate({
-            stageMemberId: stageMemberId,
-            userId: userId
-        }, {volume: volume}, {upsert: true}).exec();
-    }
-
-    setGroupVolume(groupId: GroupId, volume: number): Promise<Server.Group> {
-        return GroupModel.findByIdAndUpdate(groupId, {volume: volume}).exec();
-    }
-
-    setStageMemberVolume(stageMemberId: StageMemberId, volume: number): Promise<Server.StageMember> {
-        return StageMemberModel.findByIdAndUpdate(stageMemberId, {volume: volume}).exec();
-    }
-
-    updateGroup(groupId: GroupId, group: Partial<Omit<Server.Group, "_id">>): Promise<Server.Group> {
-        return GroupModel.findByIdAndUpdate(groupId, group).exec();
-    }
-
-    updateStage(stageId: StageId, stage: Partial<Omit<Server.Stage, "_id">>): Promise<Server.Stage> {
-        return StageModel.findByIdAndUpdate(stageId, stage).exec();
-    }
-
-    updateStageMember(stageMemberId: StageMemberId, stageMember: Partial<Omit<Server.StageMember, "_id">>): Promise<Server.StageMember> {
-        return new Promise<Server.StageMember>((resolve, reject) => {
-            StageMemberModel.findByIdAndUpdate(stageMemberId, stageMember, (err, res) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(res);
-            });
-        });
     }
 
     createDevice(userId: UserId, initialDevice: Partial<Omit<Device, "_id">>): Promise<Device> {
@@ -234,126 +60,151 @@ export class MongoStorage implements IStorage {
         device.online = initialDevice.online;
         device.name = initialDevice.name ? initialDevice.name : "";
         device.userId = userId;
-        device.videoProducer = [];
-        device.audioProducer = [];
-        device.ovProducer = [];
         return device.save();
     }
 
+    createGroup(adminUserId: UserId, stageId: StageId, name: string): Promise<Client.GroupPrototype> {
+        return UserModel.findOne({_id: adminUserId, managedStages: stageId})
+            .then(() => {
+                const group = new GroupModel();
+                group.stageId = stageId;
+                group.name = name;
+                return group.save();
+            });
+    }
+
+    createStage(name: string, password: string | null, adminId: UserId): Promise<Client.StagePrototype> {
+        const stage = new StageModel();
+        stage.name = name;
+        stage.password = password;
+        return stage.save()
+            .then(stage => UserModel.updateOne({_id: adminId}, {$push: {managedStages: stage._id}}));
+    }
+
+    createUser(uid: string, name: string, avatarUrl: string | null): Promise<User> {
+        const user = new UserModel();
+        user.uid = uid;
+        user.name = name;
+        user.avatarUrl = avatarUrl;
+        user.stageId = null;
+        user.managedStages = [];
+        return user.save();
+    }
+
     getDeviceByUserAndMac(userId: UserId, mac: string): Promise<Device> {
-        return DeviceModel.findOne({userId: userId, mac: mac}).exec();
-    }
-
-    removeDevice(deviceId: DeviceId): Promise<Device> {
-        return DeviceModel.findByIdAndDelete(deviceId).exec();
-    }
-
-    updateDevice(deviceId: DeviceId, device: Partial<Omit<Device, "_id">>): Promise<Device> {
-        return DeviceModel.findByIdAndUpdate(deviceId, device).exec();
-    }
-
-    getDevicesByUser(userId: UserId): Promise<Device[]> {
-        return DeviceModel.find({userId: userId}).exec();
+        return DeviceModel.findOne({userId: userId, mac: mac}).lean().exec();
     }
 
     getDevices(): Promise<Device[]> {
-        return DeviceModel.find().exec();
+        return DeviceModel.find().lean().exec();
     }
 
-    getStage(stageId: StageId): Promise<Server.Stage> {
-        return StageModel.findById(stageId).exec();
+    getDevicesByUser(userId: UserId): Promise<Device[]> {
+        return DeviceModel.find({userId: userId}).lean().exec();
     }
 
-    getStageMembersByStage(stageId: StageId): Promise<Server.StageMember[]> {
-        return StageMemberModel.find({stageId: stageId}).exec();
+    getGroup(groupId: GroupId): Promise<Client.GroupPrototype> {
+        return GroupModel.findById(groupId).lean().exec();
     }
 
-    getStageMembersByUser(userId: UserId): Promise<Server.StageMember[]> {
-        return StageMemberModel.find({userId: userId}).exec();
+    getGroupsByStage(stageId: StageId): Promise<Client.GroupPrototype[]> {
+        return GroupModel.find({stageId: stageId}).lean().exec();
     }
 
-    getManagedStagesByUser(userId: UserId): Promise<Server.Stage[]> {
-        return StageModel.find({admins: userId}).exec();
+    getManagedStageByUser(stageId: StageId, userId: UserId): Promise<Client.StagePrototype[]> {
+        return UserModel.findById(userId).exec()
+            .then(user => StageModel.find({_id: {$in: user.managedStages}}).lean().exec());
     }
 
-    getStagesByUser(userId: UserId): Promise<Server.Stage[]> {
-        return this.getManagedStagesByUser(userId)
-            .then(managedStages => {
-                return this.getStageMembersByUser(userId)
-                    .then(stageMembers => StageModel.find({'_id': {$in: stageMembers.map(stageMember => stageMember._id)}}).exec())
-                    .then(stages => {
-                        const filterdStages = stages.filter(stage => managedStages.find(managedStage => managedStage._id.toString() === stage._id.toString()));
-                        return [...filterdStages, ...managedStages];
+    getStage(stageId: StageId): Promise<Client.StagePrototype> {
+        return StageModel.findById(stageId).lean().exec();
+    }
+
+    getStageMembersByStage(stageId: StageId): Promise<Client.StageMemberPrototype[]> {
+        return StageMemberModel.find({stageId: stageId}).lean().exec();
+    }
+
+    getStagesByUser(userId: UserId): Promise<Client.StagePrototype[]> {
+        return StageMemberModel.find({userId: userId}).exec()
+            .then(stageMembers => StageModel.find({_id: {$in: stageMembers.map(stageMember => stageMember.stageId)}}).lean().exec());
+    }
+
+    getUserByUid(uid: string): Promise<User> {
+        return UserModel.findOne({uid: uid}).lean().exec();
+    }
+
+    removeDevice(deviceId: DeviceId): Promise<Device> {
+        return DeviceModel.findOneAndRemove({_id: deviceId}).lean().exec()
+    }
+
+    removeGroup(groupId: GroupId): Promise<Client.GroupPrototype> {
+        return GroupModel.findOneAndRemove({_id: groupId}).lean().exec()
+    }
+
+    removeStage(adminUserId: UserId, stageId: StageId): Promise<Client.StagePrototype> {
+        return UserModel.findOne({_id: adminUserId, managedStages: stageId})
+            .then(user => StageModel.findOneAndRemove({_id: stageId}).lean().exec());
+    }
+
+    removeStageMember(stageMemberId: StageMemberId): Promise<Client.StageMemberPrototype> {
+        return StageMemberModel.findOneAndRemove({_id: stageMemberId}).lean().exec();
+    }
+
+    removeUserByUid(uid: string): Promise<User> {
+        return UserModel.findOneAndRemove({uid: uid}).lean().exec();
+    }
+
+    setCustomGroupVolume(userId: UserId, groupId: GroupId, volume: number): Promise<Client.CustomGroupVolume> {
+        return CustomGroupVolumeModel.findOneAndUpdate({
+            userId: userId,
+            groupId: groupId
+        }, {volume: volume}, {upsert: true}).lean().exec();
+    }
+
+    setCustomStageMemberVolume(userId: UserId, stageMemberId: StageMemberId, volume: number): Promise<Client.CustomStageMemberVolume> {
+        return CustomStageMemberVolumeModel.findOneAndUpdate({
+            userId: userId,
+            stageMemberId: stageMemberId
+        }, {volume: volume}, {upsert: true}).lean().exec();
+    }
+
+    updateDevice(deviceId: DeviceId, device: Partial<Omit<Device, "_id">>): Promise<Device> {
+        return DeviceModel.findByIdAndUpdate(deviceId, device).lean().exec();
+    }
+
+    updateGroup(adminUserId: UserId, groupId: GroupId, group: Partial<Omit<Client.GroupPrototype, "_id">>): Promise<Client.GroupPrototype> {
+        return GroupModel.findById(groupId).lean().exec()
+            .then(group => {
+                // Now check if user has rights
+                return UserModel.findOne({_id: adminUserId, managedStages: group.stageId}).exec()
+                    .then(() => {
+                        // User has rights
+                        return GroupModel.deleteOne({_id: adminUserId}).exec()
+                            .then(() => group);
                     })
             });
     }
 
-    getGroup(groupId: GroupId): Promise<Server.Group> {
-        return GroupModel.findById(groupId).exec();
+    updateStage(adminUserId: UserId, stageId: StageId, stage: Partial<Omit<Client.StagePrototype, "_id">>): Promise<Client.StagePrototype> {
+        return UserModel.findOne({_id: adminUserId, managedStages: stageId}).exec()
+            .then(() => {
+                // User has rights
+                return StageModel.findByIdAndUpdate(stageId, stage).lean().exec()
+            });
     }
 
-    getGroupsByStage(stageId: StageId): Promise<Server.Group[]> {
-        return GroupModel.find({stageId: stageId}).exec();
+    updateStageMember(adminUserId: UserId, stageMemberId: StageMemberId, stageMember: Partial<Omit<Client.StageMemberPrototype, "_id">>): Promise<Client.StageMemberPrototype> {
+        return StageMemberModel.findById(stageMemberId).exec()
+            .then(member => {
+                return UserModel.findOne({_id: adminUserId, managedStages: member.stageId})
+                    .then(() => {
+                        // User has rights
+                        return StageMemberModel.findByIdAndUpdate(stageMemberId, stageMember).lean().exec();
+                    })
+            });
     }
 
-    private transformPopulatedStageToStagePrototype = (stage: PopulatedStage): Client.StagePrototype => {
-        return {
-            _id: stage._id,
-            name: stage.name,
-            password: stage.password,
-            width: stage.width,
-            height: stage.height,
-            length: stage.length,
-            absorption: stage.absorption,
-            reflection: stage.reflection,
-            admins: stage.admins && stage.admins.map((admin: Server.User): Client.UserPrototype => ({
-                _id: admin._id,
-                name: admin.name,
-                avatarUrl: admin.avatarUrl
-            })),
-            groups: stage.groups && stage.groups.map((group: PopulatedGroup): Client.GroupPrototype => ({
-                _id: group._id,
-                name: group.name,
-                volume: group.volume,
-                members: group.members.map((stageMember: PopulatedStageMember): Client.GroupMemberPrototype => ({
-                    _id: stageMember.user._id,
-                    name: stageMember.user.name,
-                    avatarUrl: stageMember.user.avatarUrl,
-                    isDirector: stageMember.isDirector,
-                    volume: stageMember.volume,
-                    x: stageMember.x,
-                    y: stageMember.y,
-                    z: stageMember.z
-                }))
-            }))
-        };
-    };
-
-    getStagePrototype(stageId: StageId): Promise<Client.StagePrototype> {
-        return this.getStagePrototypes([stageId])
-            .then(stages => stages.length > 0 ? stages[0] : undefined);
-    }
-
-    getStagePrototypes(stageIds: StageId[]): Promise<Client.StagePrototype[]> {
-        if (stageIds.length > 0) {
-            if (stageIds.length === 1) {
-                return StageModel.findById(stageIds[0])
-                    .populate("admins")
-                    .populate("groups")
-                    .populate("groups.members")
-                    .populate("groups.members.user")
-                    .exec()
-                    .then((stage: any) => [this.transformPopulatedStageToStagePrototype(stage)]);
-            } else {
-                return StageModel.find({"_id": {$in: stageIds}})
-                    .populate("admins")
-                    .populate("groups")
-                    .populate("groups.members")
-                    .populate("groups.members.user")
-                    .exec()
-                    .then((stages: any) => stages.map(stage => this.transformPopulatedStageToStagePrototype(stage)));
-            }
-        }
-        return new Promise<Client.StagePrototype[]>(resolve => resolve([]));
+    updateUserByUid(uid: string, user: Partial<Omit<User, "_id">>): Promise<User> {
+        return UserModel.findOneAndUpdate({uid: uid}, user).lean().exec();
     }
 }
