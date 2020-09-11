@@ -2,7 +2,7 @@ import {Device, Producer, User} from "../model.common";
 import * as socketIO from "socket.io";
 import SocketServer from "./SocketServer";
 import * as pino from "pino";
-import {manager} from "../storage/mongo/MongoStageManager";
+import {manager} from "../storage/Manager";
 import {ClientStageEvents, ServerStageEvents} from "./SocketStageEvent";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});

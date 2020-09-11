@@ -4,9 +4,9 @@ import * as pino from "pino";
 import * as https from "https";
 import * as http from "http";
 import {StageId, User, UserId} from "../model.common";
-import {manager} from "../storage/mongo/MongoStageManager";
 import SocketDeviceHandler from "./SocketDeviceEvent";
 import SocketStageHandler from "./SocketStageEvent";
+import {manager} from "../storage/Manager";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 const DEBUG_PAYLOAD: boolean = false;

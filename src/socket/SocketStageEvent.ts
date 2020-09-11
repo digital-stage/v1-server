@@ -1,7 +1,7 @@
 import * as socketIO from "socket.io";
 import SocketServer from "./SocketServer";
 import {User} from "../model.common";
-import {manager} from "../storage/mongo/MongoStageManager";
+import {manager} from "../storage/Manager";
 import Client from "../model.client";
 import GroupMemberPrototype = Client.GroupMemberPrototype;
 

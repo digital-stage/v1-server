@@ -3,7 +3,7 @@ import * as admin from "firebase-admin";
 import {Request} from "express";
 import Auth from "../IAuthentication";
 import {User} from "../../model.common";
-import {manager} from "../../storage/mongo/MongoStageManager";
+import {manager} from "../../storage/Manager";
 
 const serviceAccount = require('../../../firebase-adminsdk.json');
 admin.initializeApp({

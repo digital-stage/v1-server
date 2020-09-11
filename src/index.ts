@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as core from "express-serve-static-core";
 import HttpService from "./http/HttpService";
-import {manager} from "./storage/mongo/MongoStageManager";
+import {manager} from "./storage/Manager";
 
 export const PORT: number = 4000;
 

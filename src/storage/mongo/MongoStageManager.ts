@@ -1,4 +1,3 @@
-import {IDeviceManagement, IStageManagement} from "../IStorage";
 import {
     Device,
     DeviceId,
@@ -8,7 +7,6 @@ import {
     RouterId,
     StageId,
     StageMemberId, User,
-    UserId
 } from "../../model.common";
 import Client from "../../model.client";
 import {
@@ -25,6 +23,7 @@ import {ServerStageEvents} from "../../socket/SocketStageEvent";
 import * as pino from "pino";
 import * as mongoose from "mongoose";
 import {ServerDeviceEvents} from "../../socket/SocketDeviceEvent";
+import {IDeviceManager, IStageManager} from "../IManager";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -32,7 +31,7 @@ const uri = "mongodb://127.0.0.1:4321/digitalstage";
 
 const USE_WATCHER: boolean = false;
 
-class MongoStageManager implements IStageManagement, IDeviceManagement {
+class MongoStageManager implements IStageManager, IDeviceManager {
     private initialized: boolean = false;
 
     init(): Promise<any> {
@@ -361,4 +360,4 @@ class MongoStageManager implements IStageManagement, IDeviceManagement {
     }
 }
 
-export const manager: IStageManagement & IDeviceManagement = new MongoStageManager();
+export default MongoStageManager;

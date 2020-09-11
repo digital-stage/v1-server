@@ -1,7 +1,7 @@
 import * as core from "express-serve-static-core";
 import * as expressPino from "express-pino-logger";
-import {manager} from "../storage/mongo/MongoStageManager";
 import {authentication} from "../auth/Authentication";
+import {manager} from "../storage/Manager";
 
 
 namespace HttpService {
@@ -28,7 +28,7 @@ namespace HttpService {
                 .then(user => {
                     return manager.getStage(req.params.stageId)
                         .then(stage => {
-                            if( stage.admins.indexOf(user._id) !== -1 ) {
+                            if (stage.admins.indexOf(user._id) !== -1) {
                                 return res.status(200).send(stage);
                             }
                             return res.sendStatus(404);
