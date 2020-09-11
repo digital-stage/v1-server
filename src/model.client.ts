@@ -77,6 +77,8 @@ namespace Client {
 
         password: string | null;
 
+        admins: UserId[];
+
         // 3D Room specific
         width: number;
         length: number;

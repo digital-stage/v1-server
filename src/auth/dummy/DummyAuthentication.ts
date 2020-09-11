@@ -1,33 +1,38 @@
 import * as socketIO from "socket.io";
 import {Request} from "express";
 import Auth from "../IAuthentication";
+import {User} from "../../model.common";
 
 class DummyAuthentication implements Auth.IAuthentication {
-    authorizeSocket(socket: socketIO.Socket): Promise<Auth.User> {
-        return new Promise<Auth.User>((resolve, reject) => {
+    authorizeSocket(socket: socketIO.Socket): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 reject(new Error("Missing authorization"));
             }
             if (socket.handshake.query.token === "123")
                 return resolve({
-                    id: "123",
+                    _id: "123",
+                    uid: "123",
                     name: "Test",
-                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de"
+                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de",
+                    managedStages: []
                 });
             reject(new Error("Invalid credentials, try 123"))
         })
     }
 
-    authorizeRequest(req: Request): Promise<Auth.User> {
-        return new Promise<Auth.User>((resolve, reject) => {
+    authorizeRequest(req: Request): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
             if (!req.headers.authorization) {
                 reject(new Error("Missing authorization"));
             }
             if (req.headers.authorization === "123")
                 return resolve({
-                    id: "123",
+                    _id: "123",
+                    uid: "123",
                     name: "Test",
-                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de"
+                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de",
+                    managedStages: []
                 });
             reject(new Error("Invalid credentials, try 123"))
         })

@@ -57,7 +57,7 @@ GroupSchema.pre('deleteMany', function (next) {
     mongoose.model('CustomGroupVolume').deleteMany({groupId: this["_id"]}, next);
     mongoose.model('StageMember').deleteMany({groupId: this["_id"]}, next);
 });
-type GroupType = Client.GroupPrototype & mongoose.Document;
+export type GroupType = Client.GroupPrototype & mongoose.Document;
 export const GroupModel = mongoose.model<GroupType>('Group', GroupSchema);
 
 

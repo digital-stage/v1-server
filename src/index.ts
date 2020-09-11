@@ -39,11 +39,11 @@ const resetDevices = () => {
 
 const init = async () => {
     return manager.init()
+        .then(() => SocketServer.init(server))
+        .then(() => HttpService.init(app))
         .then(() => {
             return resetDevices()
         })
-        .then(() => HttpService.init(app))
-        .then(() => SocketServer.init(server))
 }
 
 export {app, server};

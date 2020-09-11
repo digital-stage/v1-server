@@ -41,8 +41,7 @@ export interface User {
     uid: string;
     name: string;
     avatarUrl?: string;
-    stageId: StageId;
-    managedStages: StageId[];
+    stageId?: StageId;
 }
 
 export interface Producer {

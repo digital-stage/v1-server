@@ -1,17 +1,15 @@
 import * as socketIO from "socket.io";
-import Auth from "../auth/IAuthentication";
 import {authentication} from "../auth/Authentication";
-import {storage} from "../storage/Storage";
-import SocketDeviceEvent from "./SocketDeviceEvent";
-import SocketStageEvent from "./SocketStageEvent";
 import * as pino from "pino";
 import * as https from "https";
 import * as http from "http";
 import {StageId, User, UserId} from "../model.common";
 import {manager} from "../storage/mongo/MongoStageManager";
+import SocketDeviceHandler from "./SocketDeviceEvent";
+import SocketStageHandler from "./SocketStageEvent";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
-const DEBUG_PAYLOAD: boolean = true;
+const DEBUG_PAYLOAD: boolean = false;
 
 namespace SocketServer {
     let io: socketIO.Server;
@@ -23,20 +21,33 @@ namespace SocketServer {
      * @param payload
      */
     export const sendToStage = (stageId: StageId, event: string, payload?: any) => {
-        return manager.getUsersWithActiveStage(stageId)
+        return manager.getUsersByStage(stageId)
             .then(users => {
                 users.forEach(user => sendToUser(user._id, event, payload));
             });
     }
 
     /**
-     * Send event with payload to all users, that are currently active inside the stage
+     * Send event with payload to all users, that are manging this stage
      * @param stageId
      * @param event
      * @param payload
      */
-    export const sendToActiveStage = (stageId: StageId, event: string, payload?: any) => {
-        return manager.getUsersByStage(stageId)
+    export const sendToStageManagers = (stageId: StageId, event: string, payload?: any) => {
+        return manager.getUsersManagingStage(stageId)
+            .then(users => {
+                users.forEach(user => sendToUser(user._id, event, payload));
+            });
+    }
+
+    /**
+     * Send event with payload to all users, that are currently joined in the stage
+     * @param stageId
+     * @param event
+     * @param payload
+     */
+    export const sendToJoinedStageMembers = (stageId: StageId, event: string, payload?: any) => {
+        return manager.getJoinedUsersOfStage(stageId)
             .then(users => {
                 users.forEach(user => sendToUser(user._id, event, payload));
             });
@@ -78,28 +89,23 @@ namespace SocketServer {
         io.on("connection", (socket: socketIO.Socket) => {
             logger.debug("Incoming socket request " + socket.id);
             authentication.authorizeSocket(socket)
-                .then(async (authUser: Auth.User) => {
-                    /**
-                     * USER MANAGEMENT
-                     */
-                    let user: User = await manager.getUserByUid(authUser.id);
-                    if (!user) {
-                        user = await storage.createUser(authUser.id, authUser.name, authUser.avatarUrl);
-                    }
-
+                .then(async (user: User) => {
+                    const deviceHandler = new SocketDeviceHandler(socket, user);
+                    const stageHandler = new SocketStageHandler(socket, user);
                     /**
                      * DEVICE MANAGEMENT
                      */
-                    SocketDeviceEvent.loadDeviceEvents(user._id, socket);
+                    deviceHandler.addSocketHandler();
 
                     /**
                      * STAGE MANAGEMENT
                      */
-                    SocketStageEvent.loadStageEvents(user, socket);
+                    stageHandler.addSocketHandler();
 
                     return Promise.all([
-                        SocketDeviceEvent.generateDevice(user._id, socket),
-                        SocketStageEvent.generateStage(user, socket)
+                        deviceHandler.generateDevice()
+                            .then(() => deviceHandler.sendRemoteDevices()),
+                        stageHandler.generateStage()
                     ])
                         .then(() => {
                             // Finally join user stream

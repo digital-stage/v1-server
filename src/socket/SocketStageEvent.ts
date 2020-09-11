@@ -2,6 +2,8 @@ import * as socketIO from "socket.io";
 import SocketServer from "./SocketServer";
 import {User} from "../model.common";
 import {manager} from "../storage/mongo/MongoStageManager";
+import Client from "../model.client";
+import GroupMemberPrototype = Client.GroupMemberPrototype;
 
 export enum ServerStageEvents {
     STAGE_READY = "stage-ready",
@@ -48,7 +50,7 @@ export enum ClientStageEvents {
     REMOVE_PRODUCER = "remove-producer",
 
     // Following shall be only possible if client is admin of stage
-    UPDATE_STAGE = "update-stage",
+    CHANGE_STAGE = "change-stage",
     REMOVE_STAGE = "remove-stage",
 
     ADD_GROUP = "add-group",
@@ -58,28 +60,88 @@ export enum ClientStageEvents {
     CHANGE_GROUP_MEMBER = "update-group-member",
 }
 
-namespace SocketStageEvent {
+class SocketStageHandler {
+    private user: User;
+    private readonly socket: socketIO.Socket;
 
-    export async function generateStage(user: User, socket: socketIO.Socket): Promise<any> {
+    constructor(socket: socketIO.Socket, user: User) {
+        this.socket = socket;
+        this.user = user;
+    }
+
+    public addSocketHandler() {
+        // STAGE MANAGEMENT
+        this.socket.on(ClientStageEvents.ADD_STAGE, (payload: {
+            name: string, password: string | null
+        }) => manager.createStage(this.user, payload.name, payload.password).then(stage => SocketServer.sendToStage(stage._id, ServerStageEvents.STAGE_ADDED, stage)));
+        this.socket.on(ClientStageEvents.CHANGE_STAGE, (id: string, stage: Partial<Client.StagePrototype>) =>
+            manager.updateStage(this.user, id, stage)
+                .then(() => SocketServer.sendToStage(id, ServerStageEvents.STAGE_CHANGED, id))
+        );
+        this.socket.on(ClientStageEvents.REMOVE_STAGE, (id: string) =>
+            manager.removeStage(this.user, id)
+                .then(() => SocketServer.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id))
+        );
+
+        // GROUP MANAGEMENT
+        this.socket.on(ClientStageEvents.ADD_GROUP, (payload: {
+            stageId: string,
+            name: string
+        }) => manager.addGroup(this.user, payload.stageId, payload.name).then(group => SocketServer.sendToStage(group.stageId, ServerStageEvents.GROUP_ADDED, group)));
+        this.socket.on(ClientStageEvents.CHANGE_GROUP, (id: string, group: Partial<Client.GroupPrototype>) => manager.updateGroup(this.user, id, group).then(() => SocketServer.sendToStage(this.user._id, ServerStageEvents.GROUP_CHANGED, group)));
+        this.socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) => manager.removeGroup(this.user, id).then(() => SocketServer.sendToStage(this.user._id, ServerStageEvents.GROUP_REMOVED, id)));
+
+        // STAGE MEMBER MANAGEMENT
+        this.socket.on(ClientStageEvents.CHANGE_GROUP_MEMBER, (id: string, groupMember: Partial<GroupMemberPrototype>) =>
+            manager.updateStageMember(this.user, id, groupMember)
+                .then(stageMember => SocketServer.sendToStage(stageMember.stageId, ServerStageEvents.GROUP_MEMBER_CHANGED, {
+                    ...groupMember,
+                    _id: id
+                })));
+
+        // this.user STAGE MANAGEMENT (join, leave)
+        this.socket.on(ClientStageEvents.JOIN_STAGE, (payload: {
+            stageId: string,
+            groupId: string,
+            password: string | null
+        }) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
+            .then(groupMember => Promise.all([
+                SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember),
+                manager.getActiveStageSnapshotByUser(this.user)
+                    .then(stage => SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, stage))
+            ])));
+        this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
+            Promise.all([
+                SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT),
+                manager.leaveStage(this.user)
+            ]));
+
+        // Handle internal events
+        this.socket.on(ServerStageEvents.STAGE_READY, () => {
+            console.log("Stage joined");
+        })
+    }
+
+    generateStage(): Promise<any> {
         return Promise.all([
             // Send active stage
-            manager.getActiveStageSnapshotByUser(user._id)
-                .then(stage => SocketServer.sendToDevice(socket, ServerStageEvents.STAGE_READY, stage)),
+            manager.getActiveStageSnapshotByUser(this.user)
+                .then(stage => SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_READY, stage)),
             // Send non-active stages
-            manager.getStagesByUser(user._id)
+            manager.getStagesByUser(this.user)
                 .then(stages => {
                         stages.forEach(stage => {
                             // Send stage
-                            SocketServer.sendToDevice(socket, ServerStageEvents.STAGE_ADDED, stage);
+                            SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_ADDED, stage);
                             // Send associated models
                             return Promise.all([
                                 // Send groups
                                 manager.getGroupsByStage(stage._id)
                                     .then(groups =>
-                                        groups.forEach(group => SocketServer.sendToDevice(socket, ServerStageEvents.GROUP_ADDED, group))),
+                                        groups.forEach(group => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_ADDED, group))),
                                 // Send group members
                                 manager.generateGroupMembersByStage(stage._id)
-                                    .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToDevice(socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
+                                    .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
                                 // We don't send producers for non-active stages
                             ]);
                         });
@@ -87,37 +149,6 @@ namespace SocketStageEvent {
                 )
         ]);
     }
-
-    export function loadStageEvents(user: User, socket: socketIO.Socket) {
-        socket.on(ClientStageEvents.ADD_STAGE, (payload: {
-            name: string, password: string | null
-        }) => {
-            return manager.createStage(user._id, payload.name, payload.password);
-        });
-
-        socket.on(ClientStageEvents.JOIN_STAGE, (payload: {
-            stageId: string,
-            groupId: string,
-            password: string | null
-        }) => {
-            console.log(payload);
-            return manager.joinStage(user._id, payload.stageId, payload.groupId, payload.password);
-        });
-
-        socket.on(ClientStageEvents.LEAVE_STAGE, () => manager.leaveStage(user._id));
-
-        socket.on(ClientStageEvents.REMOVE_STAGE, (id: string) => {
-            return manager.removeStage(user._id, id);
-        });
-
-        socket.on(ClientStageEvents.ADD_GROUP, (payload: {
-            stageId: string,
-            name: string
-        }) => manager.addGroup(user._id, payload.stageId, payload.name));
-
-        socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) => {
-            return manager.removeGroup(user._id, id);
-        });
-    }
 }
-export default SocketStageEvent;
+
+export default SocketStageHandler;
