@@ -8,14 +8,15 @@ import {
     RouterId,
     StageId,
     StageMemberId,
-    User
+    User, UserId
 } from "../model.common";
+import {UserType} from "./mongo/model.mongo";
 
 export interface IDeviceManager {
     init(): Promise<any>;
 
     // Device management
-    createDevice(user: User, device: Partial<Omit<Device, "_id">>): Promise<Device>;
+    createDevice(user: User, server: string, device: Partial<Omit<Device, "_id">>): Promise<Device>;
 
     getDevicesByUser(user: User): Promise<Device[]>;
 
@@ -25,17 +26,21 @@ export interface IDeviceManager {
 
     removeDevice(deviceId: DeviceId): Promise<Device>;
 
+    removeDevicesByServer(serverAddress: string): Promise<Device[]>;
+
     getDevices(): Promise<Device[]>;
 }
 
 export interface IStageManager {
     init(): Promise<any>;
 
-    createStage(user: User, name: string, password): Promise<Client.StagePrototype>;
+    createStage(user: User, initialStage: Partial<Client.StagePrototype>): Promise<Client.StagePrototype>;
 
     joinStage(user: User, stageId: StageId, groupId: GroupId, password?: string): Promise<Client.GroupMemberPrototype>;
 
     leaveStage(user: User): Promise<boolean>;
+
+    isStageManager(user: User, stageId: StageId): Promise<boolean>;
 
     getStagesByUser(user: User): Promise<Client.StagePrototype[]>;
 
@@ -63,11 +68,11 @@ export interface IStageManager {
 
     createUserWithUid(uid: string, name: string, avatarUrl?: string): Promise<User>;
 
-    getUser(id: string): Promise<User>;
+    getUserByUid(uid: string): Promise<User>;
 
     getJoinedUsersOfStage(stageId: StageId): Promise<User[]>;
 
-    getUserByUid(uid: string): Promise<User>;
+    getUser(userId: UserId): Promise<User>;
 
     getUsersByStage(stageId: StageId): Promise<User[]>;
 

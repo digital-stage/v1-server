@@ -8,8 +8,12 @@ import * as path from "path";
 import * as core from "express-serve-static-core";
 import HttpService from "./http/HttpService";
 import {manager} from "./storage/Manager";
+import * as ip from "ip";
+import * as expressPino from "express-pino-logger";
+
 
 export const PORT: number = 4000;
+export const serverAddress = ip.address() + PORT;
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -31,19 +35,17 @@ const server = process.env.NODE_ENV === "development" ? app.listen(PORT) : https
     rejectUnauthorized: false
 }, app);
 
-const resetDevices = () => {
-    return manager.getDevices()
-        .then(devices => devices.forEach(async device => await manager.removeDevice(device._id)))
-        .then(() => logger.warn("Removed all devices first!"));
-}
+app.use(expressPino());
+
+
+const resetDevices = () => manager.removeDevicesByServer(serverAddress)
+    .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
 
 const init = async () => {
     return manager.init()
         .then(() => SocketServer.init(server))
         .then(() => HttpService.init(app))
-        .then(() => {
-            return resetDevices()
-        })
+        .then(() => resetDevices())
 }
 
 export {app, server};

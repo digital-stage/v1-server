@@ -6,6 +6,8 @@ const StageSchema = new mongoose.Schema({
     name: {type: String},
     password: {type: String},
 
+    admins: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+
     // 3D Room specific
     width: {type: Number},
     length: {type: Number},
@@ -14,7 +16,6 @@ const StageSchema = new mongoose.Schema({
     reflection: {type: Number},
 });
 type StageType = Client.StagePrototype & mongoose.Document;
-
 StageSchema.pre('deleteOne', function (next) {
     mongoose.model("Group").deleteMany({'stageId': this["_id"]}, (err) => {
         if (err) {
@@ -39,8 +40,7 @@ StageSchema.pre('deleteMany', function (next) {
     console.log("StageSchema deleteMany hook: " + this["_id"]);
     mongoose.model('Group').deleteMany({stageId: this["_id"]}, next);
     mongoose.model('StageMember').deleteMany({stageId: this["_id"]}, next);
-    mongoose.model('User').updateMany({stageId: this["_id"]}, {stageId: null}, next);
-    mongoose.model('User').updateMany({lastStageIds: this["_id"]}, {$pull: {lastStageIds: this["_id"]}}, next);
+    mongoose.model('User').updateMany({stage: this["_id"]}, {stageId: null}, next);
 });
 export const StageModel = mongoose.model<StageType>('Stage', StageSchema);
 
@@ -48,7 +48,6 @@ export const StageModel = mongoose.model<StageType>('Stage', StageSchema);
 const GroupSchema = new mongoose.Schema({
     name: {type: String},
     stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
-    //members: [{type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'}],
 
     volume: {type: Number}
 });
@@ -87,6 +86,7 @@ const StageMemberSchema = new mongoose.Schema({
 });
 StageMemberSchema.pre('deleteMany', function (next) {
     console.log("StageMemberSchema deleteMany hook: " + this["_id"]);
+    mongoose.model('User').updateMany({stageMembers: this["_id"]}, {$pull: {stageMembers: this["_id"]}}, next);
     mongoose.model('CustomStageMemberVolume').deleteMany({stageMemberId: this["_id"]}, next);
 });
 StageMemberSchema.index({userId: 1, stageId: 1}, {unique: true});
@@ -106,17 +106,19 @@ export const CustomStageMemberVolumeModel = mongoose.model<CustomStageMemberVolu
 
 const UserSchema = new mongoose.Schema({
     uid: {type: String, index: true},
-    name: {type: String},
+    name: {type: String, required: true, unique: true, index: true},
     avatarUrl: {type: String},
     stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
-    managedStages: [{type: mongoose.Schema.Types.ObjectId, ref: 'Stage'}]
+
+    stageMembers: [{type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'}]
 }, {timestamps: true});
 UserSchema.pre('deleteMany', function (next) {
     console.log("UserSchema deleteMany hook: " + this["_id"]);
+    //TODO: Abandoned stages?
     mongoose.model('Device').deleteMany({userId: this["_id"]}, next);
     mongoose.model('StageMember').deleteMany({userId: this["_id"]}, next);
 });
-type UserType = User & mongoose.Document;
+export type UserType = User & mongoose.Document;
 export const UserModel = mongoose.model<UserType>('User', UserSchema);
 
 
@@ -148,7 +150,9 @@ const DeviceSchema = new mongoose.Schema({
     outputAudioDevice: {type: String},
     audioProducers: [{type: mongoose.Schema.Types.ObjectId, ref: 'Producer'}],
     videoProducers: [{type: mongoose.Schema.Types.ObjectId, ref: 'Producer'}],
-    ovProducers: [{type: mongoose.Schema.Types.ObjectId, ref: 'Producer'}]
+    ovProducers: [{type: mongoose.Schema.Types.ObjectId, ref: 'Producer'}],
+
+    server: {type: String},
 }, {timestamps: true});
 DeviceSchema.index("mac", {
     unique: true,

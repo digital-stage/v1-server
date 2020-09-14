@@ -25,15 +25,16 @@ namespace HttpService {
                 return res.sendStatus(400);
             }
             return authentication.authorizeRequest(req)
-                .then(user => {
-                    return manager.getStage(req.params.stageId)
-                        .then(stage => {
+                .then(user =>
+                    manager.getStage(req.params.stageId).then(
+                        stage => {
                             if (stage.admins.indexOf(user._id) !== -1) {
                                 return res.status(200).send(stage);
                             }
                             return res.sendStatus(404);
-                        })
-                })
+                        }
+                    )
+                )
                 .catch((error) => {
                     console.log(error);
                     return res.sendStatus(401);

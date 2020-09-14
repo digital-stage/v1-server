@@ -2,11 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const admin = require("firebase-admin");
 const Manager_1 = require("../../storage/Manager");
+const pino = require("pino");
 const serviceAccount = require('../../../firebase-adminsdk.json');
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://digitalstage-wirvsvirus.firebaseio.com"
 });
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 class GoogleAuthentication {
     authorizeSocket(socket) {
         return new Promise((resolve, reject) => {
@@ -20,12 +22,15 @@ class GoogleAuthentication {
                 return Manager_1.manager.getUserByUid(firebaseUser.uid)
                     .then(user => {
                     if (!user) {
-                        return Manager_1.manager.createUserWithUid(firebaseUser.uid, firebaseUser.displayName, firebaseUser.photoURL);
+                        logger.debug("[GOOGLE AUTH] Creating new user " + firebaseUser.displayName);
+                        return Manager_1.manager.createUserWithUid(firebaseUser.uid, firebaseUser.displayName, firebaseUser.photoURL)
+                            .then(user => resolve(user));
                     }
-                    return user;
+                    logger.debug("[GOOGLE AUTH] Signed in user " + firebaseUser.displayName);
+                    return resolve(user);
                 });
             })
-                .then(user => resolve(user));
+                .catch(error => console.error(error));
         });
     }
     authorizeRequest(req) {
@@ -44,8 +49,7 @@ class GoogleAuthentication {
                     }
                     return user;
                 });
-            })
-                .then(user => resolve(user));
+            });
         });
     }
 }

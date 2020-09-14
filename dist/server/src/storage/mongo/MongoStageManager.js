@@ -11,10 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const model_mongo_1 = require("./model.mongo");
 const SocketServer_1 = require("../../socket/SocketServer");
-const SocketStageEvent_1 = require("../../socket/SocketStageEvent");
 const pino = require("pino");
 const mongoose = require("mongoose");
-const SocketDeviceEvent_1 = require("../../socket/SocketDeviceEvent");
+const events_1 = require("../../events");
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const uri = "mongodb://127.0.0.1:4321/digitalstage";
 const USE_WATCHER = false;
@@ -26,7 +25,11 @@ class MongoStageManager {
         if (!this.initialized) {
             this.initialized = true;
             logger.info("[MONGOSTORAGE] Initializing mongo storage ...");
-            return mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
+            return mongoose.connect(uri, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+                useFindAndModify: false
+            })
                 .then(() => this.attachWatchers())
                 .then(() => logger.info("[MONGOSTORAGE] DONE initializing mongo storage."));
         }
@@ -39,13 +42,13 @@ class MongoStageManager {
                 const device = stream.fullDocument;
                 switch (stream.operationType) {
                     case "insert":
-                        SocketServer_1.default.sendToUser(device.userId, SocketDeviceEvent_1.ServerDeviceEvents.DEVICE_ADDED, device);
+                        SocketServer_1.default.sendToUser(device.userId, events_1.ServerDeviceEvents.DEVICE_ADDED, device);
                         break;
                     case "update":
-                        SocketServer_1.default.sendToUser(device.userId, SocketDeviceEvent_1.ServerDeviceEvents.DEVICE_CHANGED, device);
+                        SocketServer_1.default.sendToUser(device.userId, events_1.ServerDeviceEvents.DEVICE_CHANGED, device);
                         break;
                     case "delete":
-                        SocketServer_1.default.sendToUser(device.userId, SocketDeviceEvent_1.ServerDeviceEvents.DEVICE_REMOVED, device._id);
+                        SocketServer_1.default.sendToUser(device.userId, events_1.ServerDeviceEvents.DEVICE_REMOVED, device._id);
                         break;
                 }
             });
@@ -69,11 +72,17 @@ class MongoStageManager {
         return producer.save();
     }
     createStage(user, name, password) {
+        console.log("Creating stage");
         const stage = new model_mongo_1.StageModel();
         stage.name = name;
         stage.password = password;
         return stage.save()
-            .then(stage => model_mongo_1.UserModel.findByIdAndUpdate(user._id, { $push: { managedStages: stage._id } }).lean().exec().then(() => stage));
+            .then(() => {
+            console.log("Stage is:");
+            console.log(stage);
+            return model_mongo_1.UserModel.findByIdAndUpdate(user._id, { $push: { managedStages: stage._id } }).exec()
+                .then(() => stage);
+        });
     }
     getStageSnapshotByUser(user) {
         if (user.stageId) {
@@ -88,11 +97,11 @@ class MongoStageManager {
                 const groupMembers = yield this.generateGroupMembersByStage(stage._id);
                 // Also get all custom group and group member volumes
                 const customGroupVolumes = yield model_mongo_1.CustomGroupVolumeModel.find({
-                    user: user._id,
+                    userId: user._id,
                     stageId: stage._id
                 }).exec();
                 const customGroupMemberVolumes = yield model_mongo_1.CustomStageMemberVolumeModel.find({
-                    user: user._id,
+                    userId: user._id,
                     stageId: stage._id
                 }).exec();
                 const stageSnapshot = Object.assign(Object.assign({}, stage), { groups: groups.map(group => (Object.assign(Object.assign({}, group), { customVolume: customGroupVolumes.find(v => v.groupId === group._id).volume, members: groupMembers.map(groupMember => (Object.assign(Object.assign({}, groupMember), { customVolume: customGroupMemberVolumes.find(v => v.stageMemberId === groupMember._id).volume, audioProducers: producers.filter(p => p.kind === "audio" && p.userId === groupMember.userId), videoProducers: producers.filter(p => p.kind === "video" && p.userId === groupMember.userId), ovProducers: producers.filter(p => p.kind === "ov" && p.userId === groupMember.userId) }))) }))) });
@@ -106,7 +115,19 @@ class MongoStageManager {
     }
     getUsersByStage(stageId) {
         return model_mongo_1.StageMemberModel.find({ stageId: stageId }).exec()
-            .then(stageMembers => model_mongo_1.UserModel.find({ _id: { $in: stageMembers.map(stageMember => stageMember.userId) } }).lean().exec());
+            .then(stageMembers => {
+            return model_mongo_1.UserModel.find({
+                $or: [
+                    { managedStages: stageId },
+                    { stage: stageId },
+                    {
+                        stageMembers: {
+                            $in: stageMembers.map(stageMember => stageMember._id)
+                        }
+                    }
+                ]
+            }).lean().exec();
+        });
     }
     getUsersWithActiveStage(stageId) {
         return model_mongo_1.UserModel.find({ stageId: stageId }).lean().exec();
@@ -125,7 +146,7 @@ class MongoStageManager {
                 stageMember.volume = 1;
                 return stageMember.save()
                     .then(() => {
-                    SocketServer_1.default.sendToUser(user._id, SocketStageEvent_1.ServerStageEvents.STAGE_JOINED, stageId);
+                    SocketServer_1.default.sendToUser(user._id, events_1.ServerStageEvents.STAGE_JOINED, stageId);
                     return Object.assign(Object.assign({}, stageMember.toObject()), { name: user.name, avatarUrl: user.avatarUrl });
                 });
             }
@@ -140,15 +161,14 @@ class MongoStageManager {
     }
     removeGroup(user, groupId) {
         return model_mongo_1.GroupModel.findById(groupId)
-            .populate("stageId")
             .exec()
-            .then((group) => {
-            if (group.stageId.admins.indexOf(user._id) !== 0) {
+            .then(group => model_mongo_1.UserModel.findById(user._id).exec()
+            .then(user => {
+            if (user.managedStages.indexOf(group.stageId) !== -1) {
                 return group.deleteOne()
                     .then(() => group);
             }
-            return null;
-        });
+        }));
     }
     removeProducer(device, producerId) {
         return model_mongo_1.ProducerModel.findOneAndRemove({
@@ -157,6 +177,7 @@ class MongoStageManager {
         }).lean().exec();
     }
     removeStage(user, stageId) {
+        logger.debug("[MONGO MANAGER] removeStage(" + user.name + ", " + stageId + ")");
         return model_mongo_1.StageModel.findOneAndRemove({
             _id: stageId,
             admins: user._id,
@@ -174,9 +195,9 @@ class MongoStageManager {
         return model_mongo_1.GroupModel.findOne({
             _id: groupId,
         }).exec()
-            .then(group => model_mongo_1.StageModel.findById(group.stageId)
-            .then(stage => {
-            if (stage.admins.indexOf(user._id) !== -1)
+            .then(group => model_mongo_1.UserModel.findById(user._id)
+            .then(user => {
+            if (user.managedStages.indexOf(group.stageId) !== -1)
                 return group.remove()
                     .then(() => group.toObject());
             throw new Error("Not allowed");
@@ -190,8 +211,9 @@ class MongoStageManager {
         return model_mongo_1.StageModel.findOneAndUpdate({ _id: stageId, admins: user._id }, stage)
             .lean().exec();
     }
-    createDevice(user, initialDevice) {
+    createDevice(user, server, initialDevice) {
         const device = new model_mongo_1.DeviceModel();
+        device.server = server;
         device.mac = initialDevice.mac;
         device.canVideo = initialDevice.canVideo;
         device.canAudio = initialDevice.canAudio;
@@ -211,13 +233,13 @@ class MongoStageManager {
         return device.save();
     }
     getDeviceByUserAndMac(user, mac) {
-        return model_mongo_1.DeviceModel.findOne({ user: user._id, mac: mac }).lean().exec();
+        return model_mongo_1.DeviceModel.findOne({ userId: user._id, mac: mac }).lean().exec();
     }
     getDevices() {
         return model_mongo_1.DeviceModel.find().lean().exec();
     }
     getDevicesByUser(user) {
-        return model_mongo_1.DeviceModel.find({ user: user._id }).lean().exec();
+        return model_mongo_1.DeviceModel.find({ userId: user._id }).lean().exec();
     }
     removeDevice(deviceId) {
         return model_mongo_1.DeviceModel.findByIdAndRemove(deviceId).lean().exec();
@@ -245,8 +267,14 @@ class MongoStageManager {
             .then(users => model_mongo_1.ProducerModel.find({ userId: { $in: users.map(user => user._id) } }).lean().exec());
     }
     getStagesByUser(user) {
-        return model_mongo_1.StageMemberModel.find({ user: user._id }).exec()
-            .then(stageMembers => model_mongo_1.StageModel.find({ _id: { $in: stageMembers.map(stageMember => stageMember.stageId) } }).lean().exec());
+        return this.getManagedStages(user)
+            .then(managedStages => {
+            return model_mongo_1.StageMemberModel.find({ userId: user._id }).lean().exec()
+                .then(stageMembers => {
+                return model_mongo_1.StageModel.find({ _id: { $in: stageMembers.map(stageMember => stageMember.stageId) } }).lean().exec()
+                    .then(stages => [...managedStages, ...stages]);
+            });
+        });
     }
     setCustomStageMemberVolume(user, stageMemberId, volume) {
         return model_mongo_1.CustomStageMemberVolumeModel.findOneAndUpdate({
@@ -258,22 +286,29 @@ class MongoStageManager {
     }
     updateStageMember(user, id, groupMember) {
         return model_mongo_1.StageMemberModel.findById(id).exec()
-            .then(stageMember => model_mongo_1.StageModel.findById(stageMember.stageId)
-            .then(stage => {
-            if (stage.admins.indexOf(user._id) !== -1)
+            .then(stageMember => model_mongo_1.UserModel.findById(user._id).lean().exec()
+            .then(user => {
+            if (user.managedStages.indexOf(stageMember.stageId) !== -1) {
                 return stageMember.update(groupMember)
                     .then(() => stageMember.toObject());
+            }
             throw new Error("Not allowed");
         }));
     }
     createUserWithUid(uid, name, avatarUrl) {
-        return Promise.resolve(undefined);
+        const user = new model_mongo_1.UserModel();
+        user.uid = uid;
+        user.name = name;
+        user.avatarUrl = avatarUrl;
+        return user.save()
+            .then(user => user.toObject());
     }
     getStage(stageId) {
         return model_mongo_1.StageModel.findById(stageId).lean().exec();
     }
     getManagedStages(user) {
-        return model_mongo_1.StageModel.find({ admins: user._id }).lean().exec();
+        return this.getUser(user._id)
+            .then(user => model_mongo_1.StageModel.find({ _id: { $in: user.managedStages } }).lean().exec());
     }
     getJoinedUsersOfStage(stageId) {
         return model_mongo_1.UserModel.find({ stageId: stageId }).lean().exec();
@@ -282,8 +317,10 @@ class MongoStageManager {
         return model_mongo_1.UserModel.findById(id).lean().exec();
     }
     getUsersManagingStage(stageId) {
-        return model_mongo_1.StageModel.findById(stageId).lean().exec()
-            .then(stage => model_mongo_1.UserModel.find({ _id: { $in: stage.admins } }).lean().exec());
+        return model_mongo_1.UserModel.find({ managedStages: stageId }).lean().exec();
+    }
+    removeDevicesByServer(server) {
+        return model_mongo_1.DeviceModel.remove({ server: server }).exec();
     }
 }
 exports.default = MongoStageManager;

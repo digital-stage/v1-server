@@ -1,5 +1,5 @@
 import Auth from "./IAuthentication";
 import IAuthentication = Auth.IAuthentication;
-import GoogleAuthentication from "./google/GoogleAuthentication";
+import DefaultAuthentication from "./default/DefaultAuthentication";
 
-export const authentication: IAuthentication = new GoogleAuthentication();
+export const authentication: IAuthentication = new DefaultAuthentication();

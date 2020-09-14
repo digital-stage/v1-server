@@ -9,132 +9,47 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Database_1 = require("./Database");
-const IDatabase_1 = require("./IDatabase");
-const DummyAuthentication_1 = require("./auth/DummyAuthentication");
-const socketIO = require("socket.io");
-const events_1 = require("./backup/events");
-const database = new Database_1.Database();
-const authentication = new DummyAuthentication_1.default();
-const init = () => Promise.all([
-    database.init()
-]);
-const io = socketIO(4000);
-const sendToUser = (uid, event, payload) => {
-    io.to(uid).send(event, payload);
-};
+exports.server = exports.app = exports.serverAddress = exports.PORT = void 0;
+const pino = require("pino");
+const SocketServer_1 = require("./socket/SocketServer");
+const express = require("express");
+const cors = require("cors");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
+const HttpService_1 = require("./http/HttpService");
+const Manager_1 = require("./storage/Manager");
+const ip = require("ip");
+const expressPino = require("express-pino-logger");
+exports.PORT = 4000;
+exports.serverAddress = ip.address() + exports.PORT;
+const logger = pino({
+    level: process.env.LOG_LEVEL || 'info'
+});
+const app = express();
+exports.app = app;
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: true }));
+app.options('*', cors());
+const server = process.env.NODE_ENV === "development" ? app.listen(exports.PORT) : https.createServer({
+    key: fs.readFileSync(path.resolve(process.env.SSL_KEY || './ssl/key.pem')),
+    cert: fs.readFileSync(path.resolve(process.env.SSL_CRT || './ssl/cert.pem')),
+    ca: process.env.SSL_CA ? fs.readFileSync(path.resolve(process.env.SSL_CA)) : undefined,
+    requestCert: true,
+    rejectUnauthorized: false
+}, app);
+exports.server = server;
+app.use(expressPino());
+const resetDevices = () => Manager_1.manager.removeDevicesByServer(exports.serverAddress)
+    .then(() => logger.warn("Removed all devices of " + exports.serverAddress + " first"));
+const init = () => __awaiter(void 0, void 0, void 0, function* () {
+    return Manager_1.manager.init()
+        .then(() => SocketServer_1.default.init(server))
+        .then(() => HttpService_1.default.init(app))
+        .then(() => resetDevices());
+});
+logger.info("[SERVER] Starting ...");
 init()
-    .then(() => {
-    io.on("connection", (socket) => {
-        authentication.authorizeSocket(socket)
-            .then((user) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("NEW CONNECTION");
-            const sendToDevice = (event, payload) => {
-                socket.emit(event, payload);
-            };
-            // Socket has been authorized
-            // Check if user is already in database
-            let existingUser = yield database.readUser(user.id);
-            if (!existingUser) {
-                yield database.createUser(user);
-            }
-            else {
-                user = existingUser;
-            }
-            // Create device
-            let commitedDevice = undefined;
-            let device;
-            if (socket.handshake.query && socket.handshake.query.device) {
-                commitedDevice = JSON.parse(socket.handshake.query.device);
-                if (commitedDevice.mac) {
-                    device = yield database.readDeviceByUserAndMac(user.id, socket.handshake.query.device.mac);
-                }
-            }
-            if (!device) {
-                const initialDevice = Object.assign(Object.assign({}, commitedDevice), { userId: user.id, videoProducer: [], audioProducer: [], ovProducer: [] });
-                device = yield database.createDevice(initialDevice);
-            }
-            socket.on("disconnect", () => {
-                console.log("Remove device");
-                database.deleteDevice(device.id);
-            });
-            console.log(device);
-            socket.emit(events_1.ServerEvents.READY, device);
-        }))
-            .catch((error) => {
-            socket.error(error.message);
-            console.error("INVALID CONNECTION ATTEMPT");
-            socket.disconnect();
-        });
-    });
-});
-const testDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
-    database.on(IDatabase_1.DatabaseEvents.StageAdded, () => {
-        console.log("Yeah, Stage added");
-    });
-    database.on(IDatabase_1.DatabaseEvents.StageChanged, () => {
-        console.log("Yeah, Stage changed");
-    });
-    database.on(IDatabase_1.DatabaseEvents.StageRemoved, () => {
-        console.log("Yeah, Stage removed");
-    });
-    database.on(IDatabase_1.DatabaseEvents.UserAdded, () => {
-        console.log("Yeah, User added");
-    });
-    database.on(IDatabase_1.DatabaseEvents.UserRemoved, () => {
-        console.log("Yeah, User removed");
-    });
-    console.log("Creating stage");
-    yield database.createStage({
-        name: "My stage",
-        groups: [],
-        admins: [],
-        directors: [],
-        width: 0,
-        length: 0,
-        height: 0,
-        absorption: 0,
-        reflection: 0
-    }).then(stage => {
-        console.log("Deleting " + stage.id);
-        return database.deleteStage(stage.id)
-            .then(result => {
-            if (result) {
-                console.log("Deleted " + stage.id);
-            }
-            else {
-                console.log("Not deleted " + stage.id);
-            }
-        });
-    });
-    console.log("Creating stage");
-    yield database.createStage({
-        name: "My other stage",
-        groups: [],
-        admins: [],
-        directors: [],
-        width: 0,
-        length: 0,
-        height: 0,
-        absorption: 0,
-        reflection: 0
-    }).then(stage => {
-        console.log("Deleting " + stage.id);
-        return database.deleteStage(stage.id)
-            .then(result => {
-            if (result) {
-                console.log("Deleted " + stage.id);
-            }
-            else {
-                console.log("Not deleted " + stage.id);
-            }
-        });
-    });
-    console.log("Creating user");
-    yield database.createUser({
-        name: "User"
-    }).then(user => {
-        return database.deleteUser(user.id);
-    });
-});
+    .then(() => logger.info("[SERVER] DONE, running on port " + exports.PORT))
+    .catch(error => logger.error("[SERVER] Could not start:\n" + error));
 //# sourceMappingURL=index.js.map

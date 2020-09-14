@@ -21,13 +21,10 @@ var HttpService;
             }
             return Authentication_1.authentication.authorizeRequest(req)
                 .then(user => {
-                return Manager_1.manager.getStage(req.params.stageId)
-                    .then(stage => {
-                    if (stage.admins.indexOf(user._id) !== -1) {
-                        return res.status(200).send(stage);
-                    }
-                    return res.sendStatus(404);
-                });
+                if (user.managedStages.indexOf(req.params.stageId) !== -1)
+                    return Manager_1.manager.getStage(req.params.stageId)
+                        .then(stage => res.status(200).send(stage));
+                return res.sendStatus(404);
             })
                 .catch((error) => {
                 console.log(error);

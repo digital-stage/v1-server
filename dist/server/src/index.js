@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.server = exports.app = exports.PORT = void 0;
+exports.server = exports.app = exports.serverAddress = exports.PORT = void 0;
 const pino = require("pino");
 const SocketServer_1 = require("./socket/SocketServer");
 const express = require("express");
@@ -19,7 +19,9 @@ const fs = require("fs");
 const path = require("path");
 const HttpService_1 = require("./http/HttpService");
 const Manager_1 = require("./storage/Manager");
+const ip = require("ip");
 exports.PORT = 4000;
+exports.serverAddress = ip.address() + exports.PORT;
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
 });
@@ -36,18 +38,13 @@ const server = process.env.NODE_ENV === "development" ? app.listen(exports.PORT)
     rejectUnauthorized: false
 }, app);
 exports.server = server;
-const resetDevices = () => {
-    return Manager_1.manager.getDevices()
-        .then(devices => devices.forEach((device) => __awaiter(void 0, void 0, void 0, function* () { return yield Manager_1.manager.removeDevice(device._id); })))
-        .then(() => logger.warn("Removed all devices first!"));
-};
+const resetDevices = () => Manager_1.manager.removeDevicesByServer(exports.serverAddress)
+    .then(() => logger.warn("Removed all devices of " + exports.serverAddress + " first"));
 const init = () => __awaiter(void 0, void 0, void 0, function* () {
     return Manager_1.manager.init()
         .then(() => SocketServer_1.default.init(server))
         .then(() => HttpService_1.default.init(app))
-        .then(() => {
-        return resetDevices();
-    });
+        .then(() => resetDevices());
 });
 logger.info("[SERVER] Starting ...");
 init()

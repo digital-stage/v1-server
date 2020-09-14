@@ -14,7 +14,8 @@ class DummyAuthentication implements Auth.IAuthentication {
                     _id: "123",
                     uid: "123",
                     name: "Test",
-                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de"
+                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de",
+                    stageMembers: []
                 });
             reject(new Error("Invalid credentials, try 123"))
         })
@@ -30,10 +31,20 @@ class DummyAuthentication implements Auth.IAuthentication {
                     _id: "123",
                     uid: "123",
                     name: "Test",
-                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de"
+                    avatarUrl: "https://vignette.wikia.nocookie.net/bibi-blocksberg/images/e/e1/Dgtzgh.png/revision/latest/top-crop/width/360/height/450?cb=20190623184129&path-prefix=de",
+                    stageMembers: []
                 });
             reject(new Error("Invalid credentials, try 123"))
         })
+    }
+
+    login(email: string, password: string) {
+    }
+
+    logout() {
+    }
+
+    signup(email: string, password: string) {
     }
 }
 

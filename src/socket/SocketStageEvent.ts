@@ -4,61 +4,8 @@ import {User} from "../model.common";
 import {manager} from "../storage/Manager";
 import Client from "../model.client";
 import GroupMemberPrototype = Client.GroupMemberPrototype;
+import {ClientStageEvents, ServerStageEvents} from "../events";
 
-export enum ServerStageEvents {
-    STAGE_READY = "stage-ready",
-
-    STAGE_LEFT = "stage-left",
-    STAGE_JOINED = "stage-joined",
-
-    STAGE_ADDED = "stage-added",
-    STAGE_CHANGED = "stage-changed",
-    STAGE_REMOVED = "stage-removed",
-
-    GROUP_ADDED = "group-added",
-    GROUP_CHANGED = "group-changed",
-    GROUP_REMOVED = "group-removed",
-
-    GROUP_MEMBER_ADDED = "group-member-added",
-    GROUP_MEMBER_CHANGED = "group-member-changed",
-    GROUP_MEMBER_REMOVED = "group-member-removed",
-
-    CUSTOM_GROUP_VOLUME_ADDED = "custom-group-volume-added",
-    CUSTOM_GROUP_VOLUME_CHANGED = "custom-group-volume-changed",
-    CUSTOM_GROUP_VOLUME_REMOVED = "custom-group-volume-removed",
-
-    CUSTOM_GROUP_MEMBER_VOLUME_ADDED = "custom-group-member-volume-added",
-    CUSTOM_GROUP_MEMBER_CHANGED = "custom-group-member-volume-changed",
-    CUSTOM_GROUP_MEMBER_REMOVED = "custom-group-member-volume-removed",
-
-    PRODUCER_ADDED = "producer-added",
-    PRODUCER_CHANGED = "producer-changed",
-    PRODUCER_REMOVED = "producer-removed",
-}
-
-export enum ClientStageEvents {
-    ADD_STAGE = "add-stage",
-
-    JOIN_STAGE = "join-stage",
-    LEAVE_STAGE = "leave-stage",
-
-    SET_CUSTOM_GROUP_VOLUME = "set-custom-group-volume",
-    SET_CUSTOM_GROUP_MEMBER_VOLUME = "set-custom-group-member-volume",
-
-    ADD_PRODUCER = "add-producer",
-    CHANGE_PRODUCER = "add-producer",
-    REMOVE_PRODUCER = "remove-producer",
-
-    // Following shall be only possible if client is admin of stage
-    CHANGE_STAGE = "change-stage",
-    REMOVE_STAGE = "remove-stage",
-
-    ADD_GROUP = "add-group",
-    CHANGE_GROUP = "update-group",
-    REMOVE_GROUP = "remove-group",
-
-    CHANGE_GROUP_MEMBER = "update-group-member",
-}
 
 class SocketStageHandler {
     private user: User;
@@ -71,16 +18,29 @@ class SocketStageHandler {
 
     public addSocketHandler() {
         // STAGE MANAGEMENT
-        this.socket.on(ClientStageEvents.ADD_STAGE, (payload: {
-            name: string, password: string | null
-        }) => manager.createStage(this.user, payload.name, payload.password).then(stage => SocketServer.sendToStage(stage._id, ServerStageEvents.STAGE_ADDED, stage)));
-        this.socket.on(ClientStageEvents.CHANGE_STAGE, (id: string, stage: Partial<Client.StagePrototype>) =>
-            manager.updateStage(this.user, id, stage)
-                .then(() => SocketServer.sendToStage(id, ServerStageEvents.STAGE_CHANGED, id))
+        this.socket.on(ClientStageEvents.ADD_STAGE, (payload: Partial<Client.StagePrototype>) => {
+            console.log("add-stage");
+            return manager.createStage(this.user, payload)
+                .then(stage => {
+                    console.log("Stage is:");
+                    console.log(stage);
+                    return stage;
+                })
+                .then(stage => SocketServer.sendToStage(stage._id, ServerStageEvents.STAGE_ADDED, stage))
+                .catch(error => console.error(error))
+        });
+        this.socket.on(ClientStageEvents.CHANGE_STAGE, (payload: { id: string, stage: Partial<Client.StagePrototype> }) => {
+                console.log("change-stage");
+                console.log(payload);
+                return manager.updateStage(this.user, payload.id, payload.stage)
+                    .then(() => SocketServer.sendToStage(payload.id, ServerStageEvents.STAGE_CHANGED, payload));
+            }
         );
         this.socket.on(ClientStageEvents.REMOVE_STAGE, (id: string) =>
             manager.removeStage(this.user, id)
-                .then(() => SocketServer.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id))
+                .then(() =>
+                    SocketServer.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id)
+                )
         );
 
         // GROUP MANAGEMENT
@@ -88,7 +48,7 @@ class SocketStageHandler {
             stageId: string,
             name: string
         }) => manager.addGroup(this.user, payload.stageId, payload.name).then(group => SocketServer.sendToStage(group.stageId, ServerStageEvents.GROUP_ADDED, group)));
-        this.socket.on(ClientStageEvents.CHANGE_GROUP, (id: string, group: Partial<Client.GroupPrototype>) => manager.updateGroup(this.user, id, group).then(() => SocketServer.sendToStage(this.user._id, ServerStageEvents.GROUP_CHANGED, group)));
+        this.socket.on(ClientStageEvents.CHANGE_GROUP, (payload: { id: string, group: Partial<Client.GroupPrototype> }) => manager.updateGroup(this.user, payload.id, payload.group).then(group => SocketServer.sendToStage(group.stageId, ServerStageEvents.GROUP_CHANGED, payload)));
         this.socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) => manager.removeGroup(this.user, id).then(() => SocketServer.sendToStage(this.user._id, ServerStageEvents.GROUP_REMOVED, id)));
 
         // STAGE MEMBER MANAGEMENT
@@ -132,6 +92,7 @@ class SocketStageHandler {
                 .then(stages => {
                         stages.forEach(stage => {
                             // Send stage
+                            console.log("Sending managed stage " + stage.name);
                             SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_ADDED, stage);
                             // Send associated models
                             return Promise.all([

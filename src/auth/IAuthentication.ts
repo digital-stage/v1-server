@@ -8,6 +8,12 @@ namespace Auth {
         authorizeSocket(socket: socketIO.Socket): Promise<User>;
 
         authorizeRequest(req: Request): Promise<User>;
+
+        login(email: string, password: string);
+
+        signup(email: string, password: string);
+
+        logout();
     }
 
     export type IAuthenticationMiddleware = (socket: Socket, fn: (err?: any) => void) => void;

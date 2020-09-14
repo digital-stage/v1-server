@@ -6,7 +6,9 @@ export type StageMemberId = string;
 export type DeviceId = string;
 export type RouterId = string;
 export type ProducerId = string;
+export type CustomGroupVolumeId = string;
 export type CustomStageMemberVolumeId = string;
+export type CustomGroupMemberVolumeId = string;
 export type MediaDeviceId = string;
 
 export interface MediaDevice {
@@ -34,14 +36,19 @@ export interface Device {
     inputVideoDevice?: MediaDeviceId;
     inputAudioDevice?: MediaDeviceId;
     outputAudioDevice?: MediaDeviceId;
+
+    server: string;
 }
 
 export interface User {
     _id: UserId,
-    uid: string;
+    uid?: string;
     name: string;
+
     avatarUrl?: string;
     stageId?: StageId;
+
+    stageMembers: StageMemberId[];
 }
 
 export interface Producer {

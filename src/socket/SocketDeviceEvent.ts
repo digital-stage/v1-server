@@ -3,20 +3,11 @@ import * as socketIO from "socket.io";
 import SocketServer from "./SocketServer";
 import * as pino from "pino";
 import {manager} from "../storage/Manager";
-import {ClientStageEvents, ServerStageEvents} from "./SocketStageEvent";
+import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents, ServerStageEvents} from "../events";
+import {serverAddress} from "../index";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-export enum ServerDeviceEvents {
-    LOCAL_DEVICE_READY = "local-device-ready",
-    DEVICE_ADDED = "device-added",
-    DEVICE_CHANGED = "device-changed",
-    DEVICE_REMOVED = "device-removed",
-}
-
-export enum ClientDeviceEvents {
-    UPDATE_DEVICE = "update-device"
-}
 
 class SocketDeviceHandler {
     private device: Device;
@@ -110,7 +101,7 @@ class SocketDeviceHandler {
         return manager.getDevicesByUser(this.user)
             .then(remoteDevices =>
                 remoteDevices.forEach(remoteDevice => {
-                    console.log(remoteDevice);
+                    console.log("Have remote device " + remoteDevice._id);
                     if (remoteDevice._id.toString() !== this.device._id.toString()) {
                         return SocketServer.sendToDevice(this.socket, ServerDeviceEvents.DEVICE_ADDED, remoteDevice);
                     }
@@ -138,6 +129,7 @@ class SocketDeviceHandler {
                 }
             }
         }
+        // We have to create the device
         const device: Omit<Device, "_id"> = {
             canVideo: false,
             canAudio: false,
@@ -150,10 +142,7 @@ class SocketDeviceHandler {
             userId: this.user._id,
             online: true
         };
-        console.log(device);
-        // We have to create the device
-        this.device = await manager.createDevice(this.user, device);
-        console.log(this.device);
+        this.device = await manager.createDevice(this.user, serverAddress, device);
         SocketServer.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_ADDED, this.device);
         SocketServer.sendToDevice(this.socket, ServerDeviceEvents.LOCAL_DEVICE_READY, this.device);
         logger.debug("[SOCKET DEVICE EVENT] Finished generating device for user " + this.user.name + " by creating new.");
