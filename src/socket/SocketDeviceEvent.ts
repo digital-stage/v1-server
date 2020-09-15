@@ -30,8 +30,22 @@ class SocketDeviceHandler {
             });
     }
 
+    private debug(message: string) {
+        if (this.device) {
+            return logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") " + message);
+        }
+        return logger.debug("[SOCKET DEVICE EVENT] " + message);
+    }
+
+    private trace(message: string) {
+        if (this.device) {
+            return logger.trace("[SOCKET DEVICE EVENT](" + this.user + ") " + message);
+        }
+        return logger.trace("[SOCKET DEVICE EVENT] " + message);
+    }
+
     public addSocketHandler() {
-        logger.trace("[SOCKET DEVICE EVENT](" + this.device._id + ") Registering socket handling for " + this.user.name + "...");
+        this.trace("Registering socket handling for " + this.user.name + "...");
         this.socket.on(ClientDeviceEvents.UPDATE_DEVICE, (updatedDevice: Partial<Device>) => {
             if (updatedDevice._id.toString() === this.device._id.toString()) {
                 this.device = {
@@ -39,7 +53,7 @@ class SocketDeviceHandler {
                     ...updatedDevice
                 };
             }
-            logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Updating device '" + this.device.name + "' of" + this.user.name);
+            this.debug("Updating device of " + this.user.name);
             return Promise.all([
                 SocketServer.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, updatedDevice),
                 manager.updateDevice(updatedDevice._id, updatedDevice)
@@ -52,21 +66,21 @@ class SocketDeviceHandler {
                 .then(producer =>
                     // We have to get the current user object ... TODO: Find a way to automatically update the user
                     this.refreshUser().then(() => {
-                        logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Added producer for device '" + this.device.name + "' by" + this.user.name);
+                        this.debug("Added producer for device '" + this.device.name + "' by " + this.user.name);
                         if (this.user.stageId)
                             return SocketServer.sendToJoinedStageMembers(this.user.stageId, ServerStageEvents.PRODUCER_ADDED, producer)
                     })));
         this.socket.on(ClientStageEvents.CHANGE_PRODUCER, (id: string, producer: Partial<Producer>) => manager.updateProducer(this.device, id, producer)
             .then(producer => this.refreshUser()
                 .then(() => {
-                    logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Updated producer '" + id + "' for device '" + this.device.name + "' by" + this.user.name);
+                    this.debug("Updated producer '" + id + "' for device '" + this.device.name + "' by " + this.user.name);
                     if (this.user.stageId)
                         return SocketServer.sendToJoinedStageMembers(this.user.stageId, ServerStageEvents.PRODUCER_CHANGED, producer);
                 })));
         this.socket.on(ClientStageEvents.REMOVE_PRODUCER, (id: string) =>
             manager.removeProducer(this.device, id)
                 .then(producer => this.refreshUser().then(() => {
-                    logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Removed producer '" + id + "' for device '" + this.device.name + "' by" + this.user.name);
+                    this.debug("Removed producer '" + id + "' for device '" + this.device.name + "' by" + this.user.name);
                     if (this.user.stageId)
                         return SocketServer.sendToJoinedStageMembers(this.user.stageId, ServerStageEvents.GROUP_REMOVED, producer._id)
                 })));
@@ -74,13 +88,13 @@ class SocketDeviceHandler {
 
         this.socket.on("disconnect", () => {
             if (!this.device.mac) {
-                logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Removed device '" + this.device.name + "' of " + this.user.name);
+                this.debug("Removed device '" + this.device.name + "' of " + this.user.name);
                 return Promise.all([
                     SocketServer.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_REMOVED, this.device),
                     manager.removeDevice(this.device._id)
                 ]);
             } else {
-                logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Switched device '" + this.device.name + "' of " + this.user.name + " to offline");
+                this.debug("Switched device '" + this.device.name + "' of " + this.user.name + " to offline");
                 return manager.updateDevice(this.device._id, {
                     online: false
                 }).then((device) => {
@@ -92,7 +106,7 @@ class SocketDeviceHandler {
                 })
             }
         });
-        logger.trace("[SOCKET DEVICE EVENT](" + this.device._id + ") Registered socket handling for " + this.user.name + "!");
+        this.trace("Registered socket handling for " + this.user.name + "!");
     }
 
     public sendRemoteDevices(): Promise<void> {
@@ -100,15 +114,16 @@ class SocketDeviceHandler {
         return manager.getDevicesByUser(this.user)
             .then(remoteDevices =>
                 remoteDevices.forEach(remoteDevice => {
-                    console.log("Have remote device " + remoteDevice._id);
                     if (remoteDevice._id.toString() !== this.device._id.toString()) {
+                        this.debug("Sent remote device " + remoteDevice._id + " to device " + this.device.name + " of " + this.user.name + "!");
                         return SocketServer.sendToDevice(this.socket, ServerDeviceEvents.DEVICE_ADDED, remoteDevice);
                     }
-                })).then(() => logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Sent remote devices to device " + this.device.name + " of " + this.user.name + "!"))
+                })
+            );
     }
 
     public async generateDevice(): Promise<Device> {
-        logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Generating device for user " + this.user.name + "...");
+        this.debug("Generating device for user " + this.user.name + "...");
         let initialDevice: Device;
         if (this.socket.handshake.query && this.socket.handshake.query.device) {
             initialDevice = JSON.parse(this.socket.handshake.query.device);
@@ -122,7 +137,7 @@ class SocketDeviceHandler {
                     }).then(device => {
                         SocketServer.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, device);
                         SocketServer.sendToDevice(this.socket, ServerDeviceEvents.LOCAL_DEVICE_READY, device);
-                        logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Finished generating device for user " + this.user.name + " by reuse with mac address");
+                        this.trace("Finished generating device for user " + this.user.name + " by reuse with mac address");
                         return device;
                     });
                 }
@@ -144,7 +159,7 @@ class SocketDeviceHandler {
         this.device = await manager.createDevice(this.user, serverAddress, device);
         SocketServer.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_ADDED, this.device);
         SocketServer.sendToDevice(this.socket, ServerDeviceEvents.LOCAL_DEVICE_READY, this.device);
-        logger.debug("[SOCKET DEVICE EVENT](" + this.device._id + ") Finished generating device for user " + this.user.name + " by creating new.");
+        this.debug("Finished generating device for user " + this.user.name + " by creating new.");
         return this.device;
     }
 }

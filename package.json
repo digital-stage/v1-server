@@ -4,7 +4,7 @@
   "description": "Stage and device orchestration server for digital-stage.org",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development PORT=4000 LOG_LEVEL=debug AUTH_URL=https://auth.api.digital-stage.org nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
+    "dev": "NODE_ENV=development PORT=4000 LOG_LEVEL=trace AUTH_URL=https://auth.api.digital-stage.org nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
     "build": "tsc",
     "start": "NODE_ENV=development PORT=4000 tsc && node ./dist/index.js",
     "deploy-production": "pm2 deploy ecosystem.config.js production --env production --force",

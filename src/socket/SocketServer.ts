@@ -88,7 +88,7 @@ namespace SocketServer {
         logger.info("[SOCKETSERVER] Initializing socket server...");
         io.on("connection", (socket: socketIO.Socket) => {
             logger.trace("[SOCKETSERVER] Incoming socket request " + socket.id);
-            authentication.authorizeSocket(socket)
+            return authentication.authorizeSocket(socket)
                 .then(async (user: User) => {
                     logger.trace("[SOCKETSERVER](" + socket.id + ") Authenticated user " + user.name);
                     const deviceHandler = new SocketDeviceHandler(socket, user);

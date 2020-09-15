@@ -99,8 +99,10 @@ class SocketStageHandler {
             // Send active stage
             manager.getActiveStageSnapshotByUser(this.user)
                 .then(stage => {
-                    SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_READY, stage);
-                    logger.trace("[SOCKET STAGE EVENT] Send active stage " + stage.name + " to user " + this.user.name);
+                    if (stage) {
+                        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_READY, stage);
+                        logger.trace("[SOCKET STAGE EVENT] Send active stage " + stage.name + " to user " + this.user.name);
+                    }
                 }),
             // Send non-active stages
             manager.getStagesByUser(this.user)
