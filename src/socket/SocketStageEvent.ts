@@ -3,9 +3,9 @@ import SocketServer from "./SocketServer";
 import {User} from "../model.common";
 import {manager} from "../storage/Manager";
 import Client from "../model.client";
-import GroupMemberPrototype = Client.GroupMemberPrototype;
 import {ClientStageEvents, ServerStageEvents} from "../events";
 import * as pino from "pino";
+import GroupMemberPrototype = Client.GroupMemberPrototype;
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'

@@ -8,9 +8,9 @@ import {
     RouterId,
     StageId,
     StageMemberId,
-    User, UserId
+    User,
+    UserId
 } from "../model.common";
-import {UserType} from "./mongo/model.mongo";
 
 export interface IDeviceManager {
     init(): Promise<any>;

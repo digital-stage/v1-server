@@ -6,11 +6,13 @@ import {
     ProducerId,
     RouterId,
     StageId,
-    StageMemberId, User,
+    StageMemberId,
+    User,
 } from "../../model.common";
 import Client from "../../model.client";
 import {
-    CustomGroupVolumeModel, CustomStageMemberVolumeModel,
+    CustomGroupVolumeModel,
+    CustomStageMemberVolumeModel,
     DeviceModel,
     GroupModel,
     ProducerModel,
@@ -23,10 +25,10 @@ import * as pino from "pino";
 import * as mongoose from "mongoose";
 import {IDeviceManager, IStageManager} from "../IManager";
 import {ServerDeviceEvents, ServerStageEvents} from "../../events";
+import {MONGO_URL} from "../../index";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-const URL: string = process.env.MONGO_URL || "mongodb://127.0.0.1:4321/digitalstage";
 
 const USE_WATCHER: boolean = false;
 
@@ -36,8 +38,8 @@ class MongoStageManager implements IStageManager, IDeviceManager {
     init(): Promise<any> {
         if (!this.initialized) {
             this.initialized = true;
-            logger.info("[MONGOSTORAGE] Initializing mongo storage ...");
-            return mongoose.connect(URL, {
+            logger.info("[MONGOSTORAGE] Initializing mongo storage at " + MONGO_URL + " ...");
+            return mongoose.connect(MONGO_URL, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
                 useFindAndModify: false

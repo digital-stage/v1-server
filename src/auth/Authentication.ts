@@ -1,5 +1,5 @@
 import Auth from "./IAuthentication";
-import IAuthentication = Auth.IAuthentication;
 import DefaultAuthentication from "./default/DefaultAuthentication";
+import IAuthentication = Auth.IAuthentication;
 
 export const authentication: IAuthentication = new DefaultAuthentication();
