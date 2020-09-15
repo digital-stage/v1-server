@@ -17,6 +17,7 @@ module.exports = {
             ref: 'origin/master',
             repo: "https://github.com/digital-stage/server.git",
             path: '/node/server',
+            node_args : '-r dotenv/config',
             'post-deploy': 'npm install && cp ~/.env .env && source .env && npm run build && pm2 reload ecosystem.config.js'
         }
     }
