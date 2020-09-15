@@ -12,17 +12,16 @@ import * as ip from "ip";
 import * as expressPino from "express-pino-logger";
 import * as dotenv from 'dotenv';
 
+const logger = pino({
+    level: process.env.LOG_LEVEL || 'info'
+});
 
-const CUSTOM_ENV_PATH: string = process.env.ENV_PATH || ".env";
-
-
-const result = dotenv.config({path: CUSTOM_ENV_PATH});
-if (result.error) {
-    throw result.error
-} else {
-    console.log("Alles gut");
-    console.log(result.parsed);
-    console.log(process.env);
+if (process.env.ENV_PATH) {
+    logger.debug("Using custom environment file at " + process.env.ENV_PATH);
+    const envConfig = dotenv.parse(fs.readFileSync(process.env.ENV_PATH));
+    for (const k in envConfig) {
+        process.env[k] = envConfig[k];
+    }
 }
 
 export const PORT: number | string = process.env.PORT || 4000;
@@ -34,11 +33,6 @@ export const REDIS_PASSWORD: string = process.env.REDIS_PASSWORD || "";
 export const DEBUG_PAYLOAD: boolean = (process.env.DEBUG_PAYLOAD && process.env.DEBUG_PAYLOAD === "true") || false;
 export const serverAddress = ip.address() + PORT;
 
-const logger = pino({
-    level: process.env.LOG_LEVEL || 'info'
-});
-
-logger.debug("Using environment file at " + process.env.ENV_PATH);
 
 const app: core.Express = express();
 app.use(express.urlencoded({extended: true}));
