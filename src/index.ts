@@ -12,7 +12,9 @@ import * as ip from "ip";
 import * as expressPino from "express-pino-logger";
 import * as dotenv from 'dotenv';
 
+
 const CUSTOM_ENV_PATH: string = process.env.ENV_PATH || ".env";
+
 
 dotenv.config({path: CUSTOM_ENV_PATH});
 
@@ -28,6 +30,8 @@ export const serverAddress = ip.address() + PORT;
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
 });
+
+logger.debug("Using environment file at " + process.env.ENV_PATH);
 
 const app: core.Express = express();
 app.use(express.urlencoded({extended: true}));

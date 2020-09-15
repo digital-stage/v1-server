@@ -9,7 +9,7 @@ module.exports = {
         watch: false,
         env_production: {
             "NODE_ENV": "production",
-            ENV_PATH: "/home/node/.env",
+            "ENV_PATH": "/home/node/.env",
         },
         max_memory_restart: '1G',
     }],
@@ -23,9 +23,9 @@ module.exports = {
             path: '/node/server',
             env: {
                 "NODE_ENV": "production",
-                ENV_PATH: "/home/node/.env",
+                "ENV_PATH": "/home/node/.env",
             },
-            'post-deploy': 'npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env production'
+            'post-deploy': 'npm install && npm run build && pm2 restart ecosystem.config.js --env production'
         }
     }
 };
