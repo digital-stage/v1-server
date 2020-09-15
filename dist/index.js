@@ -21,7 +21,8 @@ const HttpService_1 = require("./http/HttpService");
 const Manager_1 = require("./storage/Manager");
 const ip = require("ip");
 const expressPino = require("express-pino-logger");
-exports.PORT = 4000;
+const USE_SSL = process.env.USE_SSL && process.env.USE_SSL === "true";
+exports.PORT = process.env.PORT || 4000;
 exports.serverAddress = ip.address() + exports.PORT;
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -31,13 +32,13 @@ exports.app = app;
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: true }));
 app.options('*', cors());
-const server = process.env.NODE_ENV === "development" ? app.listen(exports.PORT) : https.createServer({
+const server = (USE_SSL) ? https.createServer({
     key: fs.readFileSync(path.resolve(process.env.SSL_KEY || './ssl/key.pem')),
     cert: fs.readFileSync(path.resolve(process.env.SSL_CRT || './ssl/cert.pem')),
     ca: process.env.SSL_CA ? fs.readFileSync(path.resolve(process.env.SSL_CA)) : undefined,
     requestCert: true,
     rejectUnauthorized: false
-}, app);
+}, app) : app.listen(exports.PORT);
 exports.server = server;
 app.use(expressPino());
 const resetDevices = () => Manager_1.manager.removeDevicesByServer(exports.serverAddress)

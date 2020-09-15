@@ -13,6 +13,7 @@ module.exports = {
         },
         env_production: {
             NODE_ENV: 'production',
+            LOG_LEVEL: 'debug',
             PORT: '4000',
             USE_SSL: false,
             SSL_CRT: '/etc/letsencrypt/live/api.digital-stage.org/fullchain.pem',
@@ -32,6 +33,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 PORT: '4000',
+                LOG_LEVEL: 'debug',
                 USE_SSL: false,
                 SSL_CRT: '/etc/letsencrypt/live/api.digital-stage.org/fullchain.pem',
                 SSL_KEY: '/etc/letsencrypt/live/api.digital-stage.org/privkey.pem',
