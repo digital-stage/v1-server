@@ -11,18 +11,6 @@ module.exports = {
         env: {
             NODE_ENV: 'development'
         },
-        env_production: {
-            NODE_ENV: 'production',
-            PORT: '4000',
-            LOG_LEVEL: 'debug',
-            USE_SSL: false,
-            AUTH_URL: 'https://auth.api.digital-stage.org',
-            MONGO_URL: 'mongodb://localhost:4321/digitalstage',
-            USE_REDIS: true,
-            REDIS_HOSTNAME: 'localhost',
-            REDIS_PORT: '25061',
-            REDIS_PASSWORD: ''
-        }
     }],
 
     deploy: {
@@ -34,7 +22,7 @@ module.exports = {
             path: '/node/server',
             env: {
                 NODE_ENV: 'production',
-                PORT: '4000',
+                PORT: '',
                 LOG_LEVEL: 'debug',
                 USE_SSL: false,
                 AUTH_URL: 'https://auth.api.digital-stage.org',
