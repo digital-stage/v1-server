@@ -18,7 +18,7 @@ module.exports = {
             SSL_CRT: '/etc/letsencrypt/live/api.digital-stage.org/fullchain.pem',
             SSL_KEY: '/etc/letsencrypt/live/api.digital-stage.org/privkey.pem',
             AUTH_URL: 'https://auth.api.digital-stage.org',
-            MONGO_URL: 'mongodb://10.114.0.4:27017/auth'
+            MONGO_URL: 'mongodb://10.114.0.4:27017/digitalstage'
         }
     }],
 
@@ -36,7 +36,7 @@ module.exports = {
                 SSL_CRT: '/etc/letsencrypt/live/api.digital-stage.org/fullchain.pem',
                 SSL_KEY: '/etc/letsencrypt/live/api.digital-stage.org/privkey.pem',
                 AUTH_URL: 'https://auth.api.digital-stage.org',
-                MONGO_URL: 'mongodb://10.114.0.4:27017/auth'
+                MONGO_URL: 'mongodb://10.114.0.4:27017/digitalstage'
             },
             'post-deploy': 'npm install && npm run build && pm2 reload ecosystem.config.js --env production'
         }

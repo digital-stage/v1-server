@@ -11,8 +11,10 @@ import {manager} from "./storage/Manager";
 import * as ip from "ip";
 import * as expressPino from "express-pino-logger";
 
+const USE_SSL: boolean = process.env.USE_SSL && process.env.USE_SSL === "true";
 export const PORT: number | string = process.env.PORT || 4000;
 export const serverAddress = ip.address() + PORT;
+
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -22,7 +24,7 @@ const app: core.Express = express();
 app.use(express.urlencoded({extended: true}));
 app.use(cors({origin: true}));
 app.options('*', cors());
-const server = process.env.NODE_ENV === "development" ? app.listen(PORT) : https.createServer({
+const server = (USE_SSL) ? https.createServer({
     key: fs.readFileSync(
         path.resolve(process.env.SSL_KEY || './ssl/key.pem')
     ),
@@ -32,7 +34,7 @@ const server = process.env.NODE_ENV === "development" ? app.listen(PORT) : https
     ca: process.env.SSL_CA ? fs.readFileSync(path.resolve(process.env.SSL_CA)) : undefined,
     requestCert: true,
     rejectUnauthorized: false
-}, app);
+}, app) : app.listen(PORT);
 
 app.use(expressPino());
 

@@ -26,7 +26,7 @@ import {ServerDeviceEvents, ServerStageEvents} from "../../events";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-const uri = "mongodb://127.0.0.1:4321/digitalstage";
+const URL: string = process.env.MONGO_URL || "mongodb://127.0.0.1:4321/digitalstage";
 
 const USE_WATCHER: boolean = false;
 
@@ -37,7 +37,7 @@ class MongoStageManager implements IStageManager, IDeviceManager {
         if (!this.initialized) {
             this.initialized = true;
             logger.info("[MONGOSTORAGE] Initializing mongo storage ...");
-            return mongoose.connect(uri, {
+            return mongoose.connect(URL, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
                 useFindAndModify: false
