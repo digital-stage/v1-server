@@ -10,11 +10,11 @@ import HttpService from "./http/HttpService";
 import {manager} from "./storage/Manager";
 import * as ip from "ip";
 import * as expressPino from "express-pino-logger";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-const USE_SSL: boolean = process.env.USE_SSL && process.env.USE_SSL === "true";
 export const PORT: number | string = process.env.PORT || 4000;
 export const serverAddress = ip.address() + PORT;
-
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -24,7 +24,7 @@ const app: core.Express = express();
 app.use(express.urlencoded({extended: true}));
 app.use(cors({origin: true}));
 app.options('*', cors());
-const server = (USE_SSL) ? https.createServer({
+const server = (process.env.USE_SSL && process.env.USE_SSL === "true") ? https.createServer({
     key: fs.readFileSync(
         path.resolve(process.env.SSL_KEY || './ssl/key.pem')
     ),

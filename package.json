@@ -4,9 +4,9 @@
   "description": "Stage and device orchestration server for digital-stage.org",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development PORT=4000 LOG_LEVEL=trace AUTH_URL=https://auth.api.digital-stage.org nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
+    "dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
     "build": "tsc",
-    "start": "NODE_ENV=development PORT=4000 tsc && node ./dist/index.js",
+    "start": "tsc && node ./dist/index.js",
     "deploy-production": "pm2 deploy ecosystem.config.js production --env production --force",
     "reload-production": "pm2 deploy ecosystem.config.js production --env production exec 'pm2 reload server'"
   },
@@ -38,6 +38,7 @@
     "@types/passport-jwt": "^3.0.3",
     "@types/rethinkdb": "^2.3.16",
     "@types/socket.io": "^2.1.8",
+    "@types/socket.io-redis": "^1.0.26",
     "nodemon": "^2.0.4",
     "pino-colada": "^2.1.0",
     "process": "^0.11.10",
@@ -48,6 +49,7 @@
   "dependencies": {
     "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-pino-logger": "^5.0.0",
     "firebase-admin": "^8.13.0",
@@ -62,8 +64,10 @@
     "passport-local": "^1.0.0",
     "pino": "^6.6.0",
     "pino-pretty": "^4.2.1",
+    "redis": "^3.0.2",
     "rethinkdb": "^2.4.2",
     "socket.io": "^2.3.0",
+    "socket.io-redis": "^5.4.0",
     "swagger-ui-express": "^4.1.4",
     "uuid": "^8.2.0"
   }

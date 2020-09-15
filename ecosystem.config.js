@@ -14,12 +14,13 @@ module.exports = {
         env_production: {
             NODE_ENV: 'production',
             LOG_LEVEL: 'debug',
-            PORT: '4000',
+            PORT: 4000,
             USE_SSL: false,
-            SSL_CRT: '/etc/letsencrypt/live/api.digital-stage.org/fullchain.pem',
-            SSL_KEY: '/etc/letsencrypt/live/api.digital-stage.org/privkey.pem',
             AUTH_URL: 'https://auth.api.digital-stage.org',
-            MONGO_URL: 'mongodb://10.114.0.4:27017/digitalstage'
+            MONGO_URL: 'mongodb://10.114.0.4:27017/digitalstage',
+            USE_REDIS: true,
+            REDIS_HOSTNAME: 'private-api-db-redis-do-user-7336329-0.b.db.ondigitalocean.com',
+            REDIS_PORT: 25061,
         }
     }],
 
@@ -35,10 +36,10 @@ module.exports = {
                 PORT: '4000',
                 LOG_LEVEL: 'debug',
                 USE_SSL: false,
-                SSL_CRT: '/etc/letsencrypt/live/api.digital-stage.org/fullchain.pem',
-                SSL_KEY: '/etc/letsencrypt/live/api.digital-stage.org/privkey.pem',
                 AUTH_URL: 'https://auth.api.digital-stage.org',
-                MONGO_URL: 'mongodb://10.114.0.4:27017/digitalstage'
+                MONGO_URL: 'mongodb://10.114.0.4:27017/digitalstage',
+                REDIS_HOSTNAME: 'private-api-db-redis-do-user-7336329-0.b.db.ondigitalocean.com',
+                REDIS_PORT: 25061,
             },
             'post-deploy': 'npm install && npm run build && pm2 reload ecosystem.config.js --env production'
         }

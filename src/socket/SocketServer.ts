@@ -1,4 +1,6 @@
 import * as socketIO from "socket.io";
+import * as redisAdapter from "socket.io-redis";
+import * as redis from "redis";
 import {authentication} from "../auth/Authentication";
 import * as pino from "pino";
 import * as https from "https";
@@ -9,6 +11,11 @@ import SocketStageHandler from "./SocketStageEvent";
 import {manager} from "../storage/Manager";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
+const USE_REDIS: boolean = (process.env.USE_REDIS && process.env.USE_REDIS === "true") || false;
+const REDIS_HOSTNAME: string = process.env.REDIS_HOSTNAME || "localhost";
+const REDIS_PORT: number | string = process.env.REDIS_PORT || 25061;
+const REDIS_PASSWORD: string = process.env.REDIS_PASSWORD || "";
+
 const DEBUG_PAYLOAD: boolean = false;
 
 namespace SocketServer {
@@ -85,6 +92,11 @@ namespace SocketServer {
 
     export const init = (server: https.Server | http.Server) => {
         io = socketIO(server);
+        if( USE_REDIS ) {
+            const pub = redis.createClient(REDIS_PORT, REDIS_HOSTNAME, { auth_pass: REDIS_PASSWORD });
+            const sub = redis.createClient(REDIS_PORT, REDIS_HOSTNAME, { auth_pass: REDIS_PASSWORD });
+            io.adapter(redisAdapter({pubClient: pub, subClient: sub}));
+        }
         logger.info("[SOCKETSERVER] Initializing socket server...");
         io.on("connection", (socket: socketIO.Socket) => {
             logger.trace("[SOCKETSERVER] Incoming socket request " + socket.id);

@@ -2,3 +2,5 @@
 package-lock.json
 firebase-adminsdk.json
 dist
+ecosystem.config.js
+.env
