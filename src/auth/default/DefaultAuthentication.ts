@@ -8,8 +8,8 @@ import * as pino from "pino";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-const VERIFY_TOKEN_URL: string = "http://localhost:5000/verify";
-const GET_USER_BY_TOKEN_URL: string = "http://localhost:5000/profile";
+const AUTH_SERVER_URL: string = process.env.AUTH_URL || "http://localhost:5000";
+const GET_USER_BY_TOKEN_URL: string = AUTH_SERVER_URL + "/profile";
 
 export interface DefaultAuthUser {
     _id: string;

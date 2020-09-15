@@ -11,8 +11,7 @@ import {manager} from "./storage/Manager";
 import * as ip from "ip";
 import * as expressPino from "express-pino-logger";
 
-
-export const PORT: number = 4000;
+export const PORT: number | string = process.env.PORT || 4000;
 export const serverAddress = ip.address() + PORT;
 
 const logger = pino({
