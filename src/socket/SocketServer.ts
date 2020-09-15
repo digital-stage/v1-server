@@ -61,9 +61,9 @@ namespace SocketServer {
      */
     export const sendToDevice = (socket: socketIO.Socket, event: string, payload?: any) => {
         if (DEBUG_PAYLOAD) {
-            logger.debug("SEND TO DEVICE '" + socket.id + "' " + event + ": " + JSON.stringify(payload));
+            logger.trace("[SOCKETSERVER] SEND TO DEVICE '" + socket.id + "' " + event + ": " + JSON.stringify(payload));
         } else {
-            logger.debug("SEND TO DEVICE '" + socket.id + "' " + event);
+            logger.trace("[SOCKETSERVER] SEND TO DEVICE '" + socket.id + "' " + event);
         }
         socket.emit(event, payload);
     }
@@ -76,9 +76,9 @@ namespace SocketServer {
      */
     export const sendToUser = (_id: UserId, event: string, payload?: any) => {
         if (DEBUG_PAYLOAD) {
-            logger.debug("SEND TO USER '" + _id + "' " + event + ": " + JSON.stringify(payload));
+            logger.trace("[SOCKETSERVER] SEND TO USER '" + _id + "' " + event + ": " + JSON.stringify(payload));
         } else {
-            logger.debug("SEND TO USER '" + _id + "' " + event);
+            logger.trace("[SOCKETSERVER] SEND TO USER '" + _id + "' " + event);
         }
         io.to(_id).emit(event, payload);
     };
@@ -87,9 +87,10 @@ namespace SocketServer {
         io = socketIO(server);
         logger.info("[SOCKETSERVER] Initializing socket server...");
         io.on("connection", (socket: socketIO.Socket) => {
-            logger.debug("Incoming socket request " + socket.id);
+            logger.trace("[SOCKETSERVER] Incoming socket request " + socket.id);
             authentication.authorizeSocket(socket)
                 .then(async (user: User) => {
+                    logger.trace("[SOCKETSERVER](" + socket.id + ") Authenticated user " + user.name);
                     const deviceHandler = new SocketDeviceHandler(socket, user);
                     const stageHandler = new SocketStageHandler(socket, user);
                     /**
@@ -111,22 +112,22 @@ namespace SocketServer {
                             // Finally join user stream
                             return socket.join(user._id, err => {
                                 if (err)
-                                    logger.error("Could not join room: " + err);
-                                logger.debug("Joined room: " + user._id);
-                                logger.debug("Ready");
+                                    logger.warn("[SOCKETSERVER](" + socket.id + ") Could not join room: " + err);
+                                logger.trace("[SOCKETSERVER](" + socket.id + ") Joined room: " + user._id);
+                                logger.trace("[SOCKETSERVER](" + socket.id + ") Ready");
                             });
                         })
                         .catch((error) => {
                             socket.error(error.message);
-                            logger.error("Internal error");
+                            logger.error("[SOCKETSERVER](" + socket.id + ")Internal error");
                             logger.error(error);
                             socket.disconnect();
                         })
                 })
                 .catch((error) => {
                     socket.error("Invalid authorization");
-                    logger.error("INVALID CONNECTION ATTEMPT");
-                    logger.error(error);
+                    logger.trace("[SOCKETSERVER](" + socket.id + ") INVALID CONNECTION ATTEMPT");
+                    logger.trace(error);
                     socket.disconnect();
                 })
         });
