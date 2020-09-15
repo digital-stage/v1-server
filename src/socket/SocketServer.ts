@@ -1,6 +1,6 @@
 import * as socketIO from "socket.io";
-import * as redisAdapter from "socket.io-redis";
-import * as redis from "redis";
+import * as Redis from "ioredis";
+import * as redisAdapter from 'socket.io-redis';
 import {authentication} from "../auth/Authentication";
 import * as pino from "pino";
 import * as https from "https";
@@ -9,14 +9,10 @@ import {StageId, User, UserId} from "../model.common";
 import SocketDeviceHandler from "./SocketDeviceEvent";
 import SocketStageHandler from "./SocketStageEvent";
 import {manager} from "../storage/Manager";
+import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} from "../index";
+
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
-const USE_REDIS: boolean = (process.env.USE_REDIS && process.env.USE_REDIS === "true") || false;
-const REDIS_HOSTNAME: string = process.env.REDIS_HOSTNAME || "localhost";
-const REDIS_PORT: number | string = process.env.REDIS_PORT || 25061;
-const REDIS_PASSWORD: string = process.env.REDIS_PASSWORD || "";
-
-const DEBUG_PAYLOAD: boolean = false;
 
 namespace SocketServer {
     let io: socketIO.Server;
@@ -91,13 +87,16 @@ namespace SocketServer {
     };
 
     export const init = (server: https.Server | http.Server) => {
-        io = socketIO(server);
-        if( USE_REDIS ) {
-            const pub = redis.createClient(REDIS_PORT, REDIS_HOSTNAME, { auth_pass: REDIS_PASSWORD });
-            const sub = redis.createClient(REDIS_PORT, REDIS_HOSTNAME, { auth_pass: REDIS_PASSWORD });
-            io.adapter(redisAdapter({pubClient: pub, subClient: sub}));
-        }
         logger.info("[SOCKETSERVER] Initializing socket server...");
+        io = socketIO(server);
+        if (USE_REDIS) {
+            logger.info("[SOCKETSERVER] Using redis at " + REDIS_HOSTNAME + ":" + REDIS_PORT);
+            const redis = new Redis("rediss://:" + REDIS_PASSWORD + "@" + REDIS_HOSTNAME + ":" + REDIS_PORT);
+            io.adapter(redisAdapter({
+                pubClient: redis,
+                subClient: redis
+            }));
+        }
         io.on("connection", (socket: socketIO.Socket) => {
             logger.trace("[SOCKETSERVER] Incoming socket request " + socket.id);
             return authentication.authorizeSocket(socket)
@@ -131,7 +130,7 @@ namespace SocketServer {
                         })
                         .catch((error) => {
                             socket.error(error.message);
-                            logger.error("[SOCKETSERVER](" + socket.id + ")Internal error");
+                            logger.error("[SOCKETSERVER](" + socket.id + ") Internal error");
                             logger.error(error);
                             socket.disconnect();
                         })
