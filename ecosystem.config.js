@@ -21,18 +21,9 @@ module.exports = {
             repo: "https://github.com/digital-stage/server.git",
             path: '/node/server',
             env: {
-                NODE_ENV: 'production',
-                PORT: '',
-                LOG_LEVEL: 'debug',
-                USE_SSL: false,
-                AUTH_URL: 'https://auth.api.digital-stage.org',
-                MONGO_URL: 'mongodb://localhost:4321/digitalstage',
-                USE_REDIS: true,
-                REDIS_HOSTNAME: 'localhost',
-                REDIS_PORT: '25061',
-                REDIS_PASSWORD: ''
+                NODE_ENV: 'production'
             },
-            'post-deploy': 'source .env && npm install && npm run build && pm2 reload ecosystem.config.js --env production --update-env'
+            'post-deploy': 'npm install && cp ~/.env .env && npm run build && pm2 reload ecosystem.config.js --env production'
         }
     }
 };
