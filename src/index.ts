@@ -19,6 +19,9 @@ const CUSTOM_ENV_PATH: string = process.env.ENV_PATH || ".env";
 const result = dotenv.config({path: CUSTOM_ENV_PATH});
 if (result.error) {
     throw result.error
+} else {
+    console.log("Alles gut");
+    console.log(result.parsed);
 }
 
 export const PORT: number | string = process.env.PORT || 4000;
