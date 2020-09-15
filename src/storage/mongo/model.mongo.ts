@@ -1,12 +1,18 @@
 import * as mongoose from "mongoose";
 import {Device, Producer, Router, User} from "../../model.common";
 import Client from "../../model.client";
+import * as pino from "pino";
+
+const logger = pino({
+    level: process.env.LOG_LEVEL || 'info'
+});
+
 
 const StageSchema = new mongoose.Schema({
     name: {type: String},
     password: {type: String},
 
-    admins: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    admins: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
 
     // 3D Room specific
     width: {type: Number},
@@ -16,32 +22,16 @@ const StageSchema = new mongoose.Schema({
     reflection: {type: Number},
 });
 type StageType = Client.StagePrototype & mongoose.Document;
-StageSchema.pre('deleteOne', function (next) {
-    mongoose.model("Group").deleteMany({'stageId': this["_id"]}, (err) => {
-        if (err) {
-            console.log(`[error] ${err}`);
-            next(err);
-        } else {
-            console.log('success');
-            next();
-        }
-    });
-    mongoose.model("StageMember").deleteMany({'stageId': this["_id"]}, err => {
-        if (err) {
-            console.log(`[error] ${err}`);
-            next(err);
-        } else {
-            console.log('success');
-            next();
-        }
-    });
-});
-StageSchema.pre('deleteMany', function (next) {
-    console.log("StageSchema deleteMany hook: " + this["_id"]);
-    mongoose.model('Group').deleteMany({stageId: this["_id"]}, next);
-    mongoose.model('StageMember').deleteMany({stageId: this["_id"]}, next);
-    mongoose.model('User').updateMany({stage: this["_id"]}, {stageId: null}, next);
-});
+const OnStageRemoved = (stage: StageType) => {
+    logger.debug("[MONGO MODEL] Performing delete hook for stage " + stage._id + ": " + stage.name);
+    return Promise.all([
+        mongoose.model('Group').deleteMany({stageId: stage._id}).exec(),
+        mongoose.model('StageMember').deleteMany({stageId: stage._id}).exec(),
+        mongoose.model('User').updateMany({stage: stage._id}, {stageId: null}).exec(),
+    ]);
+}
+StageSchema.post('remove', OnStageRemoved);
+StageSchema.post('findOneAndRemove', OnStageRemoved);
 export const StageModel = mongoose.model<StageType>('Stage', StageSchema);
 
 
@@ -51,12 +41,16 @@ const GroupSchema = new mongoose.Schema({
 
     volume: {type: Number}
 });
-GroupSchema.pre('deleteMany', function (next) {
-    console.log("GroupSchema deleteMany hook: " + this["_id"]);
-    mongoose.model('CustomGroupVolume').deleteMany({groupId: this["_id"]}, next);
-    mongoose.model('StageMember').deleteMany({groupId: this["_id"]}, next);
-});
 export type GroupType = Client.GroupPrototype & mongoose.Document;
+const OnGroupRemoved = (group: GroupType) => {
+    logger.debug("[MONGO MODEL] Performing delete hook for group " + group._id + ": " + group.name);
+    return Promise.all([
+        mongoose.model('CustomGroupVolume').deleteMany({groupId: group._id}).exec(),
+        mongoose.model('StageMember').deleteMany({groupId: group._id}).exec()
+    ])
+};
+GroupSchema.post('remove', OnGroupRemoved);
+GroupSchema.post('findOneAndRemove', OnGroupRemoved);
 export const GroupModel = mongoose.model<GroupType>('Group', GroupSchema);
 
 
@@ -84,13 +78,17 @@ const StageMemberSchema = new mongoose.Schema({
     y: {type: Number},
     z: {type: Number},
 });
-StageMemberSchema.pre('deleteMany', function (next) {
-    console.log("StageMemberSchema deleteMany hook: " + this["_id"]);
-    mongoose.model('User').updateMany({stageMembers: this["_id"]}, {$pull: {stageMembers: this["_id"]}}, next);
-    mongoose.model('CustomStageMemberVolume').deleteMany({stageMemberId: this["_id"]}, next);
-});
-StageMemberSchema.index({userId: 1, stageId: 1}, {unique: true});
 type StageMemberType = Client.StageMemberPrototype & mongoose.Document;
+const OnStageMemberRemoved = (stageMember: StageMemberType) => {
+    logger.debug("[MONGO MODEL] Performing delete hook for stage member " + stageMember._id + " for user " + stageMember.userId);
+    return Promise.all([
+        mongoose.model('User').updateMany({stageMembers: stageMember._id}, {$pull: {stageMembers: stageMember._id}}).exec(),
+        mongoose.model('CustomStageMemberVolume').deleteMany({stageMemberId: stageMember._id}).exec()
+    ])
+};
+StageMemberSchema.post('remove', OnStageMemberRemoved);
+StageMemberSchema.post('findOneAndRemove', OnStageMemberRemoved);
+StageMemberSchema.index({userId: 1, stageId: 1}, {unique: true});
 export const StageMemberModel = mongoose.model<StageMemberType>('StageMember', StageMemberSchema);
 
 
@@ -112,15 +110,18 @@ const UserSchema = new mongoose.Schema({
 
     stageMembers: [{type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'}]
 }, {timestamps: true});
-UserSchema.pre('deleteMany', function (next) {
-    console.log("UserSchema deleteMany hook: " + this["_id"]);
-    //TODO: Abandoned stages?
-    mongoose.model('Device').deleteMany({userId: this["_id"]}, next);
-    mongoose.model('StageMember').deleteMany({userId: this["_id"]}, next);
-});
 export type UserType = User & mongoose.Document;
+const OnUserRemoved = (user: UserType) => {
+    logger.debug("[MONGO MODEL] Performing delete hook for user " + user._id + ":" + user.name);
+    return Promise.all([
+        mongoose.model('Device').deleteMany({userId: user._id}).exec(),
+        mongoose.model('StageMember').deleteMany({userId: user._id}).exec(),
+        mongoose.model('Stage').deleteMany({$and: [{admins: user._id}, {admins: {$size: 1}}]}).exec()
+    ]);
+};
+UserSchema.post('remove', OnUserRemoved);
+UserSchema.post('findOneAndRemove', OnUserRemoved);
 export const UserModel = mongoose.model<UserType>('User', UserSchema);
-
 
 const DeviceSchema = new mongoose.Schema({
     name: {type: String},
@@ -162,11 +163,15 @@ DeviceSchema.index("mac", {
         }
     }
 });
-DeviceSchema.pre('deleteMany', function (next) {
-    console.log("DeviceSchema deleteMany hook: " + this["_id"]);
-    mongoose.model('Producer').deleteMany({deviceId: this["_id"]}, next);
-});
 export type DeviceType = Device & mongoose.Document;
+const OnDeviceRemoved = (device: DeviceType) => {
+    logger.debug("[MONGO MODEL] Performing delete hook for device " + device._id + ":" + device.name);
+    return Promise.all([
+        mongoose.model('Producer').deleteMany({deviceId: device._id}).exec()
+    ]);
+};
+DeviceSchema.post('remove', OnDeviceRemoved);
+DeviceSchema.post('findOneAndRemove', OnDeviceRemoved);
 export const DeviceModel = mongoose.model<DeviceType>('Device', DeviceSchema);
 
 const ProducerSchema = new mongoose.Schema({
@@ -187,9 +192,13 @@ const RouterSchema = new mongoose.Schema({
     ipv6: {type: String},
     port: {type: Number},
 }, {timestamps: true});
-RouterSchema.pre('deleteMany', function (next) {
-    console.log("RouterSchema deleteMany hook: " + this["_id"]);
-    mongoose.model('Producer').deleteMany({routerId: this["_id"]}, next);
-});
 type RouterType = Router & mongoose.Document;
+const OnRouterRemoved = (router: RouterType) => {
+    logger.debug("[MONGO MODEL] Performing delete hook for router " + router._id + ":" + router.ipv4);
+    return Promise.all([
+        mongoose.model('Producer').deleteMany({routerId: router._id}).exec()
+    ]);
+};
+RouterSchema.post('remove', OnRouterRemoved);
+RouterSchema.post('findOneAndRemove', OnRouterRemoved);
 export const RouterModel = mongoose.model<RouterType>('Router', RouterSchema);

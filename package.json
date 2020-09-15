@@ -4,7 +4,7 @@
   "description": "Stage and device orchestration server for digital-stage.org",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
+    "dev": "LOG_LEVEL=trace nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
     "build": "tsc",
     "start": "tsc && node ./dist/index.js",
     "deploy-production": "pm2 deploy ecosystem.config.js production --env production --force",

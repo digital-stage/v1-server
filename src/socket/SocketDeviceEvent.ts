@@ -99,7 +99,7 @@ class SocketDeviceHandler {
                     online: false
                 }).then((device) => {
                     if (!device.online) {
-                        console.error("Fix me");
+                        logger.error("Fix me");
                         device.online = false;
                     }
                     return SocketServer.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, device);

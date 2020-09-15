@@ -24,9 +24,9 @@ class SocketStageHandler {
         // STAGE MANAGEMENT
         this.socket.on(ClientStageEvents.ADD_STAGE, (payload: Partial<Client.StagePrototype>) => {
             return manager.createStage(this.user, payload)
-                .then(stage => SocketServer.sendToStage(stage._id, ServerStageEvents.STAGE_ADDED, stage))
+                .then(stage => stage.admins.forEach(admin => SocketServer.sendToUser(admin, ServerStageEvents.STAGE_ADDED, stage)))
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " created stage " + payload.name))
-                .catch(error => console.error(error))
+                .catch(error => logger.error(error))
         });
         this.socket.on(ClientStageEvents.CHANGE_STAGE, (payload: { id: string, stage: Partial<Client.StagePrototype> }) => {
                 return manager.updateStage(this.user, payload.id, payload.stage)
@@ -35,10 +35,10 @@ class SocketStageHandler {
             }
         );
         this.socket.on(ClientStageEvents.REMOVE_STAGE, (id: string) =>
-            manager.removeStage(this.user, id)
-                .then(() =>
-                    SocketServer.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id)
-                ).then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " removed stage " + id))
+            manager.getUsersByStage(id)
+                .then(stageUsers => manager.removeStage(this.user, id)
+                    .then(() => stageUsers.forEach(stageUser => SocketServer.sendToUser(stageUser._id, ServerStageEvents.STAGE_REMOVED, id)))
+                    .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " removed stage " + id)))
         );
 
         // GROUP MANAGEMENT
@@ -54,7 +54,7 @@ class SocketStageHandler {
             .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " updated group " + payload.id))
         );
         this.socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) => manager.removeGroup(this.user, id)
-            .then(() => SocketServer.sendToStage(this.user._id, ServerStageEvents.GROUP_REMOVED, id))
+            .then(group => SocketServer.sendToStage(group.stageId, ServerStageEvents.GROUP_REMOVED, id))
             .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " removed group " + id))
         );
 

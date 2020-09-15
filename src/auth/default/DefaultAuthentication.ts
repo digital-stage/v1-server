@@ -23,11 +23,7 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
             Authorization: "Bearer " + token
         }
     })
-        .then(result => result.json() as DefaultAuthUser)
-        .then(user => {
-            console.log(user);
-            return user;
-        })
+        .then(result => result.json() as DefaultAuthUser);
 }
 
 class DefaultAuthentication implements Auth.IAuthentication {
@@ -38,16 +34,17 @@ class DefaultAuthentication implements Auth.IAuthentication {
                 return manager.getUserByUid(authUser._id)
                     .then(user => {
                         if (!user) {
-                            logger.debug("[DEFAULT AUTH] Creating new user " + authUser.name);
+                            logger.trace("[AUTH] Creating new user " + authUser.name);
                             return manager.createUserWithUid(authUser._id, authUser.name, authUser.avatarUrl)
                                 .then(user => resolve(user));
                         }
-                        logger.debug("[DEFAULT AUTH] Signed in user " + authUser.name);
+                        logger.trace("[AUTH] Signed in user " + authUser.name);
                         return resolve(user);
                     })
             })
             .catch(error => {
-                console.error(error);
+                logger.trace("[AUTH] Invalid token delivered");
+                logger.error(error);
                 reject(new Error("Invalid credentials"));
             });
     }
