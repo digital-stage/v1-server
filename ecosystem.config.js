@@ -23,7 +23,7 @@ module.exports = {
             env: {
                 NODE_ENV: 'production'
             },
-            'post-deploy': 'npm install && cp ~/.env .env && npm run build && pm2 reload ecosystem.config.js --env production'
+            'post-deploy': 'npm install && cp ~/.env .env && npm run build && pm2 reload ecosystem.config.js --env production --update-env'
         }
     }
 };
