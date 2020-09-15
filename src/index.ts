@@ -16,7 +16,10 @@ import * as dotenv from 'dotenv';
 const CUSTOM_ENV_PATH: string = process.env.ENV_PATH || ".env";
 
 
-dotenv.config({path: CUSTOM_ENV_PATH});
+const result = dotenv.config({path: CUSTOM_ENV_PATH});
+if (result.error) {
+    throw result.error
+}
 
 export const PORT: number | string = process.env.PORT || 4000;
 export const MONGO_URL: string = process.env.MONGO_URL || "mongodb://127.0.0.1:4321/digitalstage";
