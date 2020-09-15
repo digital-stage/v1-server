@@ -7,6 +7,10 @@ module.exports = {
         instances: 1,
         autorestart: true,
         watch: false,
+        env_production: {
+            "NODE_ENV": "production",
+            ENV_PATH: "/home/node/.env",
+        },
         max_memory_restart: '1G',
     }],
 
@@ -17,7 +21,11 @@ module.exports = {
             ref: 'origin/master',
             repo: "https://github.com/digital-stage/server.git",
             path: '/node/server',
-            'post-deploy': 'npm install && cp ~/.env .env && source .env && npm run build && pm2 reload ecosystem.config.js --update-env'
+            env: {
+                "NODE_ENV": "production",
+                ENV_PATH: "/home/node/.env",
+            },
+            'post-deploy': 'npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env production'
         }
     }
 };
