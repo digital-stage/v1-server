@@ -5,11 +5,9 @@ import {User} from "../../model.common";
 import fetch from "node-fetch";
 import {manager} from "../../storage/Manager";
 import * as pino from "pino";
+import {AUTH_SERVER_URL} from "../../index";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
-
-const AUTH_SERVER_URL: string = process.env.AUTH_URL || "http://localhost:5000";
-const GET_USER_BY_TOKEN_URL: string = AUTH_SERVER_URL + "/profile";
 
 export interface DefaultAuthUser {
     _id: string;
@@ -19,7 +17,7 @@ export interface DefaultAuthUser {
 }
 
 const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
-    return fetch(GET_USER_BY_TOKEN_URL, {
+    return fetch(AUTH_SERVER_URL + "/profile", {
         headers: {
             'Content-Type': 'application/json',
             Authorization: "Bearer " + token

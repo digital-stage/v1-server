@@ -91,10 +91,11 @@ namespace SocketServer {
         io = socketIO(server);
         if (USE_REDIS) {
             logger.info("[SOCKETSERVER] Using redis at " + REDIS_HOSTNAME + ":" + REDIS_PORT);
-            const redis = new Redis("rediss://:" + REDIS_PASSWORD + "@" + REDIS_HOSTNAME + ":" + REDIS_PORT);
+            const pub = new Redis("rediss://:" + REDIS_PASSWORD + "@" + REDIS_HOSTNAME + ":" + REDIS_PORT);
+            const sub = new Redis("rediss://:" + REDIS_PASSWORD + "@" + REDIS_HOSTNAME + ":" + REDIS_PORT);
             io.adapter(redisAdapter({
-                pubClient: redis,
-                subClient: redis
+                pubClient: pub,
+                subClient: sub
             }));
         }
         io.on("connection", (socket: socketIO.Socket) => {
