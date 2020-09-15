@@ -22,6 +22,7 @@ if (result.error) {
 } else {
     console.log("Alles gut");
     console.log(result.parsed);
+    console.log(process.env);
 }
 
 export const PORT: number | string = process.env.PORT || 4000;
