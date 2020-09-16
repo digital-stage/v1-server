@@ -1,4 +1,9 @@
 
+export enum ServerUserEvents {
+    USER_READY = "user-ready",
+    USER_CHANGED = "user-changed"
+}
+
 export enum ServerDeviceEvents {
     LOCAL_DEVICE_READY = "local-device-ready",
     DEVICE_ADDED = "device-added",

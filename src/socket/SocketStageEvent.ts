@@ -70,16 +70,22 @@ class SocketStageHandler {
 
         // this.user STAGE MANAGEMENT (join, leave)
         this.socket.on(ClientStageEvents.JOIN_STAGE, (payload: {
-            stageId: string,
-            groupId: string,
-            password: string | null
-        }) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
-            .then(groupMember => Promise.all([
-                SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember),
-                manager.getActiveStageSnapshotByUser(this.user)
-                    .then(stage => SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, stage))
-                    .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
-            ])));
+                stageId: string,
+                groupId: string,
+                password: string | null
+            }) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
+                .then(groupMember => {
+                    SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
+                    SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, payload.stageId);
+                })
+                /* .then(groupMember => Promise.all([
+                        SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember),
+                        manager.getActiveStageSnapshotByUser(this.user)
+                            .then(stage => SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, stage))
+                            .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
+                    ]))*/
+                .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
+        );
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
             Promise.all([
                 SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT),
@@ -97,13 +103,14 @@ class SocketStageHandler {
     generateStage(): Promise<any> {
         return Promise.all([
             // Send active stage
+            /*
             manager.getActiveStageSnapshotByUser(this.user)
                 .then(stage => {
                     if (stage) {
                         SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_READY, stage);
                         logger.trace("[SOCKET STAGE EVENT] Send active stage " + stage.name + " to user " + this.user.name);
                     }
-                }),
+                }),*/
             // Send non-active stages
             manager.getStagesByUser(this.user)
                 .then(stages => {
@@ -125,6 +132,11 @@ class SocketStageHandler {
                         });
                     }
                 )
+                .then(() => {
+                    if (this.user.stageId) {
+                        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, this.user.stageId);
+                    }
+                })
         ]);
     }
 }

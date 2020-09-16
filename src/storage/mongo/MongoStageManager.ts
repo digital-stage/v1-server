@@ -169,27 +169,42 @@ class MongoStageManager implements IStageManager, IDeviceManager {
     }
 
     joinStage(user: User, stageId: StageId, groupId: GroupId, password?: string): Promise<Client.GroupMemberPrototype> {
-        return StageModel.findById(stageId).lean().exec()
-            .then(stage => {
-                if (stage.password && stage.password !== password) {
-                    throw new Error("Invalid password");
-                } else {
-                    const stageMember = new StageMemberModel();
-                    stageMember.userId = user._id;
-                    stageMember.stageId = stageId;
-                    stageMember.groupId = groupId;
-                    stageMember.volume = 1;
-                    return stageMember.save()
-                        .then(() => {
-                            SocketServer.sendToUser(user._id, ServerStageEvents.STAGE_JOINED, stageId);
-                            return {
-                                ...stageMember.toObject(),
-                                name: user.name,
-                                avatarUrl: user.avatarUrl
+        return UserModel.findById(user._id).exec()
+            .then(user => {
+                if (user.stageId !== stageId) {
+                    return StageModel.findById(stageId).lean().exec()
+                        .then(stage => {
+                            if (stage.password && stage.password !== password) {
+                                throw new Error("Invalid password");
+                            } else {
+                                user.stageId = stageId;
+                                return user.save()
+                                    .then(() => {
+                                        return StageMemberModel.find({userId: user._id, stageId: stageId})
+                                            .then(stageMember => {
+                                                if (!stageMember) {
+                                                    const stageMember = new StageMemberModel();
+                                                    stageMember.userId = user._id;
+                                                    stageMember.stageId = stageId;
+                                                    stageMember.groupId = groupId;
+                                                    stageMember.volume = 1;
+                                                    return stageMember.save()
+                                                        .then(() => {
+                                                            return {
+                                                                ...stageMember.toObject(),
+                                                                name: user.name,
+                                                                avatarUrl: user.avatarUrl
+                                                            }
+                                                        });
+                                                }
+                                                return stageMember;
+                                            })
+                                    })
                             }
                         });
                 }
-            });
+            })
+
     }
 
     leaveStage(user: User): Promise<boolean> {
