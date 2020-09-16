@@ -177,28 +177,27 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                             if (stage.password && stage.password !== password) {
                                 throw new Error("Invalid password");
                             } else {
-                                user.stageId = stageId;
-                                return user.save()
-                                    .then(() => {
-                                        return StageMemberModel.find({userId: user._id, stageId: stageId})
-                                            .then(stageMember => {
-                                                if (!stageMember) {
-                                                    const stageMember = new StageMemberModel();
-                                                    stageMember.userId = user._id;
-                                                    stageMember.stageId = stageId;
-                                                    stageMember.groupId = groupId;
-                                                    stageMember.volume = 1;
-                                                    return stageMember.save()
-                                                        .then(() => {
-                                                            return {
-                                                                ...stageMember.toObject(),
-                                                                name: user.name,
-                                                                avatarUrl: user.avatarUrl
-                                                            }
-                                                        });
-                                                }
-                                                return stageMember;
-                                            })
+                                return StageMemberModel.find({userId: user._id, stageId: stageId})
+                                    .then(stageMember => {
+                                        if (!stageMember) {
+                                            const stageMember = new StageMemberModel();
+                                            stageMember.userId = user._id;
+                                            stageMember.stageId = stageId;
+                                            stageMember.groupId = groupId;
+                                            stageMember.volume = 1;
+                                            return stageMember.save()
+                                                .then(stageMember => {
+                                                    user.stageId = stageId;
+                                                    user.stageMembers.push(stageMember._id);
+                                                    return user.save()
+                                                        .then(() => ({
+                                                            ...stageMember.toObject(),
+                                                            name: user.name,
+                                                            avatarUrl: user.avatarUrl
+                                                        }))
+                                                });
+                                        }
+                                        return stageMember;
                                     })
                             }
                         });
