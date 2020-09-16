@@ -76,7 +76,10 @@ class SocketStageHandler {
             }, fn: (error?: string) => void) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
                 .then(groupMember => {
                     SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
-                    SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, payload.stageId);
+                    SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, {
+                        stageId: payload.stageId,
+                        groupId: payload.groupId
+                    });
                 })
                 /* .then(groupMember => Promise.all([
                         SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember),
