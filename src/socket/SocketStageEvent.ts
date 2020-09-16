@@ -89,11 +89,9 @@ class SocketStageHandler {
                     ]))*/
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
                 .then(() => {
-                    console.log("all right");
                     fn()
                 })
                 .catch(error => {
-                    console.log("Sending error" + error);
                     fn(error.message)
                 })
         );

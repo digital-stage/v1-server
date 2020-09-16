@@ -204,10 +204,6 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                                     return stageMember;
                                 })
                         })
-                        .catch(error => {
-                            logger.error(error);
-                            throw new Error(Errors.NOT_FOUND);
-                        })
                 }
             })
     }
