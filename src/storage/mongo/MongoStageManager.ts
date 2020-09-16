@@ -26,6 +26,7 @@ import * as mongoose from "mongoose";
 import {IDeviceManager, IStageManager} from "../IManager";
 import {ServerDeviceEvents, ServerStageEvents} from "../../events";
 import {MONGO_URL} from "../../index";
+import {Errors} from "../../errors";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -171,39 +172,44 @@ class MongoStageManager implements IStageManager, IDeviceManager {
     joinStage(user: User, stageId: StageId, groupId: GroupId, password?: string): Promise<Client.GroupMemberPrototype> {
         return UserModel.findById(user._id).exec()
             .then(user => {
-                if (user.stageId !== stageId) {
-                    return StageModel.findById(stageId).lean().exec()
+                if (user && user.stageId !== stageId) {
+                    return StageModel.findById(stageId).exec()
                         .then(stage => {
-                            if (stage.password && stage.password !== password) {
-                                throw new Error("Invalid password");
-                            } else {
-                                return StageMemberModel.find({userId: user._id, stageId: stageId})
-                                    .then(stageMember => {
-                                        if (!stageMember) {
-                                            const stageMember = new StageMemberModel();
-                                            stageMember.userId = user._id;
-                                            stageMember.stageId = stageId;
-                                            stageMember.groupId = groupId;
-                                            stageMember.volume = 1;
-                                            return stageMember.save()
-                                                .then(stageMember => {
-                                                    user.stageId = stageId;
-                                                    user.stageMembers.push(stageMember._id);
-                                                    return user.save()
-                                                        .then(() => ({
-                                                            ...stageMember.toObject(),
-                                                            name: user.name,
-                                                            avatarUrl: user.avatarUrl
-                                                        }))
-                                                });
-                                        }
-                                        return stageMember;
-                                    })
+                            if (!stage) {
+                                throw new Error(Errors.NOT_FOUND);
                             }
-                        });
+                            if (stage.password && stage.password !== password) {
+                                throw new Error(Errors.INVALID_PASSWORD);
+                            }
+                            return StageMemberModel.find({userId: user._id, stageId: stageId})
+                                .then(stageMember => {
+                                    if (!stageMember) {
+                                        const stageMember = new StageMemberModel();
+                                        stageMember.userId = user._id;
+                                        stageMember.stageId = stageId;
+                                        stageMember.groupId = groupId;
+                                        stageMember.volume = 1;
+                                        return stageMember.save()
+                                            .then(stageMember => {
+                                                user.stageId = stageId;
+                                                user.stageMembers.push(stageMember._id);
+                                                return user.save()
+                                                    .then(() => ({
+                                                        ...stageMember.toObject(),
+                                                        name: user.name,
+                                                        avatarUrl: user.avatarUrl
+                                                    }))
+                                            });
+                                    }
+                                    return stageMember;
+                                })
+                        })
+                        .catch(error => {
+                            logger.error(error);
+                            throw new Error(Errors.NOT_FOUND);
+                        })
                 }
             })
-
     }
 
     leaveStage(user: User): Promise<boolean> {

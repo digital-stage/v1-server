@@ -1,4 +1,8 @@
 
+export enum ServerGlobalEvents {
+    READY = "ready"
+}
+
 export enum ServerUserEvents {
     USER_READY = "user-ready",
     USER_CHANGED = "user-changed"

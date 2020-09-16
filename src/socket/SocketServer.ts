@@ -10,7 +10,7 @@ import SocketDeviceHandler from "./SocketDeviceEvent";
 import SocketStageHandler from "./SocketStageEvent";
 import {manager} from "../storage/Manager";
 import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} from "../index";
-import {ServerUserEvents} from "../events";
+import {ServerGlobalEvents, ServerStageEvents, ServerUserEvents} from "../events";
 
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
@@ -115,7 +115,7 @@ namespace SocketServer {
                      * STAGE MANAGEMENT
                      */
                     stageHandler.addSocketHandler();
-                    
+
                     sendToDevice(socket, ServerUserEvents.USER_READY, user);
 
                     return Promise.all([
@@ -130,6 +130,7 @@ namespace SocketServer {
                                     logger.warn("[SOCKETSERVER](" + socket.id + ") Could not join room: " + err);
                                 logger.trace("[SOCKETSERVER](" + socket.id + ") Joined room: " + user._id);
                                 logger.trace("[SOCKETSERVER](" + socket.id + ") Ready");
+                                SocketServer.sendToDevice(socket, ServerGlobalEvents.READY);
                             });
                         })
                         .catch((error) => {

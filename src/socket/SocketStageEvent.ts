@@ -73,7 +73,7 @@ class SocketStageHandler {
                 stageId: string,
                 groupId: string,
                 password: string | null
-            }) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
+            }, fn: (error?: string) => void) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
                 .then(groupMember => {
                     SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
                     SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, payload.stageId);
@@ -85,6 +85,14 @@ class SocketStageHandler {
                             .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
                     ]))*/
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
+                .then(() => {
+                    console.log("all right");
+                    fn()
+                })
+                .catch(error => {
+                    console.log("Sending error" + error);
+                    fn(error.message)
+                })
         );
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
             Promise.all([
