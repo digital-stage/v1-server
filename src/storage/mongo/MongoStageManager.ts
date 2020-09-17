@@ -23,17 +23,14 @@ import {
 import SocketServer from "../../socket/SocketServer";
 import * as pino from "pino";
 import * as mongoose from "mongoose";
-import {IDeviceManager, IStageManager, UserWithStageMember} from "../IManager";
-import {ServerDeviceEvents, ServerStageEvents} from "../../events";
-import {MONGO_URL} from "../../index";
+import {IDeviceManager, IStageManager, IUserManager} from "../IManager";
+import {MONGO_URL} from "../../env";
 import {Errors} from "../../errors";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
 
-const USE_WATCHER: boolean = false;
-
-class MongoStageManager implements IStageManager, IDeviceManager {
+class MongoStageManager implements IStageManager, IDeviceManager, IUserManager {
     private initialized: boolean = false;
 
     init(): Promise<any> {
@@ -45,28 +42,7 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                 useUnifiedTopology: true,
                 useFindAndModify: false
             })
-                .then(() => this.attachWatchers())
                 .then(() => logger.info("[MONGOSTORAGE] DONE initializing mongo storage."))
-        }
-    }
-
-    private attachWatchers() {
-        if (USE_WATCHER) {
-            DeviceModel.watch()
-                .on('change', (stream: any) => {
-                    const device: Device = stream.fullDocument;
-                    switch (stream.operationType) {
-                        case "insert":
-                            SocketServer.sendToUser(device.userId, ServerDeviceEvents.DEVICE_ADDED, device);
-                            break;
-                        case "update":
-                            SocketServer.sendToUser(device.userId, ServerDeviceEvents.DEVICE_CHANGED, device);
-                            break;
-                        case "delete":
-                            SocketServer.sendToUser(device.userId, ServerDeviceEvents.DEVICE_REMOVED, device._id);
-                            break;
-                    }
-                });
         }
     }
 

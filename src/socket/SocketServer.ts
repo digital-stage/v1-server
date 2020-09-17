@@ -1,22 +1,44 @@
 import * as socketIO from "socket.io";
 import * as Redis from "ioredis";
 import * as redisAdapter from 'socket.io-redis';
-import {authentication} from "../auth/Authentication";
 import * as pino from "pino";
 import * as https from "https";
 import * as http from "http";
 import {StageId, User, UserId} from "../model.common";
 import SocketDeviceHandler from "./SocketDeviceEvent";
 import SocketStageHandler from "./SocketStageEvent";
-import {manager} from "../storage/Manager";
-import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} from "../index";
-import {ServerGlobalEvents, ServerStageEvents, ServerUserEvents} from "../events";
-
+import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} from "../env";
+import {ServerGlobalEvents, ServerUserEvents} from "../events";
+import {IDeviceManager, IStageManager, IUserManager} from "../storage/IManager";
+import Auth from "../auth/IAuthentication";
+import IAuthentication = Auth.IAuthentication;
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-namespace SocketServer {
-    let io: socketIO.Server;
+export interface ISocketServer {
+    sendToStage(stageId: StageId, event: string, payload?: any);
+
+    sendToStageManagers(stageId: StageId, event: string, payload?: any);
+
+    sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any);
+
+    sendToDevice(socket: socketIO.Socket, event: string, payload?: any);
+
+    sendToUser(userId: UserId, event: string, payload?: any);
+
+    init();
+}
+
+class SocketServer implements ISocketServer {
+    private io: socketIO.Server;
+    private authentication: IAuthentication;
+    private readonly manager: IStageManager & IDeviceManager & IUserManager;
+    private readonly server: https.Server | http.Server;
+
+    constructor(manager: IStageManager & IDeviceManager & IUserManager, server: https.Server | http.Server, authentication: IAuthentication) {
+        this.manager = manager;
+        this.server = server;
+    }
 
     /**
      * Send event with payload to all users, that are associated anyway to the stage
@@ -24,13 +46,13 @@ namespace SocketServer {
      * @param event
      * @param payload
      */
-    export const sendToStage = (stageId: StageId, event: string, payload?: any) => {
-        return manager.getUsersByStage(stageId)
+    sendToStage(stageId: StageId, event: string, payload?: any) {
+        return this.manager.getUsersByStage(stageId)
             .then(users => {
                 return users;
             })
             .then(users => {
-                users.forEach(user => sendToUser(user._id, event, payload));
+                users.forEach(user => this.sendToUser(user._id, event, payload));
             });
     }
 
@@ -40,10 +62,10 @@ namespace SocketServer {
      * @param event
      * @param payload
      */
-    export const sendToStageManagers = (stageId: StageId, event: string, payload?: any) => {
-        return manager.getUsersManagingStage(stageId)
+    sendToStageManagers(stageId: StageId, event: string, payload?: any) {
+        return this.manager.getUsersManagingStage(stageId)
             .then(users => {
-                users.forEach(user => sendToUser(user._id, event, payload));
+                users.forEach(user => this.sendToUser(user._id, event, payload));
             });
     }
 
@@ -53,10 +75,10 @@ namespace SocketServer {
      * @param event
      * @param payload
      */
-    export const sendToJoinedStageMembers = (stageId: StageId, event: string, payload?: any) => {
-        return manager.getJoinedUsersOfStage(stageId)
+    sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any) {
+        return this.manager.getJoinedUsersOfStage(stageId)
             .then(users => {
-                users.forEach(user => sendToUser(user._id, event, payload));
+                users.forEach(user => this.sendToUser(user._id, event, payload));
             });
     }
 
@@ -66,7 +88,7 @@ namespace SocketServer {
      * @param event
      * @param payload
      */
-    export const sendToDevice = (socket: socketIO.Socket, event: string, payload?: any) => {
+    sendToDevice(socket: socketIO.Socket, event: string, payload?: any) {
         if (DEBUG_PAYLOAD) {
             logger.trace("[SOCKETSERVER] SEND TO DEVICE '" + socket.id + "' " + event + ": " + JSON.stringify(payload));
         } else {
@@ -81,34 +103,34 @@ namespace SocketServer {
      * @param event
      * @param payload
      */
-    export const sendToUser = (_id: UserId, event: string, payload?: any) => {
+    sendToUser(_id: UserId, event: string, payload?: any) {
         if (DEBUG_PAYLOAD) {
             logger.trace("[SOCKETSERVER] SEND TO USER '" + _id + "' " + event + ": " + JSON.stringify(payload));
         } else {
             logger.trace("[SOCKETSERVER] SEND TO USER '" + _id + "' " + event);
         }
-        io.to(_id).emit(event, payload);
+        this.io.to(_id).emit(event, payload);
     };
 
-    export const init = (server: https.Server | http.Server) => {
+    init() {
         logger.info("[SOCKETSERVER] Initializing socket server...");
-        io = socketIO(server);
+        this.io = socketIO(this.server);
         if (USE_REDIS) {
             logger.info("[SOCKETSERVER] Using redis at " + REDIS_HOSTNAME + ":" + REDIS_PORT);
             const pub = new Redis("rediss://:" + REDIS_PASSWORD + "@" + REDIS_HOSTNAME + ":" + REDIS_PORT);
             const sub = new Redis("rediss://:" + REDIS_PASSWORD + "@" + REDIS_HOSTNAME + ":" + REDIS_PORT);
-            io.adapter(redisAdapter({
+            this.io.adapter(redisAdapter({
                 pubClient: pub,
                 subClient: sub
             }));
         }
-        io.on("connection", (socket: socketIO.Socket) => {
+        this.io.on("connection", (socket: socketIO.Socket) => {
             logger.trace("[SOCKETSERVER] Incoming socket request " + socket.id);
-            return authentication.authorizeSocket(socket)
+            return this.authentication.authorizeSocket(socket)
                 .then(async (user: User) => {
                     logger.trace("[SOCKETSERVER](" + socket.id + ") Authenticated user " + user.name);
-                    const deviceHandler = new SocketDeviceHandler(socket, user);
-                    const stageHandler = new SocketStageHandler(socket, user);
+                    const deviceHandler = new SocketDeviceHandler(this.manager, this, socket, user);
+                    const stageHandler = new SocketStageHandler(this.manager, this, socket, user);
                     /**
                      * DEVICE MANAGEMENT
                      */
@@ -119,7 +141,7 @@ namespace SocketServer {
                      */
                     stageHandler.addSocketHandler();
 
-                    sendToDevice(socket, ServerUserEvents.USER_READY, user);
+                    this.sendToDevice(socket, ServerUserEvents.USER_READY, user);
 
                     return Promise.all([
                         deviceHandler.generateDevice()
@@ -133,7 +155,7 @@ namespace SocketServer {
                                     logger.warn("[SOCKETSERVER](" + socket.id + ") Could not join room: " + err);
                                 logger.trace("[SOCKETSERVER](" + socket.id + ") Joined room: " + user._id);
                                 logger.trace("[SOCKETSERVER](" + socket.id + ") Ready");
-                                SocketServer.sendToDevice(socket, ServerGlobalEvents.READY);
+                                this.sendToDevice(socket, ServerGlobalEvents.READY);
                             });
                         })
                         .catch((error) => {
@@ -153,4 +175,5 @@ namespace SocketServer {
         logger.info("[SOCKETSERVER] DONE initializing socket server.");
     }
 }
+
 export default SocketServer;

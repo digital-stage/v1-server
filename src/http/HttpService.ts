@@ -1,11 +1,12 @@
 import * as core from "express-serve-static-core";
 import * as expressPino from "express-pino-logger";
-import {authentication} from "../auth/Authentication";
-import {manager} from "../storage/Manager";
+import {IStageManager} from "../storage/IManager";
+import Auth from "../auth/IAuthentication";
 
 
 namespace HttpService {
-    export const init = (app: core.Express) => {
+    import IAuthentication = Auth.IAuthentication;
+    export const init = (app: core.Express, manager: IStageManager, authentication: IAuthentication) => {
         app.use(expressPino());
 
         app.get('/beat', function (req, res) {

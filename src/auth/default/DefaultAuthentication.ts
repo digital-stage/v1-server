@@ -3,9 +3,9 @@ import {Request} from "express";
 import Auth from "../IAuthentication";
 import {User} from "../../model.common";
 import fetch from "node-fetch";
-import {manager} from "../../storage/Manager";
 import * as pino from "pino";
-import {AUTH_SERVER_URL} from "../../index";
+import {AUTH_SERVER_URL} from "../../env";
+import {IUserManager} from "../../storage/IManager";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -27,15 +27,20 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
 }
 
 class DefaultAuthentication implements Auth.IAuthentication {
+    private readonly manager: IUserManager;
+
+    constructor(manager: IUserManager) {
+        this.manager = manager;
+    }
 
     verifyWithToken(resolve, reject, token: string) {
         return getUserByToken(token)
             .then(authUser => {
-                return manager.getUserByUid(authUser._id)
+                return this.manager.getUserByUid(authUser._id)
                     .then(user => {
                         if (!user) {
                             logger.trace("[AUTH] Creating new user " + authUser.name);
-                            return manager.createUserWithUid(authUser._id, authUser.name, authUser.avatarUrl)
+                            return this.manager.createUserWithUid(authUser._id, authUser.name, authUser.avatarUrl)
                                 .then(user => resolve(user));
                         }
                         logger.trace("[AUTH] Signed in user " + authUser.name);

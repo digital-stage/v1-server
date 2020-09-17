@@ -12,8 +12,18 @@ import {
     UserId
 } from "../model.common";
 
-export interface UserWithStageMember extends User {
-    stageMember: Client.StageMemberPrototype;
+export interface IUserManager {
+    createUserWithUid(uid: string, name: string, avatarUrl?: string): Promise<User>;
+
+    getUser(userId: UserId): Promise<User>;
+
+    getUserByUid(uid: string): Promise<User>;
+
+    getJoinedUsersOfStage(stageId: StageId): Promise<User[]>;
+
+    getUsersByStage(stageId: StageId): Promise<User[]>;
+
+    getUsersManagingStage(stageId: StageId): Promise<User[]>;
 }
 
 export interface IDeviceManager {
@@ -33,6 +43,12 @@ export interface IDeviceManager {
     removeDevicesByServer(serverAddress: string): Promise<Device[]>;
 
     getDevices(): Promise<Device[]>;
+
+    addProducer(user: User, device: Device, kind: "audio" | "video" | "ov", routerId: RouterId): Promise<Producer>;
+
+    updateProducer(device: Device, producerId: ProducerId, producer: Partial<Producer>): Promise<Producer>;
+
+    removeProducer(device: Device, producerId: ProducerId): Promise<Producer>;
 }
 
 export interface IStageManager {
@@ -73,24 +89,6 @@ export interface IStageManager {
     updateStageMember(user: User, id: StageMemberId, groupMember: Partial<Client.StageMemberPrototype>): Promise<Client.StageMemberPrototype>;
 
     getStageMember(user: User, id: StageMemberId): Promise<Client.StageMemberPrototype>;
-
-    createUserWithUid(uid: string, name: string, avatarUrl?: string): Promise<User>;
-
-    getUser(userId: UserId): Promise<User>;
-
-    getUserByUid(uid: string): Promise<User>;
-
-    getJoinedUsersOfStage(stageId: StageId): Promise<User[]>;
-
-    getUsersByStage(stageId: StageId): Promise<User[]>;
-
-    getUsersManagingStage(stageId: StageId): Promise<User[]>;
-
-    addProducer(user: User, device: Device, kind: "audio" | "video" | "ov", routerId: RouterId): Promise<Producer>;
-
-    updateProducer(device: Device, producerId: ProducerId, producer: Partial<Producer>): Promise<Producer>;
-
-    removeProducer(device: Device, producerId: ProducerId): Promise<Producer>;
 
     // Methods for init stage building
     //TODO: Optimize the data model to support fastest possible fetch
