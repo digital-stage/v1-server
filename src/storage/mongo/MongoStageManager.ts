@@ -20,7 +20,6 @@ import {
     StageModel,
     UserModel
 } from "./model.mongo";
-import SocketServer from "../../socket/SocketServer";
 import * as pino from "pino";
 import * as mongoose from "mongoose";
 import {IDeviceManager, IStageManager, IUserManager} from "../IManager";
@@ -29,15 +28,19 @@ import {Errors} from "../../errors";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-
 class MongoStageManager implements IStageManager, IDeviceManager, IUserManager {
+    private readonly database: string;
     private initialized: boolean = false;
+
+    constructor(database: string) {
+        this.database = database;
+    }
 
     init(): Promise<any> {
         if (!this.initialized) {
             this.initialized = true;
-            logger.info("[MONGOSTORAGE] Initializing mongo storage at " + MONGO_URL + " ...");
-            return mongoose.connect(MONGO_URL, {
+            logger.info("[MONGOSTORAGE] Initializing mongo storage at " + MONGO_URL + "/" + this.database + " ...");
+            return mongoose.connect(MONGO_URL + "/" + this.database, {
                 useNewUrlParser: true,
                 useUnifiedTopology: true,
                 useFindAndModify: false
@@ -319,10 +322,6 @@ class MongoStageManager implements IStageManager, IDeviceManager, IUserManager {
             );
     }
 
-    getManagedStages(user: User): Promise<Client.StagePrototype[]> {
-        return StageModel.find({admins: user._id}).lean().exec();
-    }
-
     getJoinedUsersOfStage(stageId: StageId): Promise<User[]> {
         return UserModel.find({stageId: stageId}).lean().exec();
     }
@@ -351,12 +350,27 @@ class MongoStageManager implements IStageManager, IDeviceManager, IUserManager {
                     return true;
                 // Maybe there is a stage Member?
                 return StageMemberModel.findOne({userId: user._id, stageId: stageId}).exec()
-                    .then(stageMember => stageMember !== undefined);
+                    .then(stageMember => {
+                        if (stageMember) {
+                            console.log("user is associated");
+                            return true
+                        }
+                        console.log("user is NOT associated");
+                        return false;
+                    });
             })
     }
 
-    getStageMember(user: User, id: StageMemberId): Promise<Client.StageMemberPrototype> {
+    getStageMember(id: StageMemberId): Promise<Client.StageMemberPrototype> {
         return StageMemberModel.findById(id).lean().exec();
+    }
+
+    removeStageMember(id: StageMemberId): Promise<Client.StageMemberPrototype> {
+        return StageMemberModel.findByIdAndRemove(id).lean().exec();
+    }
+
+    removeStageMemberByUserAndStage(user: User, stageId: StageId): Promise<Client.StageMemberPrototype> {
+        return StageMemberModel.findOneAndRemove({userId: user._id, stageId: stageId}).lean().exec();
     }
 }
 

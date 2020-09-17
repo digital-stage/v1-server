@@ -37,7 +37,7 @@ const server = (process.env.USE_SSL && process.env.USE_SSL === "true") ? https.c
 
 app.use(expressPino());
 
-const manager = new MongoStageManager();
+const manager = new MongoStageManager("digitalstage");
 const authentication = new DefaultAuthentication(manager);
 const socketServer = new SocketServer(manager, server, authentication);
 

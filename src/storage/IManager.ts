@@ -11,8 +11,11 @@ import {
     User,
     UserId
 } from "../model.common";
+import StageMemberPrototype = Client.StageMemberPrototype;
 
 export interface IUserManager {
+    init(): Promise<any>;
+
     createUserWithUid(uid: string, name: string, avatarUrl?: string): Promise<User>;
 
     getUser(userId: UserId): Promise<User>;
@@ -88,7 +91,12 @@ export interface IStageManager {
 
     updateStageMember(user: User, id: StageMemberId, groupMember: Partial<Client.StageMemberPrototype>): Promise<Client.StageMemberPrototype>;
 
-    getStageMember(user: User, id: StageMemberId): Promise<Client.StageMemberPrototype>;
+    getStageMember(id: StageMemberId): Promise<Client.StageMemberPrototype>;
+    
+    removeStageMember(id: StageMemberId): Promise<Client.StageMemberPrototype>;
+
+    removeStageMemberByUserAndStage(user: User, stageId: StageId): Promise<Client.StageMemberPrototype>;
+
 
     // Methods for init stage building
     //TODO: Optimize the data model to support fastest possible fetch

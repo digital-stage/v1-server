@@ -17,7 +17,7 @@ if (process.env.ENV_PATH) {
 }
 
 export const PORT: number | string = process.env.PORT || 4000;
-export const MONGO_URL: string = process.env.MONGO_URL || "mongodb://127.0.0.1:4321/digitalstage";
+export const MONGO_URL: string = process.env.MONGO_URL || "mongodb://127.0.0.1:4321/";
 export const USE_REDIS: boolean = (process.env.USE_REDIS && process.env.USE_REDIS === "true") || false;
 export const REDIS_HOSTNAME: string = process.env.REDIS_HOSTNAME || "localhost";
 export const REDIS_PORT: number | string = process.env.REDIS_PORT || 25061;

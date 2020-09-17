@@ -1,44 +1,41 @@
-import {IDeviceManager, IStageManager, IUserManager} from "../../src/storage/IManager";
+import MongoStageManager from "../../src/storage/mongo/MongoStageManager";
+import * as mongoose from "mongoose";
+import {User} from "../../src/model.common";
 
 
 const assert = require('assert');
 
-const testDeviceManager = (manager: IDeviceManager) => {
-    describe('Device Management', function () {
+describe('Mongo Database', function () {
+    let user: User;
+    let anotherUser: User;
 
-        describe('#indexOf()', function () {
-            it('should return -1 when the value is not present', function () {
-                assert.equal([1, 2, 3].indexOf(4), -1);
-            });
-        });
-
+    before(function () {
+        const manager = new MongoStageManager("managertest");
+        return manager.init()
+            .then(() => Promise.all([
+                manager.createUserWithUid("123", "Testuser")
+                    .then(created => user = created),
+                manager.createUserWithUid("123", "Another user")
+                    .then(created => anotherUser = created)
+            ]))
+            .then(() => console.log("Prepared mongo db"))
     });
-}
-const testUserManager = (manager: IUserManager) => {
-    describe('Device Management', function () {
 
-        describe('#indexOf()', function () {
-            it('should return -1 when the value is not present', function () {
-                assert.equal([1, 2, 3].indexOf(4), -1);
-            });
-        });
-
+    after(function () {
+        return mongoose.connection.db.dropDatabase()
+            .then(() => console.log("Cleaned up mongo db"))
     });
-}
-const testStageManager = (manager: IStageManager) => {
-    describe('Stage Management', function () {
 
-        describe('#indexOf()', function () {
-            it('should return -1 when the value is not present', function () {
-                assert.equal([1, 2, 3].indexOf(4), -1);
-            });
-        });
-
+    it('User shall be creatable', function () {
+        assert.equal([1, 2, 3].indexOf(4), -1);
     });
-}
-
-export const testManager = (manager: IStageManager & IDeviceManager & IUserManager) => {
-    testDeviceManager(manager);
-    testStageManager(manager);
-    testUserManager(manager);
-}
+    it('User shall be creatable', function () {
+        assert.equal([1, 2, 3].indexOf(4), -1);
+    });
+    it('User shall be creatable', function () {
+        assert.equal([1, 2, 3].indexOf(4), -1);
+    });
+    it('User shall be creatable', function () {
+        assert.equal([1, 2, 3].indexOf(4), -1);
+    });
+});

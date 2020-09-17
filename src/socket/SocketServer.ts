@@ -38,6 +38,7 @@ class SocketServer implements ISocketServer {
     constructor(manager: IStageManager & IDeviceManager & IUserManager, server: https.Server | http.Server, authentication: IAuthentication) {
         this.manager = manager;
         this.server = server;
+        this.authentication = authentication;
     }
 
     /**

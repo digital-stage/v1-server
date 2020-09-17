@@ -1,6 +1,6 @@
 import * as socketIO from "socket.io";
 import {ISocketServer} from "./SocketServer";
-import {User} from "../model.common";
+import {StageId, User} from "../model.common";
 import Client from "../model.client";
 import {ClientStageEvents, ServerStageEvents} from "../events";
 import * as pino from "pino";
@@ -22,6 +22,13 @@ class SocketStageHandler {
         this.server = server;
         this.socket = socket;
         this.user = user;
+    }
+
+    private refreshUser(): Promise<void> {
+        return this.manager.getUser(this.user._id)
+            .then(user => {
+                this.user = user
+            });
     }
 
     public addSocketHandler() {
@@ -90,6 +97,7 @@ class SocketStageHandler {
                             });
                             if (!wasAssociatedWithStage) {
                                 // Send whole stage
+                                console.log("Sending whole stage, since user was not associated with");
                                 return this.manager.getStage(groupMember.stageId).then(stage => this.sendStageToUser(stage));
                             }
                             // Return only additional stage information
@@ -110,12 +118,22 @@ class SocketStageHandler {
         });
 
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
-            Promise.all([
-                this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT),
-                this.manager.leaveStage(this.user)
-            ])
+            this.manager.leaveStage(this.user)
+                .then(() => this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT))
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " left stage "))
-        );
+        )
+
+        this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {
+            return this.manager.removeStageMemberByUserAndStage(this.user, id)
+                .then(stageMember => this.manager.getUser(this.user._id)
+                    .then(concurrentUser => {
+                        if (concurrentUser.stageId === stageMember.stageId) {
+                            return this.manager.leaveStage(this.user)
+                                .then(() => this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT));
+                        }
+                    })
+                );
+        });
     }
 
     sendStageToUser(stage: Client.StagePrototype): Promise<any> {
@@ -164,7 +182,7 @@ class SocketStageHandler {
                     const promises: Promise<any>[] = stages.map(stage => this.sendStageToDevice(stage));
                     if (this.user.stageMemberId) {
                         promises.push(
-                            this.manager.getStageMember(this.user, this.user.stageMemberId)
+                            this.manager.getStageMember(this.user.stageMemberId)
                                 .then(stageMember => this.server.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, {
                                     stageId: stageMember.stageId,
                                     groupId: stageMember.groupId
