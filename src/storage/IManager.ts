@@ -40,13 +40,15 @@ export interface IStageManager {
 
     leaveStage(user: User): Promise<boolean>;
 
-    isStageManager(user: User, stageId: StageId): Promise<boolean>;
-
+    /**
+     * Get all stages associated in any way with the given user
+     * @param user
+     */
     getStagesByUser(user: User): Promise<Client.StagePrototype[]>;
 
     getStage(stageId: StageId): Promise<Client.StagePrototype>;
 
-    getManagedStages(user: User): Promise<Client.StagePrototype[]>;
+    isUserAssociatedWithStage(user: User, stageId: StageId): Promise<boolean>;
 
     updateStage(user: User, stageId: StageId, stage: Partial<Client.StagePrototype>): Promise<Client.StagePrototype>;
 
@@ -83,8 +85,6 @@ export interface IStageManager {
     updateProducer(device: Device, producerId: ProducerId, producer: Partial<Producer>): Promise<Producer>;
 
     removeProducer(device: Device, producerId: ProducerId): Promise<Producer>;
-
-    getActiveStageSnapshotByUser(user: User): Promise<Client.Stage>;
 
     // Methods for init stage building
     //TODO: Optimize the data model to support fastest possible fetch

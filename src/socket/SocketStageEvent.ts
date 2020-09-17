@@ -70,31 +70,41 @@ class SocketStageHandler {
 
         // this.user STAGE MANAGEMENT (join, leave)
         this.socket.on(ClientStageEvents.JOIN_STAGE, (payload: {
-                stageId: string,
-                groupId: string,
-                password: string | null
-            }, fn: (error?: string) => void) => manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
-                .then(groupMember => {
-                    SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
-                    SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, {
-                        stageId: payload.stageId,
-                        groupId: payload.groupId
-                    });
-                })
-                /* .then(groupMember => Promise.all([
-                        SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember),
-                        manager.getActiveStageSnapshotByUser(this.user)
-                            .then(stage => SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, stage))
-                            .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
-                    ]))*/
-                .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
-                .then(() => {
-                    fn()
-                })
-                .catch(error => {
-                    fn(error.message)
-                })
-        );
+            stageId: string,
+            groupId: string,
+            password: string | null
+        }, fn: (error?: string) => void) => {
+            // Is the stage already in the scope of the user?
+            return manager.isUserAssociatedWithStage(this.user, payload.stageId)
+                .then(wasAssociatedWithStage => {
+                    return manager.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
+                        .then(groupMember => {
+                            SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
+                            SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, {
+                                stageId: payload.stageId,
+                                groupId: payload.groupId
+                            });
+                            if (!wasAssociatedWithStage) {
+                                // Send whole stage
+                                return manager.getStage(groupMember.stageId).then(stage => this.sendStageToUser(stage));
+                            }
+                            // Return only additional stage information
+                            return Promise.all([
+                                manager.getProducersByStage(groupMember.stageId).then(producers => producers.forEach(producer => SocketServer.sendToUser(this.user._id, ServerStageEvents.PRODUCER_ADDED, producer))),
+                                manager.getCustomGroupVolumesByUserAndStage(this.user, groupMember.stageId).then(volumes => volumes.forEach(volume => SocketServer.sendToUser(this.user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))),
+                                manager.getCustomStageMemberVolumesByUserAndStage(this.user, groupMember.stageId).then(volumes => volumes.forEach(volume => SocketServer.sendToUser(this.user._id, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, volume)))
+                            ])
+                        })
+                        .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " joined stage " + payload.stageId))
+                        .then(() => {
+                            fn()
+                        })
+                        .catch(error => {
+                            fn(error.message)
+                        })
+                });
+        });
+
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
             Promise.all([
                 SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT),
@@ -102,51 +112,61 @@ class SocketStageHandler {
             ])
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " left stage "))
         );
+    }
 
-        // Handle internal events
-        this.socket.on(ServerStageEvents.STAGE_READY, () => {
-            console.log("Stage joined");
-        })
+    sendStageToUser(stage: Client.StagePrototype): Promise<any> {
+        const currentStageId = this.user.stageId.toString();
+        SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_ADDED, stage);
+        const promises: Promise<any>[] = [
+            // Send groups
+            manager.getGroupsByStage(stage._id)
+                .then(groups =>
+                    groups.forEach(group => SocketServer.sendToUser(this.user._id, ServerStageEvents.GROUP_ADDED, group))),
+            // Send group members
+            manager.generateGroupMembersByStage(stage._id)
+                .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToUser(this.user._id, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
+        ];
+        if (currentStageId === stage._id.toString()) {
+            promises.push(manager.getProducersByStage(stage._id).then(producers => producers.forEach(producer => SocketServer.sendToUser(this.user._id, ServerStageEvents.PRODUCER_ADDED, producer))));
+            promises.push(manager.getCustomGroupVolumesByUserAndStage(this.user, stage._id).then(volumes => volumes.forEach(volume => SocketServer.sendToUser(this.user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))));
+            promises.push(manager.getCustomStageMemberVolumesByUserAndStage(this.user, stage._id).then(volumes => volumes.forEach(volume => SocketServer.sendToUser(this.user._id, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, volume))));
+        }
+        return Promise.all(promises);
+    }
+
+    sendStageToDevice(stage: Client.StagePrototype): Promise<any> {
+        const currentStageId = this.user.stageId ? this.user.stageId.toString() : undefined;
+        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_ADDED, stage);
+        const promises: Promise<any>[] = [
+            // Send groups
+            manager.getGroupsByStage(stage._id)
+                .then(groups =>
+                    groups.forEach(group => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_ADDED, group))),
+            // Send group members
+            manager.generateGroupMembersByStage(stage._id)
+                .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
+        ];
+        if (currentStageId === stage._id.toString()) {
+            promises.push(manager.getProducersByStage(stage._id).then(producers => producers.forEach(producer => SocketServer.sendToDevice(this.socket, ServerStageEvents.PRODUCER_ADDED, producer))));
+            promises.push(manager.getCustomGroupVolumesByUserAndStage(this.user, stage._id).then(volumes => volumes.forEach(volume => SocketServer.sendToDevice(this.socket, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))));
+            promises.push(manager.getCustomStageMemberVolumesByUserAndStage(this.user, stage._id).then(volumes => volumes.forEach(volume => SocketServer.sendToDevice(this.socket, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, volume))));
+        }
+        return Promise.all(promises);
     }
 
     generateStage(): Promise<any> {
-        return Promise.all([
-            // Send active stage
-            /*
-            manager.getActiveStageSnapshotByUser(this.user)
-                .then(stage => {
-                    if (stage) {
-                        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_READY, stage);
-                        logger.trace("[SOCKET STAGE EVENT] Send active stage " + stage.name + " to user " + this.user.name);
+        return manager.getStagesByUser(this.user)
+            .then(stages => {
+                    const promises: Promise<any>[] = stages.map(stage => this.sendStageToDevice(stage));
+                    if (this.user._id) {
+                        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, this.user._id.toString());
                     }
-                }),*/
-            // Send non-active stages
-            manager.getStagesByUser(this.user)
-                .then(stages => {
-                        stages.forEach(stage => {
-                            // Send stage
-                            logger.trace("[SOCKET STAGE EVENT] Send managed stage " + stage.name + " to user " + this.user.name);
-                            SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_ADDED, stage);
-                            // Send associated models
-                            return Promise.all([
-                                // Send groups
-                                manager.getGroupsByStage(stage._id)
-                                    .then(groups =>
-                                        groups.forEach(group => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_ADDED, group))),
-                                // Send group members
-                                manager.generateGroupMembersByStage(stage._id)
-                                    .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
-                                // We don't send producers for non-active stages
-                            ]);
-                        });
-                    }
-                )
-                .then(() => {
-                    if (this.user.stageId) {
-                        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, this.user.stageId);
-                    }
-                })
-        ]);
+                    return Promise.all(promises);
+                }
+            )
+            .catch(error => {
+                logger.error(error);
+            });
     }
 }
 

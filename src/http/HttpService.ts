@@ -45,7 +45,7 @@ namespace HttpService {
         app.get('/stages', function (req, res) {
             return authentication.authorizeRequest(req)
                 .then(user => {
-                    return manager.getManagedStages(user)
+                    return manager.getStagesByUser(user)
                         .then(stages => res.status(200).send(stages));
                 })
                 .catch((error) => {

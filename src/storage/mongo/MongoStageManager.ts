@@ -102,49 +102,6 @@ class MongoStageManager implements IStageManager, IDeviceManager {
         return stage.save();
     }
 
-    getStageSnapshotByUser(user: User): Promise<Client.Stage> {
-        if (user.stageId) {
-            return StageModel.findById(user.stageId).lean().exec()
-                .then(async stage => {
-                    // We need all producers of this stage
-                    // Since producers are not connected to a stage, first get all active users
-                    const users = await this.getUsersWithActiveStage(stage._id);
-                    const producers = await ProducerModel.find({userId: {$in: users.map(user => user._id)}}).exec();
-
-                    // Now get all groups and members
-                    const groups = await this.getGroupsByStage(stage._id);
-                    const groupMembers = await this.generateGroupMembersByStage(stage._id);
-
-                    // Also get all custom group and group member volumes
-                    const customGroupVolumes = await CustomGroupVolumeModel.find({
-                        userId: user._id,
-                        stageId: stage._id
-                    }).exec();
-                    const customGroupMemberVolumes = await CustomStageMemberVolumeModel.find({
-                        userId: user._id,
-                        stageId: stage._id
-                    }).exec();
-
-                    const stageSnapshot: Client.Stage = {
-                        ...stage,
-                        groups: groups.map(group => ({
-                            ...group,
-                            customVolume: customGroupVolumes.find(v => v.groupId === group._id).volume,
-                            members: groupMembers.map(groupMember => ({
-                                ...groupMember,
-                                customVolume: customGroupMemberVolumes.find(v => v.stageMemberId === groupMember._id).volume,
-                                audioProducers: producers.filter(p => p.kind === "audio" && p.userId === groupMember.userId),
-                                videoProducers: producers.filter(p => p.kind === "video" && p.userId === groupMember.userId),
-                                ovProducers: producers.filter(p => p.kind === "ov" && p.userId === groupMember.userId),
-                            }))
-                        }))
-                    }
-                    return stageSnapshot;
-                })
-        }
-        return null;
-    }
-
     getUserByUid(uid: string): Promise<User> {
         return UserModel.findOne({uid: uid}).lean().exec();
     }
@@ -181,7 +138,7 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                             if (stage.password && stage.password !== password) {
                                 throw new Error(Errors.INVALID_PASSWORD);
                             }
-                            return StageMemberModel.find({userId: user._id, stageId: stageId})
+                            return StageMemberModel.findOne({userId: user._id, stageId: stageId}).lean().exec()
                                 .then(stageMember => {
                                     if (!stageMember) {
                                         const stageMember = new StageMemberModel();
@@ -192,7 +149,7 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                                         return stageMember.save()
                                             .then(stageMember => {
                                                 user.stageId = stageId;
-                                                user.stageMembers.push(stageMember._id);
+                                                //user.stageMembers.push(stageMember._id);
                                                 return user.save()
                                                     .then(() => ({
                                                         ...stageMember.toObject(),
@@ -207,6 +164,7 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                 }
             })
     }
+
 
     leaveStage(user: User): Promise<boolean> {
         return UserModel.findByIdAndUpdate(user._id, {
@@ -328,10 +286,6 @@ class MongoStageManager implements IStageManager, IDeviceManager {
         return Promise.resolve([]);
     }
 
-    getActiveStageSnapshotByUser(user: User): Promise<Client.Stage> {
-        return Promise.resolve(undefined);
-    }
-
     getCustomGroupVolumesByUserAndStage(user: User, stageId: StageId): Promise<Client.CustomGroupVolume[]> {
         return Promise.resolve([]);
     }
@@ -349,16 +303,6 @@ class MongoStageManager implements IStageManager, IDeviceManager {
             .then(users => ProducerModel.find({userId: {$in: users.map(user => user._id)}}).lean().exec());
     }
 
-    getStagesByUser(user: User): Promise<Client.StagePrototype[]> {
-        return this.getManagedStages(user)
-            .then(managedStages => {
-                return StageMemberModel.find({userId: user._id}).lean().exec()
-                    .then(stageMembers => {
-                        return StageModel.find({_id: {$in: stageMembers.map(stageMember => stageMember.stageId)}}).lean().exec()
-                            .then(stages => [...managedStages, ...stages]);
-                    })
-            });
-    }
 
     setCustomStageMemberVolume(user: User, stageMemberId: StageMemberId, volume: number): Promise<Client.CustomStageMemberVolume> {
         return CustomStageMemberVolumeModel.findOneAndUpdate({
@@ -391,6 +335,13 @@ class MongoStageManager implements IStageManager, IDeviceManager {
         return StageModel.findById(stageId).lean().exec();
     }
 
+    getStagesByUser(user: User): Promise<Client.StagePrototype[]> {
+        return StageMemberModel.find({userId: user._id}).lean().exec()
+            .then(stageMembers =>
+                StageModel.find({$or: [{_id: {$in: stageMembers.map(stageMember => stageMember.stageId)}}, {admins: user._id}]}).lean().exec()
+            );
+    }
+
     getManagedStages(user: User): Promise<Client.StagePrototype[]> {
         return StageModel.find({admins: user._id}).lean().exec();
     }
@@ -416,8 +367,15 @@ class MongoStageManager implements IStageManager, IDeviceManager {
             .then(servers => servers.map(server => server.remove()));
     }
 
-    isStageManager(user: User, stageId: string): Promise<boolean> {
-        return StageModel.findOne({_id: stageId, admins: user._id}).exec().then(() => true).catch(() => false);
+    isUserAssociatedWithStage(user: User, stageId: StageId): Promise<boolean> {
+        return StageModel.findById(stageId).exec()
+            .then(stage => {
+                if (stage.admins.find(admin => admin === user._id))
+                    return true;
+                // Maybe there is a stage Member?
+                return StageMemberModel.findOne({userId: user._id, stageId: stageId}).exec()
+                    .then(stageMember => stageMember !== undefined);
+            })
     }
 }
 

@@ -48,7 +48,7 @@ export interface User {
     avatarUrl?: string;
     stageId?: StageId;
 
-    stageMembers: StageMemberId[];
+    //stageMembers: StageMemberId[];
 }
 
 export interface Producer {

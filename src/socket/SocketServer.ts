@@ -27,6 +27,9 @@ namespace SocketServer {
     export const sendToStage = (stageId: StageId, event: string, payload?: any) => {
         return manager.getUsersByStage(stageId)
             .then(users => {
+                return users;
+            })
+            .then(users => {
                 users.forEach(user => sendToUser(user._id, event, payload));
             });
     }
