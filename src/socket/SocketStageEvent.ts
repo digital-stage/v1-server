@@ -125,13 +125,17 @@ class SocketStageHandler {
 
         this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {
             return this.manager.removeStageMemberByUserAndStage(this.user, id)
-                .then(stageMember => this.manager.getUser(this.user._id)
-                    .then(concurrentUser => {
-                        if (concurrentUser.stageId === stageMember.stageId) {
-                            return this.manager.leaveStage(this.user)
-                                .then(() => this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT));
-                        }
-                    })
+                .then(stageMember => {
+                        this.server.sendToStage(stageMember.stageId, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMember._id);
+                        this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_REMOVED, id);
+                        return this.manager.getUser(this.user._id)
+                            .then(concurrentUser => {
+                                if (concurrentUser.stageId === stageMember.stageId) {
+                                    return this.manager.leaveStage(this.user)
+                                        .then(() => this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT));
+                                }
+                            })
+                    }
                 );
         });
     }
