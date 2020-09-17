@@ -158,7 +158,7 @@ class SocketStageHandler {
         return manager.getStagesByUser(this.user)
             .then(stages => {
                     const promises: Promise<any>[] = stages.map(stage => this.sendStageToDevice(stage));
-                    if (this.user._id) {
+                    if (this.user.stageId) {
                         SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, this.user._id.toString());
                     }
                     return Promise.all(promises);
