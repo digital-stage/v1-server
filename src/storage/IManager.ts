@@ -12,6 +12,10 @@ import {
     UserId
 } from "../model.common";
 
+export interface UserWithStageMember extends User {
+    stageMember: Client.StageMemberPrototype;
+}
+
 export interface IDeviceManager {
     init(): Promise<any>;
 
@@ -68,13 +72,15 @@ export interface IStageManager {
 
     updateStageMember(user: User, id: StageMemberId, groupMember: Partial<Client.StageMemberPrototype>): Promise<Client.StageMemberPrototype>;
 
+    getStageMember(user: User, id: StageMemberId): Promise<Client.StageMemberPrototype>;
+
     createUserWithUid(uid: string, name: string, avatarUrl?: string): Promise<User>;
+
+    getUser(userId: UserId): Promise<User>;
 
     getUserByUid(uid: string): Promise<User>;
 
     getJoinedUsersOfStage(stageId: StageId): Promise<User[]>;
-
-    getUser(userId: UserId): Promise<User>;
 
     getUsersByStage(stageId: StageId): Promise<User[]>;
 

@@ -46,7 +46,9 @@ export interface User {
     name: string;
 
     avatarUrl?: string;
-    stageId?: StageId;
+
+    stageId?: string;
+    stageMemberId?: string;
 
     //stageMembers: StageMemberId[];
 }

@@ -124,7 +124,7 @@ namespace SocketServer {
                     return Promise.all([
                         deviceHandler.generateDevice()
                             .then(() => deviceHandler.sendRemoteDevices()),
-                        stageHandler.generateStage()
+                        stageHandler.generateStages()
                     ])
                         .then(() => {
                             // Finally join user stream

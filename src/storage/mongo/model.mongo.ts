@@ -108,7 +108,9 @@ const UserSchema = new mongoose.Schema({
     avatarUrl: {type: String},
     stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
 
-    stageMembers: [{type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'}]
+    stageMemberId: {type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'},
+
+    //stageMembers: [{type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'}]
 }, {timestamps: true});
 export type UserType = User & mongoose.Document;
 const OnUserRemoved = (user: UserType) => {

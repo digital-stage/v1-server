@@ -81,8 +81,8 @@ class SocketStageHandler {
                         .then(groupMember => {
                             SocketServer.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
                             SocketServer.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, {
-                                stageId: payload.stageId,
-                                groupId: payload.groupId
+                                stageId: groupMember.stageId,
+                                groupId: groupMember.groupId
                             });
                             if (!wasAssociatedWithStage) {
                                 // Send whole stage
@@ -146,7 +146,7 @@ class SocketStageHandler {
             manager.generateGroupMembersByStage(stage._id)
                 .then(groupMember => groupMember.forEach(stageMember => SocketServer.sendToDevice(this.socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
         ];
-        if (currentStageId === stage._id.toString()) {
+        if (currentStageId && currentStageId === stage._id.toString()) {
             promises.push(manager.getProducersByStage(stage._id).then(producers => producers.forEach(producer => SocketServer.sendToDevice(this.socket, ServerStageEvents.PRODUCER_ADDED, producer))));
             promises.push(manager.getCustomGroupVolumesByUserAndStage(this.user, stage._id).then(volumes => volumes.forEach(volume => SocketServer.sendToDevice(this.socket, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))));
             promises.push(manager.getCustomStageMemberVolumesByUserAndStage(this.user, stage._id).then(volumes => volumes.forEach(volume => SocketServer.sendToDevice(this.socket, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, volume))));
@@ -154,12 +154,18 @@ class SocketStageHandler {
         return Promise.all(promises);
     }
 
-    generateStage(): Promise<any> {
+    generateStages(): Promise<any> {
         return manager.getStagesByUser(this.user)
             .then(stages => {
                     const promises: Promise<any>[] = stages.map(stage => this.sendStageToDevice(stage));
-                    if (this.user.stageId) {
-                        SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, this.user._id.toString());
+                    if (this.user.stageMemberId) {
+                        promises.push(
+                            manager.getStageMember(this.user, this.user.stageMemberId)
+                                .then(stageMember => SocketServer.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, {
+                                    stageId: stageMember.stageId,
+                                    groupId: stageMember.groupId
+                                }))
+                        );
                     }
                     return Promise.all(promises);
                 }

@@ -23,7 +23,7 @@ import {
 import SocketServer from "../../socket/SocketServer";
 import * as pino from "pino";
 import * as mongoose from "mongoose";
-import {IDeviceManager, IStageManager} from "../IManager";
+import {IDeviceManager, IStageManager, UserWithStageMember} from "../IManager";
 import {ServerDeviceEvents, ServerStageEvents} from "../../events";
 import {MONGO_URL} from "../../index";
 import {Errors} from "../../errors";
@@ -138,7 +138,7 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                             if (stage.password && stage.password !== password) {
                                 throw new Error(Errors.INVALID_PASSWORD);
                             }
-                            return StageMemberModel.findOne({userId: user._id, stageId: stageId}).lean().exec()
+                            return StageMemberModel.findOne({userId: user._id, stageId: stageId}).exec()
                                 .then(stageMember => {
                                     if (!stageMember) {
                                         const stageMember = new StageMemberModel();
@@ -146,19 +146,19 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                                         stageMember.stageId = stageId;
                                         stageMember.groupId = groupId;
                                         stageMember.volume = 1;
-                                        return stageMember.save()
-                                            .then(stageMember => {
-                                                user.stageId = stageId;
-                                                //user.stageMembers.push(stageMember._id);
-                                                return user.save()
-                                                    .then(() => ({
-                                                        ...stageMember.toObject(),
-                                                        name: user.name,
-                                                        avatarUrl: user.avatarUrl
-                                                    }))
-                                            });
+                                        return stageMember.save();
                                     }
-                                    return stageMember;
+                                    stageMember.groupId = groupId;
+                                    return stageMember.save();
+                                })
+                                .then(stageMember => {
+                                    user.stageId = stageMember.stageId;
+                                    user.stageMemberId = stageMember._id;
+                                    return user.save().then((user) => ({
+                                        ...stageMember.toObject(),
+                                        name: user.name,
+                                        avatarUrl: user.avatarUrl
+                                    }));
                                 })
                         })
                 }
@@ -168,7 +168,8 @@ class MongoStageManager implements IStageManager, IDeviceManager {
 
     leaveStage(user: User): Promise<boolean> {
         return UserModel.findByIdAndUpdate(user._id, {
-            stageId: undefined
+            stageId: undefined,
+            stageMemberId: undefined
         }).exec()
             .then(() => true)
             .catch(() => false);
@@ -376,6 +377,10 @@ class MongoStageManager implements IStageManager, IDeviceManager {
                 return StageMemberModel.findOne({userId: user._id, stageId: stageId}).exec()
                     .then(stageMember => stageMember !== undefined);
             })
+    }
+
+    getStageMember(user: User, id: StageMemberId): Promise<Client.StageMemberPrototype> {
+        return StageMemberModel.findById(id).lean().exec();
     }
 }
 
