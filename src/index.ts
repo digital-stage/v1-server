@@ -39,7 +39,7 @@ app.use(expressPino());
 
 const manager = new MongoStageManager("digitalstage");
 const authentication = new DefaultAuthentication(manager);
-const socketServer = new SocketServer(manager, server, authentication);
+const socketServer = new SocketServer(server, authentication);
 
 const resetDevices = () => manager.removeDevicesByServer(serverAddress)
     .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));

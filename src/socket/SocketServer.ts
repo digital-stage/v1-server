@@ -9,9 +9,11 @@ import SocketDeviceHandler from "./SocketDeviceEvent";
 import SocketStageHandler from "./SocketStageEvent";
 import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} from "../env";
 import {ServerGlobalEvents, ServerUserEvents} from "../events";
-import {IDeviceManager, IStageManager, IUserManager} from "../storage/IManager";
 import Auth from "../auth/IAuthentication";
 import IAuthentication = Auth.IAuthentication;
+import {StageMemberModel, StageModel, UserModel} from "../storage/mongo/model.mongo";
+import Client from "../model.client";
+import EventReactor, {IEventReactor} from "./EventReactor";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -27,18 +29,22 @@ export interface ISocketServer {
     sendToUser(userId: UserId, event: string, payload?: any);
 
     init();
+
+    getUserIdsByStageId(stageId: StageId): Promise<UserId[]>;
+
+    getUserIdsByStage(stage: Client.StagePrototype): Promise<UserId[]>;
 }
 
 class SocketServer implements ISocketServer {
     private io: socketIO.Server;
     private authentication: IAuthentication;
-    private readonly manager: IStageManager & IDeviceManager & IUserManager;
     private readonly server: https.Server | http.Server;
+    private readonly reactor: IEventReactor;
 
-    constructor(manager: IStageManager & IDeviceManager & IUserManager, server: https.Server | http.Server, authentication: IAuthentication) {
-        this.manager = manager;
+    constructor(server: https.Server | http.Server, authentication: IAuthentication) {
         this.server = server;
         this.authentication = authentication;
+        this.reactor = new EventReactor(this);
     }
 
     /**
@@ -48,12 +54,9 @@ class SocketServer implements ISocketServer {
      * @param payload
      */
     sendToStage(stageId: StageId, event: string, payload?: any) {
-        return this.manager.getUsersByStage(stageId)
-            .then(users => {
-                return users;
-            })
-            .then(users => {
-                users.forEach(user => this.sendToUser(user._id, event, payload));
+        return this.getUserIdsByStageId(stageId)
+            .then(userIds => {
+                userIds.forEach(userId => this.sendToUser(userId, event, payload));
             });
     }
 
@@ -64,10 +67,8 @@ class SocketServer implements ISocketServer {
      * @param payload
      */
     sendToStageManagers(stageId: StageId, event: string, payload?: any) {
-        return this.manager.getUsersManagingStage(stageId)
-            .then(users => {
-                users.forEach(user => this.sendToUser(user._id, event, payload));
-            });
+        return StageModel.findById(stageId).lean().exec()
+            .then(stage => stage.admins.forEach(admin => this.sendToUser(admin, event, payload)));
     }
 
     /**
@@ -77,7 +78,7 @@ class SocketServer implements ISocketServer {
      * @param payload
      */
     sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any) {
-        return this.manager.getJoinedUsersOfStage(stageId)
+        return UserModel.find({stageId: stageId}).lean().exec()
             .then(users => {
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
@@ -113,6 +114,22 @@ class SocketServer implements ISocketServer {
         this.io.to(_id).emit(event, payload);
     };
 
+    getUserIdsByStage = (stage: Client.StagePrototype): Promise<UserId[]> => {
+        return StageMemberModel.find({stageId: stage._id}).exec()
+            .then(stageMembers => ([...new Set([...stage.admins, ...stageMembers.map(stageMember => stageMember.userId)])]));
+
+    }
+
+    getUserIdsByStageId = (stageId: StageId): Promise<UserId[]> => {
+        return StageModel.findById(stageId).lean().exec()
+            .then(stage => {
+                if (stage) {
+                    return this.getUserIdsByStage(stage);
+                }
+                return [];
+            })
+    }
+
     init() {
         logger.info("[SOCKETSERVER] Initializing socket server...");
         this.io = socketIO(this.server);
@@ -130,8 +147,8 @@ class SocketServer implements ISocketServer {
             return this.authentication.authorizeSocket(socket)
                 .then(async (user: User) => {
                     logger.trace("[SOCKETSERVER](" + socket.id + ") Authenticated user " + user.name);
-                    const deviceHandler = new SocketDeviceHandler(this.manager, this, socket, user);
-                    const stageHandler = new SocketStageHandler(this.manager, this, socket, user);
+                    const deviceHandler = new SocketDeviceHandler(this, this.reactor, socket, user);
+                    const stageHandler = new SocketStageHandler(this, this.reactor, socket, user);
                     /**
                      * DEVICE MANAGEMENT
                      */

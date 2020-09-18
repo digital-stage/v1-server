@@ -1,11 +1,11 @@
 import * as socketIO from "socket.io";
 import {Request} from "express";
 import Auth from "../IAuthentication";
-import {User} from "../../model.common";
 import fetch from "node-fetch";
 import * as pino from "pino";
 import {AUTH_SERVER_URL} from "../../env";
 import {IUserManager} from "../../storage/IManager";
+import {UserModel, UserType} from "../../storage/mongo/model.mongo";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -33,10 +33,10 @@ class DefaultAuthentication implements Auth.IAuthentication {
         this.manager = manager;
     }
 
-    verifyWithToken(resolve, reject, token: string) {
+    verifyWithToken(resolve, reject, token: string): Promise<UserType> {
         return getUserByToken(token)
             .then(authUser => {
-                return this.manager.getUserByUid(authUser._id)
+                return UserModel.findOne({uid: authUser._id}).exec()
                     .then(user => {
                         if (!user) {
                             logger.trace("[AUTH] Creating new user " + authUser.name);
@@ -54,8 +54,8 @@ class DefaultAuthentication implements Auth.IAuthentication {
             });
     }
 
-    authorizeSocket(socket: socketIO.Socket): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
+    authorizeSocket(socket: socketIO.Socket): Promise<UserType> {
+        return new Promise<UserType>((resolve, reject) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 reject(new Error("Missing authorization"));
             }
@@ -63,22 +63,13 @@ class DefaultAuthentication implements Auth.IAuthentication {
         })
     }
 
-    authorizeRequest(req: Request): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
+    authorizeRequest(req: Request): Promise<UserType> {
+        return new Promise<UserType>((resolve, reject) => {
             if (!req.headers.authorization) {
                 reject(new Error("Missing authorization"));
             }
             return this.verifyWithToken(resolve, reject, req.headers.authorization);
         })
-    }
-
-    login(email: string, password: string) {
-    }
-
-    logout() {
-    }
-
-    signup(email: string, password: string) {
     }
 }
 

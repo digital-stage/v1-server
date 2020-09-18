@@ -1,19 +1,13 @@
 import * as socketIO from "socket.io";
 import {Socket} from "socket.io";
 import {Request} from "express";
-import {User} from "../model.common";
+import {UserType} from "../storage/mongo/model.mongo";
 
 namespace Auth {
     export interface IAuthentication {
-        authorizeSocket(socket: socketIO.Socket): Promise<User>;
+        authorizeSocket(socket: socketIO.Socket): Promise<UserType>;
 
-        authorizeRequest(req: Request): Promise<User>;
-
-        login(email: string, password: string);
-
-        signup(email: string, password: string);
-
-        logout();
+        authorizeRequest(req: Request): Promise<UserType>;
     }
 
     export type IAuthenticationMiddleware = (socket: Socket, fn: (err?: any) => void) => void;

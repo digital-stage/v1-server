@@ -1,4 +1,3 @@
-
 export enum ServerGlobalEvents {
     READY = "ready"
 }
@@ -13,10 +12,21 @@ export enum ServerDeviceEvents {
     DEVICE_ADDED = "device-added",
     DEVICE_CHANGED = "device-changed",
     DEVICE_REMOVED = "device-removed",
+
+    PRODUCER_ADDED = "producer-added",
+    PRODUCER_CHANGED = "producer-changed",
+    PRODUCER_REMOVED = "producer-removed",
 }
 
 export enum ClientDeviceEvents {
-    UPDATE_DEVICE = "update-device"
+    UPDATE_DEVICE = "update-device",
+
+    HIDE_PRODUCER = "hide-producer",
+    PUBLISH_PRODUCER = "publish-producer",
+
+    ADD_PRODUCER = "add-producer",
+    CHANGE_PRODUCER = "change-producer",
+    REMOVE_PRODUCER = "remove-producer",
 }
 
 
@@ -61,10 +71,6 @@ export enum ClientStageEvents {
     SET_CUSTOM_GROUP_VOLUME = "set-custom-group-volume",
     SET_CUSTOM_GROUP_MEMBER_VOLUME = "set-custom-group-member-volume",
 
-    ADD_PRODUCER = "add-producer",
-    CHANGE_PRODUCER = "add-producer",
-    REMOVE_PRODUCER = "remove-producer",
-
     // Following shall be only possible if client is admin of stage
     CHANGE_STAGE = "change-stage",
     REMOVE_STAGE = "remove-stage",
@@ -74,5 +80,10 @@ export enum ClientStageEvents {
     REMOVE_GROUP = "remove-group",
 
     CHANGE_GROUP_MEMBER = "update-group-member",
-    REMOVE_GROUP_MEMBER = "remove-group-member"
+    REMOVE_GROUP_MEMBER = "remove-group-member",
+
+
+    ADD_PRODUCER = "add-producer",
+    CHANGE_PRODUCER = "change-producer",
+    REMOVE_PRODUCER = "remove-producer",
 }

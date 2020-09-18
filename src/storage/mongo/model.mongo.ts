@@ -7,7 +7,6 @@ const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
 });
 
-
 const StageSchema = new mongoose.Schema({
     name: {type: String},
     password: {type: String},
@@ -30,8 +29,8 @@ const OnStageRemoved = (stage: StageType) => {
         mongoose.model('User').updateMany({stage: stage._id}, {stageId: null}).exec(),
     ]);
 }
-StageSchema.post('remove', OnStageRemoved);
-StageSchema.post('findOneAndRemove', OnStageRemoved);
+//StageSchema.post('remove', OnStageRemoved);
+//StageSchema.post('findOneAndRemove', OnStageRemoved);
 export const StageModel = mongoose.model<StageType>('Stage', StageSchema);
 
 
@@ -49,8 +48,8 @@ const OnGroupRemoved = (group: GroupType) => {
         mongoose.model('StageMember').deleteMany({groupId: group._id}).exec()
     ])
 };
-GroupSchema.post('remove', OnGroupRemoved);
-GroupSchema.post('findOneAndRemove', OnGroupRemoved);
+//GroupSchema.post('remove', OnGroupRemoved);
+//GroupSchema.post('findOneAndRemove', OnGroupRemoved);
 export const GroupModel = mongoose.model<GroupType>('Group', GroupSchema);
 
 
@@ -71,6 +70,8 @@ const StageMemberSchema = new mongoose.Schema({
     stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
     groupId: {type: mongoose.Schema.Types.ObjectId, ref: 'Group'},
 
+    online: {type: Boolean},
+
     isDirector: {type: Boolean},
 
     volume: {type: Number},
@@ -86,9 +87,9 @@ const OnStageMemberRemoved = (stageMember: StageMemberType) => {
         mongoose.model('CustomStageMemberVolume').deleteMany({stageMemberId: stageMember._id}).exec()
     ])
 };
-StageMemberSchema.post('remove', OnStageMemberRemoved);
-StageMemberSchema.post('findOneAndRemove', OnStageMemberRemoved);
-StageMemberSchema.index({userId: 1, stageId: 1}, {unique: true});
+//StageMemberSchema.post('remove', OnStageMemberRemoved);
+//StageMemberSchema.post('findOneAndRemove', OnStageMemberRemoved);
+//StageMemberSchema.index({userId: 1, stageId: 1}, {unique: true});
 export const StageMemberModel = mongoose.model<StageMemberType>('StageMember', StageMemberSchema);
 
 
@@ -97,7 +98,7 @@ const CustomStageMemberVolumeSchema = new mongoose.Schema({
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     volume: {type: Number}
 });
-CustomStageMemberVolumeSchema.index({stageMemberId: 1, userId: 1}, {unique: true});
+//CustomStageMemberVolumeSchema.index({stageMemberId: 1, userId: 1}, {unique: true});
 type CustomStageMemberVolumeType = Client.CustomStageMemberVolume & mongoose.Document;
 export const CustomStageMemberVolumeModel = mongoose.model<CustomStageMemberVolumeType>('CustomStageMemberVolume', CustomStageMemberVolumeSchema);
 
@@ -121,8 +122,8 @@ const OnUserRemoved = (user: UserType) => {
         mongoose.model('Stage').deleteMany({$and: [{admins: user._id}, {admins: {$size: 1}}]}).exec()
     ]);
 };
-UserSchema.post('remove', OnUserRemoved);
-UserSchema.post('findOneAndRemove', OnUserRemoved);
+//UserSchema.post('remove', OnUserRemoved);
+//UserSchema.post('findOneAndRemove', OnUserRemoved);
 export const UserModel = mongoose.model<UserType>('User', UserSchema);
 
 const DeviceSchema = new mongoose.Schema({
@@ -172,8 +173,8 @@ const OnDeviceRemoved = (device: DeviceType) => {
         mongoose.model('Producer').deleteMany({deviceId: device._id}).exec()
     ]);
 };
-DeviceSchema.post('remove', OnDeviceRemoved);
-DeviceSchema.post('findOneAndRemove', OnDeviceRemoved);
+//DeviceSchema.post('remove', OnDeviceRemoved);
+//DeviceSchema.post('findOneAndRemove', OnDeviceRemoved);
 export const DeviceModel = mongoose.model<DeviceType>('Device', DeviceSchema);
 
 const ProducerSchema = new mongoose.Schema({
@@ -181,6 +182,7 @@ const ProducerSchema = new mongoose.Schema({
     avatarUrl: {type: String},
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     deviceId: {type: mongoose.Schema.Types.ObjectId, ref: 'Device'},
+    stageMemberId: {type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'},
     kind: {type: String},
     routerId: {type: mongoose.Schema.Types.ObjectId, ref: 'Router'},
 }, {timestamps: true});
@@ -201,6 +203,6 @@ const OnRouterRemoved = (router: RouterType) => {
         mongoose.model('Producer').deleteMany({routerId: router._id}).exec()
     ]);
 };
-RouterSchema.post('remove', OnRouterRemoved);
-RouterSchema.post('findOneAndRemove', OnRouterRemoved);
+//RouterSchema.post('remove', OnRouterRemoved);
+//RouterSchema.post('findOneAndRemove', OnRouterRemoved);
 export const RouterModel = mongoose.model<RouterType>('Router', RouterSchema);

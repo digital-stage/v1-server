@@ -120,6 +120,7 @@ class MongoStageManager implements IStageManager, IDeviceManager, IUserManager {
                             return StageMemberModel.findOne({userId: user._id, stageId: stageId}).exec()
                                 .then(stageMember => {
                                     if (!stageMember) {
+                                        console.log("Created new stage member");
                                         const stageMember = new StageMemberModel();
                                         stageMember.userId = user._id;
                                         stageMember.stageId = stageId;
@@ -127,6 +128,7 @@ class MongoStageManager implements IStageManager, IDeviceManager, IUserManager {
                                         stageMember.volume = 1;
                                         return stageMember.save();
                                     }
+                                    console.log("Used existing stage member");
                                     stageMember.groupId = groupId;
                                     return stageMember.save();
                                 })

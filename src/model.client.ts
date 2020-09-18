@@ -38,6 +38,7 @@ namespace Client {
         stageId: StageId;
         groupId: GroupId;
         userId: UserId;
+        online: boolean;
         isDirector: boolean;
         volume: number;
         x: number;

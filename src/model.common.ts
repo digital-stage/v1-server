@@ -58,6 +58,7 @@ export interface Producer {
     userId: UserId;
     deviceId: DeviceId;
     kind: "audio" | "video" | "ov";
+    stageMemberId?: StageMemberId;
     routerId?: RouterId;
 }
 
