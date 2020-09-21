@@ -64,7 +64,10 @@ class EventReactor implements IEventReactor {
             .then(groups => Promise.all(groups.map(group => this.removeGroupModel(group))))
             .then(() => this.getUserIdsByStage(stage))
             .then(userIds => stage.remove()
-                .then(() => userIds.forEach(userId => this.server.sendToUser(userId, ServerStageEvents.STAGE_REMOVED, stage._id))));
+                .then(() => {
+                    userIds.forEach(userId => this.revokeFullStageFromUser(userId, stage._id));
+                })
+            );
     }
 
     addStage(user: User, initialStage: Partial<Client.StagePrototype>): Promise<any> {
@@ -91,17 +94,17 @@ class EventReactor implements IEventReactor {
             }));
     }
 
-    private async generateStage(user: User, stageId: StageId) {
+    private async generateStage(userId: UserId, stageId: StageId) {
         const stage = await Model.StageModel.findById(stageId).lean().exec();
         const groups = await Model.GroupModel.find({stageId: stageId}).lean().exec();
         const stageMembers = await Model.GroupMemberModel.find({stageId: stageId}).lean().exec();
         const customGroupVolumes = await Model.CustomGroupVolumeModel.find({
             stageId: stageId,
-            userId: user._id
+            userId: userId
         }).lean().exec();
         const stageMemberIds: string[] = stageMembers.map(stageMember => stageMember._id);
         const customStageMemberGroupVolumes = await Model.CustomStageMemberVolumeModel.find({
-            userId: user._id,
+            userId: userId,
             stageMemberId: {$in: stageMemberIds}
         }).lean().exec();
         const producers = await Model.ProducerModel.find({stageMemberId: {$in: stageMemberIds}}).lean().exec();
@@ -115,41 +118,41 @@ class EventReactor implements IEventReactor {
         }
     }
 
-    async revokeFullStageFromUser(user: User, stageId: StageId) {
-        const {stage, groups, stageMembers, customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(user, stageId);
+    async revokeFullStageFromUser(userId: UserId, stageId: StageId) {
+        const {stage, groups, stageMembers, customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(userId, stageId);
         for (const producer of producers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.PRODUCER_REMOVED, producer._id);
+            await this.server.sendToUser(userId, ServerStageEvents.PRODUCER_REMOVED, producer._id);
         }
         for (const customGroupMemberVolume of customStageMemberGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_REMOVED, customGroupMemberVolume._id);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_REMOVED, customGroupMemberVolume._id);
         }
         for (const customGroupVolume of customGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_REMOVED, customGroupVolume._id);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_VOLUME_REMOVED, customGroupVolume._id);
         }
         for (const stageMember of stageMembers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMember._id);
+            await this.server.sendToUser(userId, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMember._id);
         }
         for (const group of groups) {
-            await this.server.sendToUser(user._id, ServerStageEvents.GROUP_REMOVED, group._id);
+            await this.server.sendToUser(userId, ServerStageEvents.GROUP_REMOVED, group._id);
         }
-        await this.server.sendToUser(user._id, ServerStageEvents.STAGE_REMOVED, stage._id);
+        await this.server.sendToUser(userId, ServerStageEvents.STAGE_REMOVED, stage._id);
     }
 
-    async revokeActiveStageInformationFromUser(user: User, stageId: StageId) {
-        const {customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(user, stageId);
+    async revokeActiveStageInformationFromUser(userId: UserId, stageId: StageId) {
+        const {customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(userId, stageId);
         for (const producer of producers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.PRODUCER_REMOVED, producer._id);
+            await this.server.sendToUser(userId, ServerStageEvents.PRODUCER_REMOVED, producer._id);
         }
         for (const customGroupMemberVolume of customStageMemberGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_REMOVED, customGroupMemberVolume._id);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_REMOVED, customGroupMemberVolume._id);
         }
         for (const customGroupVolume of customGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_REMOVED, customGroupVolume._id);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_VOLUME_REMOVED, customGroupVolume._id);
         }
     }
 
-    async sendStageToDevice(socket: socketIO.Socket, user: User, stageId: StageId) {
-        const {stage, groups, stageMembers, customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(user, stageId);
+    async sendStageToDevice(socket: socketIO.Socket, userId: UserId, stageId: StageId) {
+        const {stage, groups, stageMembers, customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(userId, stageId);
         await this.server.sendToDevice(socket, ServerStageEvents.STAGE_ADDED, stage);
         for (const group of groups) {
             await this.server.sendToDevice(socket, ServerStageEvents.GROUP_ADDED, group);
@@ -164,41 +167,41 @@ class EventReactor implements IEventReactor {
             await this.server.sendToDevice(socket, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customGroupMemberVolume);
         }
         for (const producer of producers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.PRODUCER_ADDED, producer);
+            await this.server.sendToUser(userId, ServerStageEvents.PRODUCER_ADDED, producer);
         }
     }
 
 
-    async sendActiveStageInformationToUser(user: User, stageId: StageId) {
-        const {customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(user, stageId);
+    async sendActiveStageInformationToUser(userId: UserId, stageId: StageId) {
+        const {customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(userId, stageId);
         for (const customGroupVolume of customGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, customGroupVolume);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, customGroupVolume);
         }
         for (const customGroupMemberVolume of customStageMemberGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customGroupMemberVolume);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customGroupMemberVolume);
         }
         for (const producer of producers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.PRODUCER_ADDED, producer);
+            await this.server.sendToUser(userId, ServerStageEvents.PRODUCER_ADDED, producer);
         }
     }
 
-    async sendStageToUser(user: User, stageId: StageId) {
-        const {stage, groups, stageMembers, customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(user, stageId);
-        await this.server.sendToUser(user._id, ServerStageEvents.STAGE_ADDED, stage);
+    async sendStageToUser(userId: UserId, stageId: StageId) {
+        const {stage, groups, stageMembers, customGroupVolumes, customStageMemberGroupVolumes, producers} = await this.generateStage(userId, stageId);
+        await this.server.sendToUser(userId, ServerStageEvents.STAGE_ADDED, stage);
         for (const group of groups) {
-            await this.server.sendToUser(user._id, ServerStageEvents.GROUP_ADDED, group);
+            await this.server.sendToUser(userId, ServerStageEvents.GROUP_ADDED, group);
         }
         for (const stageMember of stageMembers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember);
+            await this.server.sendToUser(userId, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember);
         }
         for (const customGroupVolume of customGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, customGroupVolume);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, customGroupVolume);
         }
         for (const customGroupMemberVolume of customStageMemberGroupVolumes) {
-            await this.server.sendToUser(user._id, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customGroupMemberVolume);
+            await this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customGroupMemberVolume);
         }
         for (const producer of producers) {
-            await this.server.sendToUser(user._id, ServerStageEvents.PRODUCER_ADDED, producer);
+            await this.server.sendToUser(userId, ServerStageEvents.PRODUCER_ADDED, producer);
         }
     }
 
@@ -252,9 +255,9 @@ class EventReactor implements IEventReactor {
                             });
 
                             if (wasUserAlreadyInStage || isAdmin) {
-                                await this.sendActiveStageInformationToUser(user, stage._id);
+                                await this.sendActiveStageInformationToUser(user._id, stage._id);
                             } else {
-                                await this.sendStageToUser(user, stage._id);
+                                await this.sendStageToUser(user._id, stage._id);
                             }
 
 
@@ -292,7 +295,7 @@ class EventReactor implements IEventReactor {
                         .then(async groupMember => {
                             if (groupMember) {
                                 // First clean up client by revoking stage
-                                await this.revokeActiveStageInformationFromUser(user, stageId);
+                                await this.revokeActiveStageInformationFromUser(user._id, stageId);
 
                                 // Update group member (before finally leaving)
                                 groupMember.online = false;
