@@ -11,7 +11,7 @@ import {
     User,
     UserId
 } from "../model.common";
-import StageMemberPrototype = Client.StageMemberPrototype;
+import StageMemberPrototype = Client.GroupMemberPrototype;
 
 export interface IUserManager {
     init(): Promise<any>;
@@ -89,13 +89,13 @@ export interface IStageManager {
 
     setCustomStageMemberVolume(user: User, stageMemberId: StageMemberId, volume: number);
 
-    updateStageMember(user: User, id: StageMemberId, groupMember: Partial<Client.StageMemberPrototype>): Promise<Client.StageMemberPrototype>;
+    updateStageMember(user: User, id: StageMemberId, groupMember: Partial<Client.GroupMemberPrototype>): Promise<Client.GroupMemberPrototype>;
 
-    getStageMember(id: StageMemberId): Promise<Client.StageMemberPrototype>;
+    getStageMember(id: StageMemberId): Promise<Client.GroupMemberPrototype>;
     
-    removeStageMember(id: StageMemberId): Promise<Client.StageMemberPrototype>;
+    removeStageMember(id: StageMemberId): Promise<Client.GroupMemberPrototype>;
 
-    removeStageMemberByUserAndStage(user: User, stageId: StageId): Promise<Client.StageMemberPrototype>;
+    removeStageMemberByUserAndStage(user: User, stageId: StageId): Promise<Client.GroupMemberPrototype>;
 
 
     // Methods for init stage building

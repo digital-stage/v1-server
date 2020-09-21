@@ -44,6 +44,10 @@ export enum ServerStageEvents {
     STAGE_CHANGED = "stage-changed",
     STAGE_REMOVED = "stage-removed",
 
+    USER_ADDED = "user-added",
+    USER_CHANGED = "user-changed",
+    USER_REMOVED = "user-removed",
+
     GROUP_ADDED = "group-added",
     GROUP_CHANGED = "group-changed",
     GROUP_REMOVED = "group-removed",

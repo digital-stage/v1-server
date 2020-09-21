@@ -33,7 +33,7 @@ namespace Client {
         volume: number;
     }
 
-    export interface StageMemberPrototype {
+    export interface GroupMemberPrototype {
         _id: StageMemberId;
         stageId: StageId;
         groupId: GroupId;
@@ -67,12 +67,6 @@ namespace Client {
 
     export interface Group extends GroupPrototype {
         members: GroupMember[];
-    }
-
-    export interface GroupMemberPrototype extends StageMemberPrototype {
-        _id: GroupMemberId;
-        name: string;
-        avatarUrl?: string;
     }
 
     export interface GroupMember extends GroupMemberPrototype {

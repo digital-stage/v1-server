@@ -51,57 +51,21 @@ class SocketStageHandler {
                 stageId: string,
                 name: string
             }) =>
-                // ADD GROUP
-                Model.StageModel.findOne({_id: payload.stageId, admins: this.user._id})
-                    .then(stage => {
-                        if (stage) {
-                            const group = new Model.GroupModel();
-                            group.stageId = stage._id;
-                            group.name = payload.name;
-                            return group.save()
-                                .then(group => this.server.sendToStage(group.stageId, ServerStageEvents.GROUP_ADDED, group))
-                                .then(() => logger.debug("[SOCKET STAGE EVENT] User " + this.user.name + " added group " + payload.name))
-                        }
-                    })
+                this.reactor.addGroup(this.user, payload.stageId, payload.name)
         );
         this.socket.on(ClientStageEvents.CHANGE_GROUP, (payload: { id: string, group: Partial<Client.GroupPrototype> }) =>
             // CHANGE GROUP
-            Model.GroupModel.findById(payload.id).populate("stageId").exec()
-                .then((group: GroupType) => {
-                    if (group) {
-                        // Check permissions, they are inside the stage...
-                        return Model.StageModel.findOne({_id: group.stageId, admins: this.user._id}).exec()
-                            .then(stage => {
-                                if (stage) {
-                                    group.updateOne(payload.group)
-                                        .then(group => this.server.sendToStage(group.stageId, ServerStageEvents.GROUP_CHANGED, payload))
-                                        .then(() => logger.debug("[SOCKET STAGE EVENT] User " + this.user.name + " updated group " + payload.id))
-                                }
-                            });
-                    }
-                })
+            this.reactor.changeGroup(this.user, payload.id, payload.group)
         );
         this.socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) =>
             // REMOVE GROUP
-            Model.GroupModel.findById(id).exec()
-                .then(group => {
-                    if (group) {
-                        // Check permissions, they are inside the stage...
-                        return Model.StageModel.findOne({_id: group.stageId, admins: this.user._id}).exec()
-                            .then(stage => {
-                                if (stage) {
-                                    group.remove().then(group => this.server.sendToStage(group.stageId, ServerStageEvents.GROUP_REMOVED, id))
-                                        .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " removed group " + id));
-                                }
-                            });
-                    }
-                })
+            this.reactor.removeGroup(this.user, id)
         );
 
         // STAGE MEMBER MANAGEMENT
         this.socket.on(ClientStageEvents.CHANGE_GROUP_MEMBER, (id: string, groupMember: Partial<GroupMemberPrototype>) =>
             // CHANGE GROUP MEMBER
-            Model.StageMemberModel.findById(id).exec()
+            Model.GroupMemberModel.findById(id).exec()
                 .then(stageMember => {
                     return Model.StageModel.findOne({_id: stageMember.stageId, admins: this.user._id}).lean().exec()
                         .then(stage => {
@@ -121,113 +85,23 @@ class SocketStageHandler {
 
         // STAGE MEMBERSHIP MANAGEMENT
         this.socket.on(ClientStageEvents.JOIN_STAGE, (payload: {
-            stageId: string,
-            groupId: string,
-            password: string | null
-        }, fn: (error?: string) => void) => {
-            // JOIN STAGE
-            let hasUserStageReceived = false;
-            return Model.StageModel.findById(payload.stageId)
-                .lean()
-                .exec()
-                .then(stage => {
-                    if (!stage) {
-                        return fn(Errors.NOT_FOUND);
-                    }
-                    // Check if password matches
-                    if (stage.password && stage.password !== payload.password) {
-                        return fn(Errors.INVALID_PASSWORD);
-                    }
-                    if (stage.admins.find(admin => admin === this.user._id.toString())) {
-                        hasUserStageReceived = true;
-                    }
-                    return Model.GroupModel.findById(payload.groupId)
-                        .lean()
-                        .exec()
-                        .then(group => {
-                            if (!group) {
-                                return fn(Errors.NOT_FOUND);
-                            }
-                            return Model.StageMemberModel.findOne({userId: this.user._id, stageId: stage._id}).exec()
-                                .then(groupMember => {
-                                    if (!groupMember) {
-                                        groupMember = new Model.StageMemberModel();
-                                        groupMember.userId = this.user._id;
-                                        groupMember.groupId = group._id;
-                                        groupMember.stageId = stage._id;
-                                        groupMember.volume = 1;
-                                    } else {
-                                        if (groupMember.groupId === group._id) {
-                                            return;
-                                        }
-                                        hasUserStageReceived = true;
-                                    }
-                                    groupMember.groupId = payload.groupId;
-                                    return groupMember.save();
-                                })
-                                .then(async groupMember => {
-                                    // Inform other stage members
-                                    logger.debug("[SOCKET STAGE EVENT] Send stage member " + this.user.name + " to stage " + stage.name);
-                                    this.server.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
-
-                                    const user = await Model.UserModel.findById(this.user._id);
-                                    user.stageId = stage._id;
-                                    user.stageMemberId = groupMember._id;
-                                    await user.save();
-
-                                    // Send additional stage objects to user
-                                    logger.debug("[SOCKET STAGE EVENT] Sending custom volumes and producers of group " + stage.name + " to " + this.user.name);
-
-                                    return Model.UserModel.updateOne({_id: this.user._id}, {
-                                        stageId: stage._id,
-                                        stageMemberId: groupMember._id
-                                    }).lean()
-                                        .then(() => {
-                                            if (!hasUserStageReceived) {
-                                                // Send stage to user, since he has not received it yet
-                                                logger.debug("[SOCKET STAGE EVENT] Send stage " + stage.name + " to user " + this.user.name);
-                                                return this.sendStageToUser(stage);
-                                            }
-                                        })
-                                        .then(() => {
-                                                logger.debug("[SOCKET STAGE EVENT] Inform user " + this.user.name + " about join to " + stage.name);
-                                                this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_JOINED, {
-                                                    stageId: groupMember.stageId,
-                                                    groupId: groupMember.groupId
-                                                });
-                                            }
-                                        )
-                                })
-                                .then(() => {
-                                    logger.debug("[SOCKET STAGE EVENT] Sending custom volumes and producers of group " + stage.name + " to " + this.user.name);
-                                    return this.sendProducersAndCustomVolumesToUser(stage._id)
-                                })
-                                .then(() => fn())
-                        })
-                })
-        });
-        this.socket.on(ClientStageEvents.LEAVE_STAGE, () => {
+                stageId: string,
+                groupId: string,
+                password: string | null
+            }, fn: (error?: string) => void) =>
+                // JOIN STAGE
+                this.reactor.joinStage(this.user, payload.stageId, payload.groupId, payload.password)
+                    .then(() => fn())
+                    .catch(error => fn(error))
+        );
+        this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
             // LEAVE STAGE
-            return Model.UserModel.findById(this.user._id).exec()
-                .then(user => {
-                    if (user.stageMemberId) {
-                        const stageId = user.stageId;
-                        const stageMemberId = user.stageMemberId;
-                        user.stageId = undefined;
-                        user.stageMemberId = undefined;
-                        user.save()
-                            .then(() => {
-                                this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT);
-                                this.server.sendToStage(stageId, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMemberId);
-                            })
-                            .then(() => logger.debug("[SOCKET STAGE EVENT] User " + this.user.name + " left stage "));
-                    }
-                });
-        });
+            this.reactor.leaveStage(this.user)
+        );
         this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {
             // LEAVE STAGE FOR GOOD
             return Model.UserModel.findById(this.user._id).exec()
-                .then(user => Model.StageMemberModel.findOneAndRemove({userId: user._id, stageId: id})
+                .then(user => Model.GroupMemberModel.findOneAndRemove({userId: user._id, stageId: id})
                     .lean()
                     .then(stageMember => {
                         if (stageMember) {
@@ -255,7 +129,7 @@ class SocketStageHandler {
                 .then(groups =>
                     groups.forEach(group => this.server.sendToUser(this.user._id, ServerStageEvents.GROUP_ADDED, group))),
             // Send group members
-            Model.StageMemberModel.find({stageId: stage._id})
+            Model.GroupMemberModel.find({stageId: stage._id})
                 .lean().exec()
                 .then(groupMember => groupMember.forEach(stageMember => this.server.sendToUser(this.user._id, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
         ];
@@ -275,7 +149,7 @@ class SocketStageHandler {
                 .then(groups =>
                     groups.forEach(group => this.server.sendToDevice(this.socket, ServerStageEvents.GROUP_ADDED, group))),
             // Send group members
-            Model.StageMemberModel.find({stageId: stage._id})
+            Model.GroupMemberModel.find({stageId: stage._id})
                 .lean().exec()
                 .then(groupMember => groupMember.forEach(stageMember => this.server.sendToDevice(this.socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
         ];
@@ -291,7 +165,7 @@ class SocketStageHandler {
                     const promises: Promise<any>[] = stages.map(stage => this.sendStageToDevice(stage));
                     if (this.user.stageMemberId) {
                         promises.push(
-                            Model.StageMemberModel.findById(this.user.stageMemberId).lean().exec()
+                            Model.GroupMemberModel.findById(this.user.stageMemberId).lean().exec()
                                 .then(stageMember => {
                                     if (stageMember)
                                         this.server.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, {
@@ -310,7 +184,7 @@ class SocketStageHandler {
     }
 
     private getStages = () => {
-        return Model.StageMemberModel.find({userId: this.user._id}).lean().exec()
+        return Model.GroupMemberModel.find({userId: this.user._id}).lean().exec()
             .then(stageMembers =>
                 Model.StageModel.find({$or: [{_id: {$in: stageMembers.map(stageMember => stageMember.stageId)}}, {admins: this.user._id}]}).lean().exec()
             );
@@ -328,7 +202,7 @@ class SocketStageHandler {
                         .lean()
                         .exec()
                         .then(volumes => volumes.forEach(volume => this.server.sendToDevice(this.socket, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))),
-                    Model.StageMemberModel.find({stageId: stageId}).lean().exec()
+                    Model.GroupMemberModel.find({stageId: stageId}).lean().exec()
                         .then(stageMembers =>
                             Model.CustomStageMemberVolumeModel.find({
                                 userId: this.user._id,
@@ -353,7 +227,7 @@ class SocketStageHandler {
                         .lean()
                         .exec()
                         .then(volumes => volumes.forEach(volume => this.server.sendToUser(this.user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))),
-                    Model.StageMemberModel.find({stageId: stageId}).lean().exec()
+                    Model.GroupMemberModel.find({stageId: stageId}).lean().exec()
                         .then(stageMembers =>
                             Model.CustomStageMemberVolumeModel.find({
                                 userId: this.user._id,

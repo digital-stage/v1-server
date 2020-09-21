@@ -6,7 +6,7 @@ import {
     GroupType,
     ProducerType,
     RouterType,
-    StageMemberType,
+    GroupMemberType,
     StageType, UserType
 } from "./mongo.types";
 import {
@@ -83,7 +83,7 @@ namespace Model {
         console.log("OnStageRemoved");
         return Promise.all(getListeners(ModelEvents.STAGE_REMOVED).map(listener => listener(this)))
             .then(() => console.log("Listeners performed"))
-            .then(() => StageMemberModel.find({stageId: this.id}).exec().then(
+            .then(() => GroupMemberModel.find({stageId: this.id}).exec().then(
                 stageMembers => {
                     if (stageMembers)
                         return stageMembers.map(stageMember => stageMember.remove())
@@ -112,7 +112,7 @@ namespace Model {
             });
     }
 
-    function OnGroupMemberRemoved(this: StageMemberType, next: HookNextFunction) {
+    function OnGroupMemberRemoved(this: GroupMemberType, next: HookNextFunction) {
         console.log("OnGroupMemberRemoved");
         getListeners(ModelEvents.GROUP_MEMBER_REMOVED).forEach(listener => listener(this));
         return Promise.all([
@@ -164,7 +164,7 @@ namespace Model {
     //StageSchema.pre<StageType>('findOneAndRemove', BeforeStageRemoved);
     GroupSchema.pre<GroupType>('remove', OnGroupRemoved);
     //GroupSchema.pre<GroupType>('findOneAndRemove', OnGroupRemoved);
-    StageMemberSchema.pre<StageMemberType>('remove', OnGroupMemberRemoved);
+    StageMemberSchema.pre<GroupMemberType>('remove', OnGroupMemberRemoved);
     //StageMemberSchema.pre<StageMemberType>('findOneAndRemove', OnGroupMemberRemoved);
     CustomGroupVolumeSchema.pre<CustomGroupVolumeType>('remove', OnCustomGroupVolumeRemoved);
     //CustomGroupVolumeSchema.pre<CustomGroupVolumeType>('findOneAndRemove', OnCustomGroupVolumeRemoved);
@@ -182,7 +182,7 @@ namespace Model {
     export const StageModel = mongoose.model<StageType>('Stage', StageSchema);
     export const GroupModel = mongoose.model<GroupType>('Group', GroupSchema);
     export const CustomGroupVolumeModel = mongoose.model<CustomGroupVolumeType>('CustomGroupVolume', CustomGroupVolumeSchema);
-    export const StageMemberModel = mongoose.model<StageMemberType>('StageMember', StageMemberSchema);
+    export const GroupMemberModel = mongoose.model<GroupMemberType>('StageMember', StageMemberSchema);
     export const CustomStageMemberVolumeModel = mongoose.model<CustomStageMemberVolumeType>('CustomStageMemberVolume', CustomStageMemberVolumeSchema);
     export const UserModel = mongoose.model<UserType>('User', UserSchema);
     export const DeviceModel = mongoose.model<DeviceType>('Device', DeviceSchema);
