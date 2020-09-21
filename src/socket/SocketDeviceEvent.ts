@@ -1,12 +1,12 @@
 import {Device, Producer, User} from "../model.common";
 import * as socketIO from "socket.io";
-import {ISocketServer} from "./SocketServer";
 import * as pino from "pino";
 import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents, ServerStageEvents} from "../events";
 import {serverAddress} from "../index";
-import {IDeviceManager, IUserManager} from "../storage/IManager";
-import {DeviceModel, DeviceType, ProducerModel, UserModel} from "../storage/mongo/model.mongo";
-import {IEventReactor} from "./EventReactor";
+import Model from "../storage/mongo/model.mongo";
+import {DeviceType} from "../storage/mongo/mongo.types";
+import IEventReactor from "../IEventReactor";
+import ISocketServer from "../ISocketServer";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -44,7 +44,7 @@ class SocketDeviceHandler {
     }
 
     private refreshUser(): Promise<void> {
-        return UserModel.findById(this.user._id)
+        return Model.UserModel.findById(this.user._id)
             .then(user => {
                 this.user = user
             })
@@ -61,13 +61,13 @@ class SocketDeviceHandler {
             this.debug("Updating remote device of " + this.user.name);
             return Promise.all([
                 this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, updatedDevice),
-                DeviceModel.findByIdAndUpdate(updatedDevice._id, updatedDevice).lean().exec()
+                Model.DeviceModel.findByIdAndUpdate(updatedDevice._id, updatedDevice).lean().exec()
             ]);
         });
 
         // PRODUCER MANAGEMENT (only to active stage)
         this.socket.on(ClientStageEvents.ADD_PRODUCER, (initialProducer: Producer) => {
-            const producer = new ProducerModel();
+            const producer = new Model.ProducerModel();
             producer.userId = this.user._id;
             producer.deviceId = this.device._id;
             producer.kind = initialProducer.kind;
@@ -82,7 +82,7 @@ class SocketDeviceHandler {
                 )
         });
         this.socket.on(ClientStageEvents.CHANGE_PRODUCER, (id: string, producer: Partial<Producer>) =>
-            ProducerModel.findOneAndUpdate({_id: id, deviceId: this.device._id}, producer)
+            Model.ProducerModel.findOneAndUpdate({_id: id, deviceId: this.device._id}, producer)
                 .then(producer => {
                         if (producer) {
                             return this.refreshUser()
@@ -96,7 +96,7 @@ class SocketDeviceHandler {
                 )
         );
         this.socket.on(ClientStageEvents.REMOVE_PRODUCER, (id: string) =>
-            ProducerModel.findOneAndRemove({_id: id, deviceId: this.device._id})
+            Model.ProducerModel.findOneAndRemove({_id: id, deviceId: this.device._id})
                 .then(producer => {
                     if (producer) {
                         return this.refreshUser().then(() => {
@@ -113,11 +113,11 @@ class SocketDeviceHandler {
                 this.debug("Removed device '" + this.device.name + "' of " + this.user.name);
                 return Promise.all([
                     this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_REMOVED, this.device),
-                    DeviceModel.findByIdAndRemove(this.device._id).lean().exec()
+                    Model.DeviceModel.findByIdAndRemove(this.device._id).lean().exec()
                 ]);
             } else {
                 this.debug("Switched device '" + this.device.name + "' of " + this.user.name + " to offline");
-                return DeviceModel.findByIdAndUpdate(this.device._id, {
+                return Model.DeviceModel.findByIdAndUpdate(this.device._id, {
                     online: false
                 })
                     .lean().exec()
@@ -129,7 +129,7 @@ class SocketDeviceHandler {
 
     public sendRemoteDevices(): Promise<void> {
         // Send other devices
-        return DeviceModel.find({userId: this.user._id})
+        return Model.DeviceModel.find({userId: this.user._id})
             .lean().exec()
             .then(remoteDevices =>
                 remoteDevices.forEach(remoteDevice => {
@@ -148,7 +148,7 @@ class SocketDeviceHandler {
             initialDevice = JSON.parse(this.socket.handshake.query.device);
             if (initialDevice.mac) {
                 // Try to get device by mac
-                this.device = await DeviceModel.findOne({userId: this.user._id, mac: initialDevice.mac}).exec();
+                this.device = await Model.DeviceModel.findOne({userId: this.user._id, mac: initialDevice.mac}).exec();
                 if (this.device) {
                     this.device.online = true;
                     return this.device.save();
@@ -169,7 +169,7 @@ class SocketDeviceHandler {
             userId: this.user._id,
             online: true
         };
-        this.device = await new DeviceModel(device).save();
+        this.device = await new Model.DeviceModel(device).save();
         this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_ADDED, this.device);
         this.server.sendToDevice(this.socket, ServerDeviceEvents.LOCAL_DEVICE_READY, this.device);
         this.debug("Finished generating device for user " + this.user.name + " by creating new.");

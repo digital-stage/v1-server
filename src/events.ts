@@ -16,6 +16,10 @@ export enum ServerDeviceEvents {
     PRODUCER_ADDED = "producer-added",
     PRODUCER_CHANGED = "producer-changed",
     PRODUCER_REMOVED = "producer-removed",
+
+    ROUTER_ADDED = "router-added",
+    ROUTER_CHANGED = "router-changed",
+    ROUTER_REMOVED = "router-removed"
 }
 
 export enum ClientDeviceEvents {
@@ -53,12 +57,12 @@ export enum ServerStageEvents {
     CUSTOM_GROUP_VOLUME_REMOVED = "custom-group-volume-removed",
 
     CUSTOM_GROUP_MEMBER_VOLUME_ADDED = "custom-group-member-volume-added",
-    CUSTOM_GROUP_MEMBER_CHANGED = "custom-group-member-volume-changed",
-    CUSTOM_GROUP_MEMBER_REMOVED = "custom-group-member-volume-removed",
+    CUSTOM_GROUP_MEMBER_VOLUME_CHANGED = "custom-group-member-volume-changed",
+    CUSTOM_GROUP_MEMBER_VOLUME_REMOVED = "custom-group-member-volume-removed",
 
-    PRODUCER_ADDED = "producer-added",
-    PRODUCER_CHANGED = "producer-changed",
-    PRODUCER_REMOVED = "producer-removed",
+    PRODUCER_ADDED = "group-member-producer-added",
+    PRODUCER_CHANGED = "group-member-producer-changed",
+    PRODUCER_REMOVED = "group-member-producer-removed",
 }
 
 export enum ClientStageEvents {

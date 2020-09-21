@@ -1,20 +1,14 @@
 import * as socketIO from "socket.io";
-import {ISocketServer} from "./SocketServer";
 import {StageId, User} from "../model.common";
 import Client from "../model.client";
-import {ClientStageEvents, ServerDeviceEvents, ServerStageEvents} from "../events";
+import {ClientStageEvents, ServerStageEvents} from "../events";
 import * as pino from "pino";
 import GroupMemberPrototype = Client.GroupMemberPrototype;
-import {
-    CustomGroupVolumeModel, CustomStageMemberVolumeModel,
-    GroupModel,
-    GroupType,
-    ProducerModel,
-    StageMemberModel, StageModel,
-    UserModel
-} from "../storage/mongo/model.mongo";
 import {Errors} from "../errors";
-import {IEventReactor} from "./EventReactor";
+import Model from "../storage/mongo/model.mongo";
+import {GroupType} from "../storage/mongo/mongo.types";
+import IEventReactor from "../IEventReactor";
+import ISocketServer from "../ISocketServer";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -58,10 +52,10 @@ class SocketStageHandler {
                 name: string
             }) =>
                 // ADD GROUP
-                StageModel.findOne({_id: payload.stageId, admins: this.user._id})
+                Model.StageModel.findOne({_id: payload.stageId, admins: this.user._id})
                     .then(stage => {
                         if (stage) {
-                            const group = new GroupModel();
+                            const group = new Model.GroupModel();
                             group.stageId = stage._id;
                             group.name = payload.name;
                             return group.save()
@@ -72,11 +66,11 @@ class SocketStageHandler {
         );
         this.socket.on(ClientStageEvents.CHANGE_GROUP, (payload: { id: string, group: Partial<Client.GroupPrototype> }) =>
             // CHANGE GROUP
-            GroupModel.findById(payload.id).populate("stageId").exec()
+            Model.GroupModel.findById(payload.id).populate("stageId").exec()
                 .then((group: GroupType) => {
                     if (group) {
                         // Check permissions, they are inside the stage...
-                        return StageModel.findOne({_id: group.stageId, admins: this.user._id}).exec()
+                        return Model.StageModel.findOne({_id: group.stageId, admins: this.user._id}).exec()
                             .then(stage => {
                                 if (stage) {
                                     group.updateOne(payload.group)
@@ -89,11 +83,11 @@ class SocketStageHandler {
         );
         this.socket.on(ClientStageEvents.REMOVE_GROUP, (id: string) =>
             // REMOVE GROUP
-            GroupModel.findById(id).exec()
+            Model.GroupModel.findById(id).exec()
                 .then(group => {
                     if (group) {
                         // Check permissions, they are inside the stage...
-                        return StageModel.findOne({_id: group.stageId, admins: this.user._id}).exec()
+                        return Model.StageModel.findOne({_id: group.stageId, admins: this.user._id}).exec()
                             .then(stage => {
                                 if (stage) {
                                     group.remove().then(group => this.server.sendToStage(group.stageId, ServerStageEvents.GROUP_REMOVED, id))
@@ -107,9 +101,9 @@ class SocketStageHandler {
         // STAGE MEMBER MANAGEMENT
         this.socket.on(ClientStageEvents.CHANGE_GROUP_MEMBER, (id: string, groupMember: Partial<GroupMemberPrototype>) =>
             // CHANGE GROUP MEMBER
-            StageMemberModel.findById(id).exec()
+            Model.StageMemberModel.findById(id).exec()
                 .then(stageMember => {
-                    return StageModel.findOne({_id: stageMember.stageId, admins: this.user._id}).lean().exec()
+                    return Model.StageModel.findOne({_id: stageMember.stageId, admins: this.user._id}).lean().exec()
                         .then(stage => {
                             if (stage) {
                                 return stageMember.update(groupMember)
@@ -133,7 +127,7 @@ class SocketStageHandler {
         }, fn: (error?: string) => void) => {
             // JOIN STAGE
             let hasUserStageReceived = false;
-            return StageModel.findById(payload.stageId)
+            return Model.StageModel.findById(payload.stageId)
                 .lean()
                 .exec()
                 .then(stage => {
@@ -147,17 +141,17 @@ class SocketStageHandler {
                     if (stage.admins.find(admin => admin === this.user._id.toString())) {
                         hasUserStageReceived = true;
                     }
-                    return GroupModel.findById(payload.groupId)
+                    return Model.GroupModel.findById(payload.groupId)
                         .lean()
                         .exec()
                         .then(group => {
                             if (!group) {
                                 return fn(Errors.NOT_FOUND);
                             }
-                            return StageMemberModel.findOne({userId: this.user._id, stageId: stage._id}).exec()
+                            return Model.StageMemberModel.findOne({userId: this.user._id, stageId: stage._id}).exec()
                                 .then(groupMember => {
                                     if (!groupMember) {
-                                        groupMember = new StageMemberModel();
+                                        groupMember = new Model.StageMemberModel();
                                         groupMember.userId = this.user._id;
                                         groupMember.groupId = group._id;
                                         groupMember.stageId = stage._id;
@@ -176,7 +170,7 @@ class SocketStageHandler {
                                     logger.debug("[SOCKET STAGE EVENT] Send stage member " + this.user.name + " to stage " + stage.name);
                                     this.server.sendToStage(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_ADDED, groupMember);
 
-                                    const user = await UserModel.findById(this.user._id);
+                                    const user = await Model.UserModel.findById(this.user._id);
                                     user.stageId = stage._id;
                                     user.stageMemberId = groupMember._id;
                                     await user.save();
@@ -184,7 +178,7 @@ class SocketStageHandler {
                                     // Send additional stage objects to user
                                     logger.debug("[SOCKET STAGE EVENT] Sending custom volumes and producers of group " + stage.name + " to " + this.user.name);
 
-                                    return UserModel.updateOne({_id: this.user._id}, {
+                                    return Model.UserModel.updateOne({_id: this.user._id}, {
                                         stageId: stage._id,
                                         stageMemberId: groupMember._id
                                     }).lean()
@@ -214,7 +208,7 @@ class SocketStageHandler {
         });
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () => {
             // LEAVE STAGE
-            return UserModel.findById(this.user._id).exec()
+            return Model.UserModel.findById(this.user._id).exec()
                 .then(user => {
                     if (user.stageMemberId) {
                         const stageId = user.stageId;
@@ -232,8 +226,8 @@ class SocketStageHandler {
         });
         this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {
             // LEAVE STAGE FOR GOOD
-            return UserModel.findById(this.user._id).exec()
-                .then(user => StageMemberModel.findOneAndRemove({userId: user._id, stageId: id})
+            return Model.UserModel.findById(this.user._id).exec()
+                .then(user => Model.StageMemberModel.findOneAndRemove({userId: user._id, stageId: id})
                     .lean()
                     .then(stageMember => {
                         if (stageMember) {
@@ -253,20 +247,19 @@ class SocketStageHandler {
     }
 
     sendStageToUser(stage: Client.StagePrototype): Promise<any> {
-        const currentStageId = this.user.stageId.toString();
         this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_ADDED, stage);
         const promises: Promise<any>[] = [
             // Send groups
-            GroupModel.find({stageId: stage._id})
+            Model.GroupModel.find({stageId: stage._id})
                 .lean().exec()
                 .then(groups =>
                     groups.forEach(group => this.server.sendToUser(this.user._id, ServerStageEvents.GROUP_ADDED, group))),
             // Send group members
-            StageMemberModel.find({stageId: stage._id})
+            Model.StageMemberModel.find({stageId: stage._id})
                 .lean().exec()
                 .then(groupMember => groupMember.forEach(stageMember => this.server.sendToUser(this.user._id, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
         ];
-        if (currentStageId === stage._id.toString()) {
+        if (this.user.stageId && this.user.stageId.toString() === stage._id.toString()) {
             promises.push(this.sendProducersAndCustomVolumesToUser(stage._id));
         }
         return Promise.all(promises);
@@ -277,12 +270,12 @@ class SocketStageHandler {
         this.server.sendToDevice(this.socket, ServerStageEvents.STAGE_ADDED, stage);
         const promises: Promise<any>[] = [
             // Send groups
-            GroupModel.find({stageId: stage._id})
+            Model.GroupModel.find({stageId: stage._id})
                 .lean().exec()
                 .then(groups =>
                     groups.forEach(group => this.server.sendToDevice(this.socket, ServerStageEvents.GROUP_ADDED, group))),
             // Send group members
-            StageMemberModel.find({stageId: stage._id})
+            Model.StageMemberModel.find({stageId: stage._id})
                 .lean().exec()
                 .then(groupMember => groupMember.forEach(stageMember => this.server.sendToDevice(this.socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember))),
         ];
@@ -298,7 +291,7 @@ class SocketStageHandler {
                     const promises: Promise<any>[] = stages.map(stage => this.sendStageToDevice(stage));
                     if (this.user.stageMemberId) {
                         promises.push(
-                            StageMemberModel.findById(this.user.stageMemberId).lean().exec()
+                            Model.StageMemberModel.findById(this.user.stageMemberId).lean().exec()
                                 .then(stageMember => {
                                     if (stageMember)
                                         this.server.sendToDevice(this.socket, ServerStageEvents.STAGE_JOINED, {
@@ -317,27 +310,27 @@ class SocketStageHandler {
     }
 
     private getStages = () => {
-        return StageMemberModel.find({userId: this.user._id}).lean().exec()
+        return Model.StageMemberModel.find({userId: this.user._id}).lean().exec()
             .then(stageMembers =>
-                StageModel.find({$or: [{_id: {$in: stageMembers.map(stageMember => stageMember.stageId)}}, {admins: this.user._id}]}).lean().exec()
+                Model.StageModel.find({$or: [{_id: {$in: stageMembers.map(stageMember => stageMember.stageId)}}, {admins: this.user._id}]}).lean().exec()
             );
     }
 
     private sendProducersAndCustomVolumesToDevice = (stageId: StageId) => {
-        return UserModel.find({stageId: stageId}).lean().exec()
+        return Model.UserModel.find({stageId: stageId}).lean().exec()
             .then(currentStageUsers => Promise.all([
                     // Get producers
-                    ProducerModel.find({userId: {$in: currentStageUsers.map(user => user._id)}})
+                    Model.ProducerModel.find({userId: {$in: currentStageUsers.map(user => user._id)}})
                         .lean()
                         .exec()
                         .then(producers => producers.forEach(producer => this.server.sendToDevice(this.socket, ServerStageEvents.PRODUCER_ADDED, producer))),
-                    CustomGroupVolumeModel.find({userId: this.user._id, stageId: stageId})
+                    Model.CustomGroupVolumeModel.find({userId: this.user._id, stageId: stageId})
                         .lean()
                         .exec()
                         .then(volumes => volumes.forEach(volume => this.server.sendToDevice(this.socket, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))),
-                    StageMemberModel.find({stageId: stageId}).lean().exec()
+                    Model.StageMemberModel.find({stageId: stageId}).lean().exec()
                         .then(stageMembers =>
-                            CustomStageMemberVolumeModel.find({
+                            Model.CustomStageMemberVolumeModel.find({
                                 userId: this.user._id,
                                 stageMembers: {$in: stageMembers.map(stageMember => stageMember._id)}
                             })
@@ -349,20 +342,20 @@ class SocketStageHandler {
             );
     }
     private sendProducersAndCustomVolumesToUser = (stageId: StageId) => {
-        return UserModel.find({stageId: stageId}).lean().exec()
+        return Model.UserModel.find({stageId: stageId}).lean().exec()
             .then(currentStageUsers => Promise.all([
                     // Get producers
-                    ProducerModel.find({userId: {$in: currentStageUsers.map(user => user._id)}})
+                    Model.ProducerModel.find({userId: {$in: currentStageUsers.map(user => user._id)}})
                         .lean()
                         .exec()
                         .then(producers => producers.forEach(producer => this.server.sendToUser(this.user._id, ServerStageEvents.PRODUCER_ADDED, producer))),
-                    CustomGroupVolumeModel.find({userId: this.user._id, stageId: stageId})
+                    Model.CustomGroupVolumeModel.find({userId: this.user._id, stageId: stageId})
                         .lean()
                         .exec()
                         .then(volumes => volumes.forEach(volume => this.server.sendToUser(this.user._id, ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED, volume))),
-                    StageMemberModel.find({stageId: stageId}).lean().exec()
+                    Model.StageMemberModel.find({stageId: stageId}).lean().exec()
                         .then(stageMembers =>
-                            CustomStageMemberVolumeModel.find({
+                            Model.CustomStageMemberVolumeModel.find({
                                 userId: this.user._id,
                                 stageMembers: {$in: stageMembers.map(stageMember => stageMember._id)}
                             })

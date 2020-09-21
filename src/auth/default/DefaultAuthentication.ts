@@ -5,7 +5,8 @@ import fetch from "node-fetch";
 import * as pino from "pino";
 import {AUTH_SERVER_URL} from "../../env";
 import {IUserManager} from "../../storage/IManager";
-import {UserModel, UserType} from "../../storage/mongo/model.mongo";
+import {UserType} from "../../storage/mongo/mongo.types";
+import Model from "../../storage/mongo/model.mongo";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -36,7 +37,7 @@ class DefaultAuthentication implements Auth.IAuthentication {
     verifyWithToken(resolve, reject, token: string): Promise<UserType> {
         return getUserByToken(token)
             .then(authUser => {
-                return UserModel.findOne({uid: authUser._id}).exec()
+                return Model.UserModel.findOne({uid: authUser._id}).exec()
                     .then(user => {
                         if (!user) {
                             logger.trace("[AUTH] Creating new user " + authUser.name);

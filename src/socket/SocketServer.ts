@@ -11,29 +11,12 @@ import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} fr
 import {ServerGlobalEvents, ServerUserEvents} from "../events";
 import Auth from "../auth/IAuthentication";
 import IAuthentication = Auth.IAuthentication;
-import {StageMemberModel, StageModel, UserModel} from "../storage/mongo/model.mongo";
-import Client from "../model.client";
-import EventReactor, {IEventReactor} from "./EventReactor";
+import EventReactor from "./EventReactor";
+import Model from "../storage/mongo/model.mongo";
+import IEventReactor from "../IEventReactor";
+import ISocketServer from "../ISocketServer";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
-
-export interface ISocketServer {
-    sendToStage(stageId: StageId, event: string, payload?: any);
-
-    sendToStageManagers(stageId: StageId, event: string, payload?: any);
-
-    sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any);
-
-    sendToDevice(socket: socketIO.Socket, event: string, payload?: any);
-
-    sendToUser(userId: UserId, event: string, payload?: any);
-
-    init();
-
-    getUserIdsByStageId(stageId: StageId): Promise<UserId[]>;
-
-    getUserIdsByStage(stage: Client.StagePrototype): Promise<UserId[]>;
-}
 
 class SocketServer implements ISocketServer {
     private io: socketIO.Server;
@@ -53,8 +36,8 @@ class SocketServer implements ISocketServer {
      * @param event
      * @param payload
      */
-    sendToStage(stageId: StageId, event: string, payload?: any) {
-        return this.getUserIdsByStageId(stageId)
+    sendToStage(stageId: StageId, event: string, payload?: any): Promise<void> {
+        return this.reactor.getUserIdsByStageId(stageId)
             .then(userIds => {
                 userIds.forEach(userId => this.sendToUser(userId, event, payload));
             });
@@ -66,8 +49,8 @@ class SocketServer implements ISocketServer {
      * @param event
      * @param payload
      */
-    sendToStageManagers(stageId: StageId, event: string, payload?: any) {
-        return StageModel.findById(stageId).lean().exec()
+    sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void> {
+        return Model.StageModel.findById(stageId).lean().exec()
             .then(stage => stage.admins.forEach(admin => this.sendToUser(admin, event, payload)));
     }
 
@@ -77,8 +60,8 @@ class SocketServer implements ISocketServer {
      * @param event
      * @param payload
      */
-    sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any) {
-        return UserModel.find({stageId: stageId}).lean().exec()
+    sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void> {
+        return Model.UserModel.find({stageId: stageId}).lean().exec()
             .then(users => {
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
@@ -90,7 +73,7 @@ class SocketServer implements ISocketServer {
      * @param event
      * @param payload
      */
-    sendToDevice(socket: socketIO.Socket, event: string, payload?: any) {
+    sendToDevice(socket: socketIO.Socket, event: string, payload?: any): void {
         if (DEBUG_PAYLOAD) {
             logger.trace("[SOCKETSERVER] SEND TO DEVICE '" + socket.id + "' " + event + ": " + JSON.stringify(payload));
         } else {
@@ -105,7 +88,7 @@ class SocketServer implements ISocketServer {
      * @param event
      * @param payload
      */
-    sendToUser(_id: UserId, event: string, payload?: any) {
+    sendToUser(_id: UserId, event: string, payload?: any): void {
         if (DEBUG_PAYLOAD) {
             logger.trace("[SOCKETSERVER] SEND TO USER '" + _id + "' " + event + ": " + JSON.stringify(payload));
         } else {
@@ -114,20 +97,13 @@ class SocketServer implements ISocketServer {
         this.io.to(_id).emit(event, payload);
     };
 
-    getUserIdsByStage = (stage: Client.StagePrototype): Promise<UserId[]> => {
-        return StageMemberModel.find({stageId: stage._id}).exec()
-            .then(stageMembers => ([...new Set([...stage.admins, ...stageMembers.map(stageMember => stageMember.userId)])]));
-
-    }
-
-    getUserIdsByStageId = (stageId: StageId): Promise<UserId[]> => {
-        return StageModel.findById(stageId).lean().exec()
-            .then(stage => {
-                if (stage) {
-                    return this.getUserIdsByStage(stage);
-                }
-                return [];
-            })
+    sendToAll(event: string, payload?: any): void {
+        if (DEBUG_PAYLOAD) {
+            logger.trace("[SOCKETSERVER] SEND TO ALL " + event + ": " + JSON.stringify(payload));
+        } else {
+            logger.trace("[SOCKETSERVER] SEND TO ALL " + event);
+        }
+        this.io.emit(event, payload);
     }
 
     init() {
