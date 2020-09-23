@@ -4,9 +4,9 @@ import Auth from "../IAuthentication";
 import fetch from "node-fetch";
 import * as pino from "pino";
 import {AUTH_SERVER_URL} from "../../env";
-import {IUserManager} from "../../storage/IManager";
 import {UserType} from "../../storage/mongo/mongo.types";
 import Model from "../../storage/mongo/model.mongo";
+import UserModel = Model.UserModel;
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -28,20 +28,19 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
 }
 
 class DefaultAuthentication implements Auth.IAuthentication {
-    private readonly manager: IUserManager;
-
-    constructor(manager: IUserManager) {
-        this.manager = manager;
-    }
 
     verifyWithToken(resolve, reject, token: string): Promise<UserType> {
         return getUserByToken(token)
             .then(authUser => {
-                return Model.UserModel.findOne({uid: authUser._id}).exec()
+                return UserModel.findOne({uid: authUser._id}).exec()
                     .then(user => {
                         if (!user) {
                             logger.trace("[AUTH] Creating new user " + authUser.name);
-                            return this.manager.createUserWithUid(authUser._id, authUser.name, authUser.avatarUrl)
+                            const user = new Model.UserModel();
+                            user.uid = authUser._id;
+                            user.name = authUser.name;
+                            user.avatarUrl = authUser.avatarUrl;
+                            return user.save()
                                 .then(user => resolve(user));
                         }
                         logger.trace("[AUTH] Signed in user " + authUser.name);

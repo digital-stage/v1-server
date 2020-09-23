@@ -9,8 +9,8 @@ import {
     UserId
 } from "./model.common";
 
-namespace Client {
-    export interface StagePrototype {
+namespace Server {
+    export interface Stage {
         _id: StageId;
         name: string;
 
@@ -26,14 +26,22 @@ namespace Client {
         reflection: number;
     }
 
-    export interface GroupPrototype {
+    export interface Group {
         _id: GroupId;
         name: string;
         stageId: StageId;
         volume: number;
     }
 
-    export interface GroupMemberPrototype {
+    export interface CustomGroupVolume {
+        _id: CustomGroupVolumeId;
+        userId: UserId;
+        stageId: StageId;
+        groupId: GroupId;
+        volume: number;
+    }
+
+    export interface StageMember {
         _id: StageMemberId;
         stageId: StageId;
         groupId: GroupId;
@@ -46,34 +54,12 @@ namespace Client {
         z: number;
     }
 
-    export interface CustomGroupVolume {
-        _id: CustomGroupVolumeId;
-        userId: UserId;
-        stageId: StageId;
-        groupId: GroupId;
-        volume: number;
-    }
-
     export interface CustomStageMemberVolume {
         _id: CustomStageMemberVolumeId;
         userId: UserId;
         stageMemberId: StageMemberId;
         volume: number;
     }
-
-    export interface Stage extends StagePrototype {
-        groups: Group[];
-    }
-
-    export interface Group extends GroupPrototype {
-        members: GroupMember[];
-    }
-
-    export interface GroupMember extends GroupMemberPrototype {
-        videoProducers: Producer[];
-        audioProducers: Producer[];
-        ovProducers: Producer[];
-    }
 }
 
-export default Client;
+export default Server;

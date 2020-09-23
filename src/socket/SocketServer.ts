@@ -11,10 +11,11 @@ import {DEBUG_PAYLOAD, REDIS_HOSTNAME, REDIS_PASSWORD, REDIS_PORT, USE_REDIS} fr
 import {ServerGlobalEvents, ServerUserEvents} from "../events";
 import Auth from "../auth/IAuthentication";
 import IAuthentication = Auth.IAuthentication;
-import EventReactor from "./EventReactor";
+import EventReactor from "../reactor/EventReactor";
 import Model from "../storage/mongo/model.mongo";
-import IEventReactor from "../IEventReactor";
+import IEventReactor from "../reactor/IEventReactor";
 import ISocketServer from "../ISocketServer";
+import UserModel = Model.UserModel;
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -61,7 +62,7 @@ class SocketServer implements ISocketServer {
      * @param payload
      */
     sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void> {
-        return Model.UserModel.find({stageId: stageId}).lean().exec()
+        return UserModel.find({stageId: stageId}).lean().exec()
             .then(users => {
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
@@ -140,7 +141,7 @@ class SocketServer implements ISocketServer {
                     return Promise.all([
                         deviceHandler.generateDevice()
                             .then(() => deviceHandler.sendRemoteDevices()),
-                        stageHandler.generateStages()
+                        stageHandler.sendStages()
                     ])
                         .then(() => {
                             // Finally join user stream

@@ -5,7 +5,7 @@ import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents, ServerStageEv
 import {serverAddress} from "../index";
 import Model from "../storage/mongo/model.mongo";
 import {DeviceType} from "../storage/mongo/mongo.types";
-import IEventReactor from "../IEventReactor";
+import IEventReactor from "../reactor/IEventReactor";
 import ISocketServer from "../ISocketServer";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});

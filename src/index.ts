@@ -6,12 +6,12 @@ import * as https from "https";
 import * as fs from "fs";
 import * as path from "path";
 import * as core from "express-serve-static-core";
-import HttpService from "./http/HttpService";
 import * as expressPino from "express-pino-logger";
-import {PORT} from "./env";
+import {MONGO_URL, PORT} from "./env";
 import * as ip from "ip";
-import MongoStageManager from "./storage/mongo/MongoStageManager";
 import DefaultAuthentication from "./auth/default/DefaultAuthentication";
+import Model from "./storage/mongo/model.mongo";
+import * as mongoose from "mongoose";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -37,17 +37,27 @@ const server = (process.env.USE_SSL && process.env.USE_SSL === "true") ? https.c
 
 app.use(expressPino());
 
-const manager = new MongoStageManager("digitalstage");
-const authentication = new DefaultAuthentication(manager);
+
+const authentication = new DefaultAuthentication();
 const socketServer = new SocketServer(server, authentication);
 
-const resetDevices = () => manager.removeDevicesByServer(serverAddress)
-    .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
+const resetDevices = () => {
+    return Model.DeviceModel
+        .find({
+            server: serverAddress
+        })
+        .exec()
+        .then(servers => servers.map(server => server.remove()))
+        .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
+}
 
 const init = async () => {
-    return manager.init()
+    return mongoose.connect(MONGO_URL + "/digitalstage", {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false
+    })
         .then(() => socketServer.init())
-        .then(() => HttpService.init(app, manager, authentication))
         .then(() => resetDevices())
 }
 
