@@ -1,12 +1,14 @@
-import {Device, Producer, User} from "../model.common";
+import {Device, DeviceId, Producer, RouterId, User} from "../model.common";
 import * as socketIO from "socket.io";
 import * as pino from "pino";
-import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents, ServerStageEvents} from "../events";
+import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents} from "../events";
 import {serverAddress} from "../index";
 import Model from "../storage/mongo/model.mongo";
-import {DeviceType} from "../storage/mongo/mongo.types";
 import IEventReactor from "../reactor/IEventReactor";
 import ISocketServer from "../ISocketServer";
+import {DeviceType} from "../storage/mongo/mongo.types";
+import DeviceModel = Model.DeviceModel;
+import ProducerModel = Model.ProducerModel;
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -17,10 +19,6 @@ class SocketDeviceHandler {
     private device: DeviceType;
     private user: User;
     private readonly reactor: IEventReactor;
-
-    public getDevice(): Device {
-        return this.device;
-    }
 
     constructor(server: ISocketServer, reactor: IEventReactor, socket: socketIO.Socket, user: User) {
         this.server = server;
@@ -43,85 +41,75 @@ class SocketDeviceHandler {
         return logger.trace("[SOCKET DEVICE EVENT] " + message);
     }
 
-    private refreshUser(): Promise<void> {
-        return Model.UserModel.findById(this.user._id)
-            .then(user => {
-                this.user = user
-            })
-    }
-
     public addSocketHandler() {
         this.trace("Registering socket handling for " + this.user.name + "...");
-        this.socket.on(ClientDeviceEvents.UPDATE_DEVICE, (updatedDevice: Partial<Device>) => {
-            this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, updatedDevice);
-            if (updatedDevice._id.toString() === this.device._id.toString()) {
-                this.debug("Updating local device of " + this.user.name);
-                return this.device.updateOne(updatedDevice);
+        this.socket.on(ClientDeviceEvents.UPDATE_DEVICE, (payload: Partial<Device>) => {
+                if (payload._id.toString() === this.device._id.toString()) {
+                    // Update this device
+                    this.device.updateOne({
+                        ...payload,
+                        _id: undefined
+                    });
+                    this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
+                        ...payload,
+                        _id: payload._id
+                    });
+                } else {
+                    // Update remote device
+                    return DeviceModel.findOneAndUpdate({_id: payload._id, userId: this.user._id}, {
+                        ...payload,
+                        _id: undefined
+                    }).lean().exec()
+                        .then(() => this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
+                            ...payload,
+                            _id: payload._id
+                        }));
+                }
             }
-            this.debug("Updating remote device of " + this.user.name);
-            return Promise.all([
-                this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, updatedDevice),
-                Model.DeviceModel.findByIdAndUpdate(updatedDevice._id, updatedDevice).lean().exec()
-            ]);
-        });
-
-        // PRODUCER MANAGEMENT (only to active stage)
-        this.socket.on(ClientStageEvents.ADD_PRODUCER, (initialProducer: Producer) => {
-            const producer = new Model.ProducerModel();
-            producer.userId = this.user._id;
-            producer.deviceId = this.device._id;
-            producer.kind = initialProducer.kind;
-            producer.routerId = initialProducer.routerId;
-            return producer.save()
-                .then(producer => this.refreshUser()
-                    .then(() => {
-                        this.debug("Added producer for device '" + this.device.name + "' by " + this.user.name);
-                        if (this.user.stageId)
-                            return this.server.sendToJoinedStageMembers(this.user.stageId, ServerStageEvents.PRODUCER_ADDED, producer)
-                    })
-                )
-        });
-        this.socket.on(ClientStageEvents.CHANGE_PRODUCER, (id: string, producer: Partial<Producer>) =>
-            Model.ProducerModel.findOneAndUpdate({_id: id, deviceId: this.device._id}, producer)
-                .then(producer => {
-                        if (producer) {
-                            return this.refreshUser()
-                                .then(() => {
-                                    this.debug("Updated producer '" + id + "' for device '" + this.device.name + "' by " + this.user.name);
-                                    if (this.user.stageId)
-                                        return this.server.sendToJoinedStageMembers(this.user.stageId, ServerStageEvents.PRODUCER_CHANGED, producer);
-                                });
-                        }
-                    }
-                )
         );
-        this.socket.on(ClientStageEvents.REMOVE_PRODUCER, (id: string) =>
-            Model.ProducerModel.findOneAndRemove({_id: id, deviceId: this.device._id})
-                .then(producer => {
-                    if (producer) {
-                        return this.refreshUser().then(() => {
-                            this.debug("Removed producer '" + id + "' for device '" + this.device.name + "' by" + this.user.name);
-                            if (this.user.stageId)
-                                return this.server.sendToJoinedStageMembers(this.user.stageId, ServerStageEvents.GROUP_REMOVED, producer._id)
-                        });
-                    }
-                }));
 
+        // PRODUCER MANAGEMENT
+        this.socket.on(ClientStageEvents.ADD_PRODUCER, (
+            payload: {
+                kind: "audio" | "video" | "ov",
+                routerId?: RouterId
+            }, fn: (producer: Producer) => void
+        ) => {
+            //TODO: Validate data
+            return this.reactor.addProducer(this.device, payload.kind, payload.routerId)
+                .then(producer => fn(producer));
+        });
+        this.socket.on(ClientStageEvents.CHANGE_PRODUCER, (id: string, producer: Partial<Producer>, fn: (producer: Producer) => void) =>
+            //TODO: Validate data
+            this.reactor.changeProducer(this.device, id, producer)
+                .then(producer => fn(producer))
+        );
+        this.socket.on(ClientStageEvents.REMOVE_PRODUCER, (id: string, fn: () => void) =>
+            this.reactor.removeProducer(this.device, id)
+                .then(() => fn())
+        );
 
-        this.socket.on("disconnect", () => {
+        this.socket.on("disconnect", async () => {
             if (!this.device.mac) {
                 this.debug("Removed device '" + this.device.name + "' of " + this.user.name);
-                return Promise.all([
-                    this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_REMOVED, this.device),
-                    Model.DeviceModel.findByIdAndRemove(this.device._id).lean().exec()
-                ]);
+                // Remove producers first
+                const producers = await ProducerModel.find({deviceId: this.device._id}).lean().exec();
+                for (const producer of producers) {
+                    await this.reactor.removeProducer(this.device, producer._id)
+                }
+                this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_REMOVED, this.device._id);
+                return this.device.remove();
             } else {
                 this.debug("Switched device '" + this.device.name + "' of " + this.user.name + " to offline");
-                return Model.DeviceModel.findByIdAndUpdate(this.device._id, {
+                return this.device.updateOne({
                     online: false
                 })
-                    .lean().exec()
-                    .then((device) => this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, device));
+                    .then(() => {
+                        this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
+                            online: false,
+                            _id: this.device._id
+                        });
+                    })
             }
         });
         this.trace("Registered socket handling for " + this.user.name + "!");

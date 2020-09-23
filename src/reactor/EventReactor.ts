@@ -1,4 +1,4 @@
-import {GroupId, StageId, User, UserId} from "../model.common";
+import {Device, DeviceId, GroupId, Producer, StageId, User, UserId} from "../model.common";
 import Model from "../storage/mongo/model.mongo";
 import IEventReactor from "./IEventReactor";
 import ISocketServer from "../ISocketServer";
@@ -9,6 +9,11 @@ import EventReactorStorage, {IEventReactorStorage} from "../reactor/EventReactor
 import StageModel = Model.StageModel;
 import UserModel = Model.UserModel;
 import Server from "../model.server";
+import ProducerModel = Model.ProducerModel;
+import DeviceModel = Model.DeviceModel;
+import * as pino from "pino";
+
+const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
 class EventReactor implements IEventReactor {
     private readonly server: ISocketServer;
@@ -17,6 +22,37 @@ class EventReactor implements IEventReactor {
     constructor(server: ISocketServer) {
         this.server = server;
         this.database = new EventReactorStorage(this.server);
+    }
+
+    addDevice(user: User, initialDevice: Partial<Device>): Promise<any> {
+        return this.database.addDevice(user, initialDevice);
+    }
+
+    getDeviceByMac(user: User, mac: string): Promise<any> {
+        return this.database.getDeviceByMac(user, mac);
+    }
+
+    updateDevice(user: User, id: DeviceId, update: Partial<Device>): Promise<Device> {
+        return DeviceModel.findById(id).exec()
+            .then(device => {
+                if (device) {
+                    if (device.userId.toString() === user._id.toString()) {
+                        return this.database.updateDevice(device, update);
+                    }
+                    logger.warn("[EVENT REACTOR] User " + user.name + " tried to modify unowned device " + id);
+                }
+                logger.warn("[EVENT REACTOR] Could not find device " + id + " to update");
+            });
+    }
+
+    removeDevice(user: User, deviceId: DeviceId) {
+        return DeviceModel.findById(deviceId).exec()
+            .then(device => {
+                if (device.userId.toString() === user._id.toString())
+                    return this.database.removeDevice(device);
+
+                logger.warn("[EVENT REACTOR] User " + user.name + " tried to remove unowned device " + deviceId);
+            });
     }
 
     addStage(user: User, initialStage: Partial<Server.Stage>): Promise<any> {
@@ -99,6 +135,39 @@ class EventReactor implements IEventReactor {
                 }
             }
         )
+    }
+
+    addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: string): Promise<Producer> {
+        return UserModel.findById(device.userId).exec()
+            .then(user => {
+                if (user) {
+                    return this.database.addProducer(device, user, kind, routerId);
+                }
+                throw new Error("Could not find user");
+            })
+    }
+
+    changeProducer(device: Device, producerId: string, update: Partial<Producer>): Promise<Producer> {
+        return ProducerModel.findOne({_id: producerId, deviceId: device._id}).exec()
+            .then(producer => {
+                if (producer) {
+                    return this.database.updateProducer(producer, {
+                        ...update,
+                        _id: undefined
+                    });
+                }
+                throw new Error("Could not find producer");
+            });
+    }
+
+    removeProducer(device: Device, producerId: string): Promise<Producer> {
+        return ProducerModel.findOne({_id: producerId, deviceId: device._id}).exec()
+            .then(producer => {
+                if (producer) {
+                    return this.database.removeProducer(producer);
+                }
+                throw new Error("Could not find producer");
+            })
     }
 
     getUserIdsByStageId(stageId: StageId): Promise<UserId[]> {

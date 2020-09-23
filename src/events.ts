@@ -64,9 +64,9 @@ export enum ServerStageEvents {
     CUSTOM_GROUP_MEMBER_VOLUME_CHANGED = "custom-group-member-volume-changed",
     CUSTOM_GROUP_MEMBER_VOLUME_REMOVED = "custom-group-member-volume-removed",
 
-    PRODUCER_ADDED = "group-member-producer-added",
-    PRODUCER_CHANGED = "group-member-producer-changed",
-    PRODUCER_REMOVED = "group-member-producer-removed",
+    STAGE_PRODUCER_ADDED = "stage-producer-added",
+    STAGE_PRODUCER_CHANGED = "stage-producer-changed",
+    STAGE_PRODUCER_REMOVED = "stage-producer-removed",
 }
 
 export enum ClientStageEvents {

@@ -1,6 +1,7 @@
-import {GroupId, StageId, User, UserId} from "../model.common";
+import {Device, DeviceId, GroupId, Producer, ProducerId, RouterId, StageId, User, UserId} from "../model.common";
 import * as socketIO from "socket.io";
 import Server from "../model.server";
+import {DeviceType} from "../storage/mongo/mongo.types";
 
 interface IEventReactor {
     addStage(user: User, initialStage: Partial<Server.Stage>): Promise<any>;
@@ -18,6 +19,12 @@ interface IEventReactor {
     changeGroup(user: User, groupId: GroupId, group: Partial<Server.Group>): Promise<any>;
 
     removeGroup(user: User, groupId: GroupId): Promise<any>;
+
+    addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<Producer>;
+
+    changeProducer(device: Device, producerId: ProducerId, update: Partial<Producer>): Promise<Producer>;
+
+    removeProducer(device: Device, producerId: ProducerId): Promise<Producer>;
 
     getUserIdsByStageId(stageId: StageId): Promise<UserId[]>;
 

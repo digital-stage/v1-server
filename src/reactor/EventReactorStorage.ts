@@ -1,8 +1,8 @@
-import {StageMemberType, GroupType, StageType, UserType} from "../storage/mongo/mongo.types";
-import {Producer, StageId, User, UserId} from "../model.common";
+import {StageMemberType, GroupType, StageType, UserType, ProducerType, DeviceType} from "../storage/mongo/mongo.types";
+import {Device, Producer, RouterId, StageId, User, UserId} from "../model.common";
 import ISocketServer from "../ISocketServer";
 import Model from "../storage/mongo/model.mongo";
-import {ServerStageEvents} from "../events";
+import {ServerDeviceEvents, ServerStageEvents} from "../events";
 import * as pino from "pino";
 import {Errors} from "../errors";
 import Server from "../model.server";
@@ -11,12 +11,23 @@ import StageMemberModel = Model.StageMemberModel;
 import GroupModel = Model.GroupModel;
 import CustomGroupVolumeModel = Model.CustomGroupVolumeModel;
 import UserModel = Model.UserModel;
+import ProducerModel = Model.ProducerModel;
+import {serverAddress} from "../index";
+import DeviceModel = Model.DeviceModel;
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
 });
 
 export interface IEventReactorStorage {
+    addDevice(user: User, initialDevice: Partial<Device>): Promise<DeviceType>;
+
+    updateDevice(device: DeviceType, update: Partial<Device>): Promise<DeviceType>;
+
+    getDeviceByMac(user: User, mac: string): Promise<DeviceType>;
+
+    removeDevice(device: DeviceType): Promise<any>;
+
     addStage(user: User, initialStage: Partial<Server.Stage>): Promise<any>;
 
     updateStage(stage: StageType, fields: Partial<Server.Stage>): Promise<any>;
@@ -38,6 +49,12 @@ export interface IEventReactorStorage {
     getUserIdsByStage(stage: Server.Stage): Promise<UserId[]>;
 
     sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<any>;
+
+    addProducer(device: Device, user: UserType, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<any>;
+
+    updateProducer(producer: ProducerType, update: Partial<Producer>): Promise<any>;
+
+    removeProducer(producer: ProducerType): Promise<any>;
 }
 
 class EventReactorStorage implements IEventReactorStorage {
@@ -45,6 +62,49 @@ class EventReactorStorage implements IEventReactorStorage {
 
     constructor(server: ISocketServer) {
         this.server = server;
+    }
+
+    addDevice(user: User, initialDevice: Partial<Device>): Promise<DeviceType> {
+        const device: Omit<Device, "_id"> = {
+            canVideo: false,
+            canAudio: false,
+            sendAudio: false,
+            sendVideo: false,
+            receiveAudio: false,
+            receiveVideo: false,
+            name: "",
+            ...initialDevice,
+            server: serverAddress,
+            userId: user._id,
+            online: true
+        };
+        return new Model.DeviceModel(device).save()
+            .then(device => {
+                this.server.sendToUser(user._id, ServerDeviceEvents.DEVICE_ADDED, device);
+                return device;
+            });
+    }
+
+    getDeviceByMac(user: User, mac: string): Promise<DeviceType> {
+        return DeviceModel.findOne({userId: user._id, mac: mac}).exec();
+    }
+
+    updateDevice(device: DeviceType, update: Partial<Device>): Promise<any> {
+        return device.updateOne({
+            ...update,
+            _id: undefined
+        })
+            .then(device => {
+                this.server.sendToUser(device.userId, ServerDeviceEvents.DEVICE_CHANGED, update);
+                return device;
+            });
+    }
+
+    removeDevice(device: DeviceType): Promise<any> {
+        return device.remove()
+            .then(() => {
+                this.server.sendToUser(device.userId, ServerDeviceEvents.DEVICE_REMOVED, device._id);
+            });
     }
 
     public addStage(user: User, initialStage: Partial<Server.Stage>) {
@@ -64,14 +124,17 @@ class EventReactorStorage implements IEventReactorStorage {
 
     public updateStage(stage: StageType, fields: Partial<Server.Stage>) {
         // CHANGE STAGE
-        return stage.updateOne(fields)
+        return stage.updateOne({
+            ...fields,
+            _id: undefined
+        })
             .then(() => this.server.sendToStage(stage._id, ServerStageEvents.STAGE_CHANGED, {
                 ...stage,
                 id: stage._id
             }));
     }
 
-    async joinStage(user: UserType, stage: StageType, group: GroupType, password?: string) {
+    public async joinStage(user: UserType, stage: StageType, group: GroupType, password?: string) {
         logger.debug("[EVENT REACTOR] User " + user.name + " wants to join stage " + stage.name + " and group " + group.name);
         // First check password
         if (stage.password && stage.password !== password) {
@@ -129,13 +192,12 @@ class EventReactorStorage implements IEventReactorStorage {
         }
 
         // Publish existing producers
-        const producers = await Model.ProducerModel.find({userId: user._id}).exec();
-        for (const producer of producers) {
-            await producer.updateOne({
-                stageMemberId: groupMember._id
-            })
-                .then(producer => this.server.sendToJoinedStageMembers(stage._id, ServerStageEvents.PRODUCER_ADDED, producer));
-        }
+        return Model.ProducerModel.find({userId: user._id}).exec()
+            .then(producers => producers.map(producer => {
+                producer.stageMemberId = groupMember._id;
+                producer.save()
+                    .then(producer => this.server.sendToJoinedStageMembers(stage._id, ServerStageEvents.STAGE_PRODUCER_ADDED, producer.toObject()))
+            }))
     }
 
     public async leaveStage(user: UserType, skipLeaveNotification?: boolean): Promise<any> {
@@ -172,7 +234,7 @@ class EventReactorStorage implements IEventReactorStorage {
             for (const producer of producers) {
                 await producer.updateOne({
                     stageMemberId: undefined
-                }).then(() => this.server.sendToJoinedStageMembers(stageId, ServerStageEvents.PRODUCER_REMOVED, producer));
+                }).then(() => this.server.sendToJoinedStageMembers(stageId, ServerStageEvents.STAGE_PRODUCER_REMOVED, producer));
             }
         }
     }
@@ -222,7 +284,11 @@ class EventReactorStorage implements IEventReactorStorage {
     }
 
     public updateGroupMember(groupMember: StageMemberType, update: Partial<Server.StageMember>) {
-
+        return groupMember.updateOne(update).exec()
+            .then(() => this.server.sendToJoinedStageMembers(groupMember.stageId, ServerStageEvents.GROUP_MEMBER_CHANGED, {
+                ...update,
+                _id: groupMember._id
+            }))
     }
 
     public removeStageMember(stageMember: StageMemberType) {
@@ -241,6 +307,59 @@ class EventReactorStorage implements IEventReactorStorage {
             .then(() => stageMember.remove())
             .then(() => this.server.sendToJoinedStageMembers(stageMember.stageId, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMember._id));
     }
+
+
+    addProducer(device: Device, user: UserType, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<ProducerType> {
+        const producer = new ProducerModel();
+        producer.userId = user._id;
+        producer.deviceId = device._id;
+        producer.kind = kind;
+        //producer.routerId = routerId;
+        if (user.stageMemberId) {
+            producer.stageMemberId = user.stageMemberId;
+        }
+        return producer.save()
+            .then(async producer => {
+                if (producer.stageMemberId) {
+                    // Inform all stage members first
+                    await this.server.sendToStage(user.stageId, ServerStageEvents.STAGE_PRODUCER_ADDED, producer.toObject());
+                }
+                // Inform user
+                this.server.sendToUser(device.userId, ServerDeviceEvents.PRODUCER_ADDED, producer.toObject());
+                return producer;
+            });
+    }
+
+    updateProducer(producer: ProducerType, update: Partial<Producer>): Promise<ProducerType> {
+        return producer.update(producer)
+            .then(async () => {
+                if (producer.stageMemberId) {
+                    // Inform all stage members first
+                    await StageMemberModel.findById(producer.stageMemberId).lean().exec()
+                        .then(stageMember => this.server.sendToJoinedStageMembers(stageMember.stageId, ServerStageEvents.STAGE_PRODUCER_CHANGED, {
+                            ...update,
+                            _id: producer._id
+                        }));
+                }
+                // Inform user
+                this.server.sendToUser(producer.userId, ServerDeviceEvents.PRODUCER_CHANGED, producer);
+                return producer;
+            });
+    }
+
+    removeProducer(producer: ProducerType): Promise<ProducerType> {
+        return producer.remove()
+            .then(async () => {
+                if (producer.stageMemberId) {
+                    // Inform all stage members first
+                    await StageMemberModel.findById(producer.stageMemberId).lean().exec()
+                        .then(stageMember => this.server.sendToJoinedStageMembers(stageMember.stageId, ServerStageEvents.STAGE_PRODUCER_REMOVED, producer._id));
+                }
+                this.server.sendToUser(producer.userId, ServerDeviceEvents.PRODUCER_REMOVED, producer._id);
+                return producer;
+            })
+    }
+
 
     //**** SEND / REVOKE METHODS *****/
     public async sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<any> {
@@ -285,7 +404,7 @@ class EventReactorStorage implements IEventReactorStorage {
         this.server.sendToUser(userId, ServerStageEvents.STAGE_REMOVED, stageId);
     }
 
-    private async getStageMembers(userId: UserId, stageId: StageId): Promise<{
+    private static async getStageMembers(userId: UserId, stageId: StageId): Promise<{
         stageMembers: Server.StageMember[],
         customGroupVolumes: Server.CustomGroupVolume[],
         customStageMemberVolumes: Server.CustomStageMemberVolume[],
@@ -312,7 +431,7 @@ class EventReactorStorage implements IEventReactorStorage {
     }
 
     private async sendStageMembersToUser(userId: UserId, stageId: StageId): Promise<any> {
-        const {stageMembers, customGroupVolumes, customStageMemberVolumes, producers} = await this.getStageMembers(userId, stageId);
+        const {stageMembers, customGroupVolumes, customStageMemberVolumes, producers} = await EventReactorStorage.getStageMembers(userId, stageId);
         for (const stageMember of stageMembers) {
             this.server.sendToUser(userId, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember);
         }
@@ -323,12 +442,12 @@ class EventReactorStorage implements IEventReactorStorage {
             this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customStageMemberVolume);
         }
         for (const producer of producers) {
-            this.server.sendToUser(userId, ServerStageEvents.PRODUCER_ADDED, producer);
+            this.server.sendToUser(userId, ServerStageEvents.STAGE_PRODUCER_ADDED, producer);
         }
     }
 
     private async sendStageMembersToDevice(socket: socketIO.Socket, userId: UserId, stageId: StageId): Promise<any> {
-        const {stageMembers, customGroupVolumes, customStageMemberVolumes, producers} = await this.getStageMembers(userId, stageId);
+        const {stageMembers, customGroupVolumes, customStageMemberVolumes, producers} = await EventReactorStorage.getStageMembers(userId, stageId);
         for (const stageMember of stageMembers) {
             this.server.sendToDevice(socket, ServerStageEvents.GROUP_MEMBER_ADDED, stageMember);
         }
@@ -339,12 +458,12 @@ class EventReactorStorage implements IEventReactorStorage {
             this.server.sendToDevice(socket, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_ADDED, customStageMemberVolume);
         }
         for (const producer of producers) {
-            this.server.sendToDevice(socket, ServerStageEvents.PRODUCER_ADDED, producer);
+            this.server.sendToDevice(socket, ServerStageEvents.STAGE_PRODUCER_ADDED, producer);
         }
     }
 
     private async revokeStageMembersFromUser(userId: UserId, stageId: StageId): Promise<any> {
-        const {stageMembers, customGroupVolumes, customStageMemberVolumes, producers} = await this.getStageMembers(userId, stageId);
+        const {stageMembers, customGroupVolumes, customStageMemberVolumes, producers} = await EventReactorStorage.getStageMembers(userId, stageId);
         for (const stageMember of stageMembers) {
             this.server.sendToUser(userId, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMember._id);
         }
@@ -355,7 +474,7 @@ class EventReactorStorage implements IEventReactorStorage {
             this.server.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_MEMBER_VOLUME_REMOVED, customStageMemberVolume._id);
         }
         for (const producer of producers) {
-            this.server.sendToUser(userId, ServerStageEvents.PRODUCER_REMOVED, producer._id);
+            this.server.sendToUser(userId, ServerStageEvents.STAGE_PRODUCER_REMOVED, producer._id);
         }
     }
 
