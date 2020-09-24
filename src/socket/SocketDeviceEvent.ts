@@ -51,7 +51,7 @@ class SocketDeviceHandler {
                     this.device.updateOne(omit(payload, '_id'));
                     this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
                         ...payload,
-                        _id: undefined
+                        _id: payload._id
                     });
                 } else {
                     // Update remote device
