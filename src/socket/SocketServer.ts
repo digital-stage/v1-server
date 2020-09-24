@@ -51,7 +51,7 @@ class SocketServer implements ISocketServer {
      * @param payload
      */
     sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void> {
-        return Model.StageModel.findById(stageId).lean().exec()
+        return Model.StageModel.findById(stageId, {admins: 1}).lean().exec()
             .then(stage => stage.admins.forEach(admin => this.sendToUser(admin, event, payload)));
     }
 
@@ -62,8 +62,8 @@ class SocketServer implements ISocketServer {
      * @param payload
      */
     sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void> {
-        return UserModel.find({stageId: stageId}).lean().exec()
-            .then(users => {
+        return UserModel.find({stageId: stageId}, {_id: 1}).lean().exec()
+            .then((users: {_id: string}[]) => {
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
     }

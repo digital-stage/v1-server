@@ -1,4 +1,4 @@
-import {Device, DeviceId, Producer, RouterId, User} from "../model.common";
+import {Device, Producer, RouterId, User} from "../model.common";
 import * as socketIO from "socket.io";
 import * as pino from "pino";
 import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents} from "../events";
@@ -7,6 +7,7 @@ import Model from "../storage/mongo/model.mongo";
 import IEventReactor from "../reactor/IEventReactor";
 import ISocketServer from "../ISocketServer";
 import {DeviceType} from "../storage/mongo/mongo.types";
+import {omit} from "lodash";
 import DeviceModel = Model.DeviceModel;
 import ProducerModel = Model.ProducerModel;
 
@@ -45,21 +46,19 @@ class SocketDeviceHandler {
         this.trace("Registering socket handling for " + this.user.name + "...");
         this.socket.on(ClientDeviceEvents.UPDATE_DEVICE, (payload: Partial<Device>) => {
                 if (payload._id.toString() === this.device._id.toString()) {
+                    console.log("Updating local device");
                     // Update this device
                     this.device.updateOne({
                         ...payload,
                         _id: undefined
                     });
-                    this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
-                        ...payload,
-                        _id: payload._id
-                    });
+                    this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, omit(payload, '_id'));
                 } else {
                     // Update remote device
-                    return DeviceModel.findOneAndUpdate({_id: payload._id, userId: this.user._id}, {
-                        ...payload,
-                        _id: undefined
-                    }).lean().exec()
+                    return DeviceModel.findOneAndUpdate({
+                        _id: payload._id,
+                        userId: this.user._id
+                    }, omit(payload, '_id')).lean().exec()
                         .then(() => this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
                             ...payload,
                             _id: payload._id
@@ -75,17 +74,16 @@ class SocketDeviceHandler {
                 routerId?: RouterId
             }, fn: (producer: Producer) => void
         ) => {
-            //TODO: Validate data
             return this.reactor.addProducer(this.device, payload.kind, payload.routerId)
                 .then(producer => fn(producer));
         });
         this.socket.on(ClientStageEvents.CHANGE_PRODUCER, (id: string, producer: Partial<Producer>, fn: (producer: Producer) => void) =>
             //TODO: Validate data
-            this.reactor.changeProducer(this.device, id, producer)
+            this.reactor.changeProducer(this.device._id, id, producer)
                 .then(producer => fn(producer))
         );
         this.socket.on(ClientStageEvents.REMOVE_PRODUCER, (id: string, fn: () => void) =>
-            this.reactor.removeProducer(this.device, id)
+            this.reactor.removeProducer(this.device._id, id)
                 .then(() => fn())
         );
 
@@ -95,7 +93,7 @@ class SocketDeviceHandler {
                 // Remove producers first
                 const producers = await ProducerModel.find({deviceId: this.device._id}).lean().exec();
                 for (const producer of producers) {
-                    await this.reactor.removeProducer(this.device, producer._id)
+                    await this.reactor.removeProducer(this.device._id, producer._id)
                 }
                 this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_REMOVED, this.device._id);
                 return this.device.remove();

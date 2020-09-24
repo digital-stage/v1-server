@@ -28,19 +28,19 @@ class SocketStageHandler {
         // STAGE MANAGEMENT
         this.socket.on(ClientStageEvents.ADD_STAGE, (initialStage: Partial<Server.Stage>) =>
             // ADD STAGE
-            this.reactor.addStage(this.user, initialStage)
+            this.reactor.addStage(this.user._id, initialStage)
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " created stage " + initialStage.name))
                 .catch(error => logger.error(error))
         );
         this.socket.on(ClientStageEvents.CHANGE_STAGE, (payload: { id: string, stage: Partial<Server.Stage> }) =>
             // CHANGE STAGE
-            this.reactor.changeStage(this.user, payload.id, payload.stage)
+            this.reactor.changeStage(this.user._id, payload.id, payload.stage)
                 .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " changed stage " + payload.id))
                 .catch(error => logger.error(error))
         );
         this.socket.on(ClientStageEvents.REMOVE_STAGE, (id: string) =>
             // REMOVE STAGE
-            this.reactor.removeStage(this.user, id)
+            this.reactor.removeStage(this.user._id, id)
         );
 
         // GROUP MANAGEMENT
@@ -88,12 +88,17 @@ class SocketStageHandler {
             }, fn: (error?: string) => void) =>
                 // JOIN STAGE
                 this.reactor.joinStage(this.user._id, payload.stageId, payload.groupId, payload.password)
-                    .then(() => fn())
-                    .catch(error => fn(error))
+                    .then(() => {
+                        return fn();
+                    })
+                    .catch(error => {
+                        return fn(error)
+                    })
         );
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
             // LEAVE STAGE
             this.reactor.leaveStage(this.user._id)
+                .then(() => logger.info("Join stage finsihed"))
         );
         this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {
             // LEAVE STAGE FOR GOOD

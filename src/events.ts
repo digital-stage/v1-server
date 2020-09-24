@@ -25,9 +25,6 @@ export enum ServerDeviceEvents {
 export enum ClientDeviceEvents {
     UPDATE_DEVICE = "update-device",
 
-    HIDE_PRODUCER = "hide-producer",
-    PUBLISH_PRODUCER = "publish-producer",
-
     ADD_PRODUCER = "add-producer",
     CHANGE_PRODUCER = "change-producer",
     REMOVE_PRODUCER = "remove-producer",
@@ -66,7 +63,7 @@ export enum ServerStageEvents {
 
     STAGE_PRODUCER_ADDED = "stage-producer-added",
     STAGE_PRODUCER_CHANGED = "stage-producer-changed",
-    STAGE_PRODUCER_REMOVED = "stage-producer-removed",
+    STAGE_PRODUCER_REMOVED = "stage-producer-removed"
 }
 
 export enum ClientStageEvents {

@@ -4,15 +4,15 @@ import Server from "../model.server";
 import {DeviceType} from "../storage/mongo/mongo.types";
 
 interface IEventReactor {
-    addStage(user: User, initialStage: Partial<Server.Stage>): Promise<any>;
+    addStage(userId: UserId, initialStage: Partial<Server.Stage>): Promise<any>;
 
-    changeStage(user: User, id: StageId, stage: Partial<Server.Stage>): Promise<any>;
+    changeStage(userId: UserId, id: StageId, stage: Partial<Server.Stage>): Promise<any>;
 
     leaveStage(userId: UserId): Promise<any>;
 
     joinStage(userId: UserId, stageId: StageId, groupId: GroupId, password?: string): Promise<any>;
 
-    removeStage(user: User, id: StageId): Promise<any>;
+    removeStage(userId: UserId, id: StageId): Promise<any>;
 
     addGroup(user: User, stageId: StageId, name: string): Promise<any>;
 
@@ -22,9 +22,9 @@ interface IEventReactor {
 
     addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<Producer>;
 
-    changeProducer(device: Device, producerId: ProducerId, update: Partial<Producer>): Promise<Producer>;
+    changeProducer(deviceId: DeviceId, producerId: ProducerId, update: Partial<Producer>): Promise<Producer>;
 
-    removeProducer(device: Device, producerId: ProducerId): Promise<Producer>;
+    removeProducer(deviceId: DeviceId, producerId: ProducerId): Promise<Producer>;
 
     getUserIdsByStageId(stageId: StageId): Promise<UserId[]>;
 
