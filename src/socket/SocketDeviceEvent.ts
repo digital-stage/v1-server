@@ -48,11 +48,11 @@ class SocketDeviceHandler {
                 if (payload._id.toString() === this.device._id.toString()) {
                     console.log("Updating local device");
                     // Update this device
-                    this.device.updateOne({
+                    this.device.updateOne(omit(payload, '_id'));
+                    this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, {
                         ...payload,
                         _id: undefined
                     });
-                    this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_CHANGED, omit(payload, '_id'));
                 } else {
                     // Update remote device
                     return DeviceModel.findOneAndUpdate({
