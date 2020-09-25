@@ -34,9 +34,7 @@ namespace HttpService {
 
         app.post('/routers/create', function (req, res) {
             if (
-                !req.body.id
-                || typeof req.body.id !== 'string'
-                || !req.body.ipv4
+                !req.body.ipv4
                 || typeof req.body.ipv4 !== 'string'
                 || !req.body.port
                 || typeof req.body.port !== 'string'
