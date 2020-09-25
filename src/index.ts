@@ -12,6 +12,7 @@ import * as ip from "ip";
 import DefaultAuthentication from "./auth/default/DefaultAuthentication";
 import Model from "./storage/mongo/model.mongo";
 import * as mongoose from "mongoose";
+import HttpService from "./http/HttpService";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -57,6 +58,7 @@ const init = async () => {
         useUnifiedTopology: true,
         useFindAndModify: false
     })
+        .then(() => HttpService.init(app, authentication))
         .then(() => socketServer.init())
         .then(() => resetDevices())
 }

@@ -54,7 +54,7 @@ class SocketDeviceHandler {
                         _id: payload._id
                     });
                 } else {
-                    // Update remote device
+                    // Update remote devices
                     return DeviceModel.findOneAndUpdate({
                         _id: payload._id,
                         userId: this.user._id

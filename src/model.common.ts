@@ -64,6 +64,7 @@ export interface Producer {
 
 export interface Router {
     _id: RouterId;
+    url: string;
     ipv4: string;
     ipv6: string;
     port: number;
