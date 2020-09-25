@@ -2,7 +2,7 @@ import * as core from "express-serve-static-core";
 import * as expressPino from "express-pino-logger";
 import Auth from "../auth/IAuthentication";
 import Model from "../storage/mongo/model.mongo";
-import {Router} from "../model.common";
+import * as express from "express";
 
 namespace HttpService {
     import IAuthentication = Auth.IAuthentication;
@@ -32,17 +32,19 @@ namespace HttpService {
                 });
         });
 
-        app.post('/routers/create', function (req, res) {
+        app.post('/routers/create', express.json(), function (req, res) {
+            console.log("routers/create");
             if (
                 !req.body.ipv4
                 || typeof req.body.ipv4 !== 'string'
-                || !req.body.port
-                || typeof req.body.port !== 'string'
                 || !req.body.ipv6
                 || typeof req.body.ipv6 !== 'string'
+                || !req.body.port
+                || typeof req.body.port !== 'string'
                 || !req.body.url
                 || typeof req.body.url !== 'string'
             ) {
+                console.log(req.body);
                 return res.sendStatus(400);
             }
             return authentication.authorizeRequest(req)
