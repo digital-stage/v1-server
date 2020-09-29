@@ -4,6 +4,7 @@ import Server from "../model.server";
 import {DeviceType} from "../storage/mongo/mongo.types";
 
 interface IEventReactor {
+
     addStage(userId: UserId, initialStage: Partial<Server.Stage>): Promise<any>;
 
     changeStage(userId: UserId, id: StageId, stage: Partial<Server.Stage>): Promise<any>;
@@ -20,7 +21,7 @@ interface IEventReactor {
 
     removeGroup(user: User, groupId: GroupId): Promise<any>;
 
-    addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<Producer>;
+    addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: RouterId, routerProducerId?: string): Promise<Producer>;
 
     changeProducer(deviceId: DeviceId, producerId: ProducerId, update: Partial<Producer>): Promise<Producer>;
 

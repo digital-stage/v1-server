@@ -68,7 +68,11 @@ class DefaultAuthentication implements Auth.IAuthentication {
             if (!req.headers.authorization) {
                 reject(new Error("Missing authorization"));
             }
-            return this.verifyWithToken(resolve, reject, req.headers.authorization);
+            if (!req.headers.authorization.startsWith("Bearer ")) {
+                reject(new Error("Invalid authorization"));
+            }
+            const token = req.headers.authorization.substr(7);
+            return this.verifyWithToken(resolve, reject, token);
         })
     }
 }

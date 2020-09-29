@@ -10,7 +10,6 @@ import StageModel = Model.StageModel;
 import UserModel = Model.UserModel;
 import Server from "../model.server";
 import ProducerModel = Model.ProducerModel;
-import DeviceModel = Model.DeviceModel;
 import * as pino from "pino";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
@@ -30,29 +29,6 @@ class EventReactor implements IEventReactor {
 
     getDeviceByMac(userId: UserId, mac: string): Promise<any> {
         return this.database.getDeviceByMac(userId, mac);
-    }
-
-    updateDevice(userId: UserId, id: DeviceId, update: Partial<Device>): Promise<Device> {
-        return DeviceModel.findById(id).exec()
-            .then(device => {
-                if (device) {
-                    if (device.userId.toString() === userId.toString()) {
-                        return this.database.updateDevice(device, update);
-                    }
-                    logger.warn("[EVENT REACTOR] User " + userId + " tried to modify unowned device " + id);
-                }
-                logger.warn("[EVENT REACTOR] Could not find device " + id + " to update");
-            });
-    }
-
-    removeDevice(userId: UserId, deviceId: DeviceId) {
-        return DeviceModel.findById(deviceId).exec()
-            .then(device => {
-                if (device.userId.toString() === userId.toString())
-                    return this.database.removeDevice(device);
-
-                logger.warn("[EVENT REACTOR] User " + userId + " tried to remove unowned device " + deviceId);
-            });
     }
 
     addStage(userId: UserId, initialStage: Partial<Server.Stage>): Promise<any> {
@@ -144,11 +120,11 @@ class EventReactor implements IEventReactor {
         )
     }
 
-    addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: string): Promise<Producer> {
+    addProducer(device: Device, kind: "audio" | "video" | "ov", routerId?: string, routerProducerId?: string): Promise<Producer> {
         return UserModel.findById(device.userId).exec()
             .then(user => {
                 if (user) {
-                    return this.database.addProducer(device._id, user, kind, routerId);
+                    return this.database.addProducer(device._id, user, kind, routerId, routerProducerId);
                 }
                 throw new Error("Could not find user");
             })

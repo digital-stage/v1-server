@@ -6,13 +6,13 @@ import * as https from "https";
 import * as fs from "fs";
 import * as path from "path";
 import * as core from "express-serve-static-core";
-import * as expressPino from "express-pino-logger";
 import {MONGO_URL, PORT} from "./env";
 import * as ip from "ip";
 import DefaultAuthentication from "./auth/default/DefaultAuthentication";
 import Model from "./storage/mongo/model.mongo";
 import * as mongoose from "mongoose";
 import HttpService from "./http/HttpService";
+import ProducerModel = Model.ProducerModel;
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -36,8 +36,6 @@ const server = (process.env.USE_SSL && process.env.USE_SSL === "true") ? https.c
     rejectUnauthorized: false
 }, app) : app.listen(PORT);
 
-app.use(expressPino());
-
 
 const authentication = new DefaultAuthentication();
 const socketServer = new SocketServer(server, authentication);
@@ -48,7 +46,10 @@ const resetDevices = () => {
             server: serverAddress
         })
         .exec()
-        .then(servers => servers.map(server => server.remove()))
+        .then(devices => devices.map(device => {
+            return ProducerModel.remove({deviceId: device._id}).exec()
+                .then(() => device.remove());
+        }))
         .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
 }
 

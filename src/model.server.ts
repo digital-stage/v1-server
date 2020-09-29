@@ -43,6 +43,8 @@ namespace Server {
 
     export interface StageMember {
         _id: StageMemberId;
+        name: string;
+        avatarUrl?: string;
         stageId: StageId;
         groupId: GroupId;
         userId: UserId;

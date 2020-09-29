@@ -1,4 +1,5 @@
 import * as mongoose from "mongoose";
+import {RouterId} from "../../model.common";
 
 export const StageSchema = new mongoose.Schema({
     name: {type: String},
@@ -28,6 +29,7 @@ export const CustomGroupVolumeSchema = new mongoose.Schema({
 CustomGroupVolumeSchema.index({groupId: 1, userId: 1}, {unique: true});
 export const StageMemberSchema = new mongoose.Schema({
     name: {type: String},
+    avatarUrl: {type: String},
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
     stageId: {type: mongoose.Schema.Types.ObjectId, ref: 'Stage'},
     groupId: {type: mongoose.Schema.Types.ObjectId, ref: 'Group'},
@@ -106,9 +108,10 @@ export const ProducerSchema = new mongoose.Schema({
     stageMemberId: {type: mongoose.Schema.Types.ObjectId, ref: 'StageMember'},
     kind: {type: String},
     routerId: {type: mongoose.Schema.Types.ObjectId, ref: 'Router'},
+    routerProducerId: {type: String}
 }, {timestamps: true});
 export const RouterSchema = new mongoose.Schema({
-    name: {type: String},
+    url: {type: String, unique: true},
     ipv4: {type: String},
     ipv6: {type: String},
     port: {type: Number},

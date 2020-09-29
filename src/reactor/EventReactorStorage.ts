@@ -51,7 +51,7 @@ export interface IEventReactorStorage {
 
     sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<any>;
 
-    addProducer(deviceId: DeviceId, user: UserType, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<any>;
+    addProducer(deviceId: DeviceId, user: UserType, kind: "audio" | "video" | "ov", routerId?: RouterId, routerProducerId?: string): Promise<any>;
 
     updateProducer(producer: ProducerType, update: Partial<Producer>): Promise<any>;
 
@@ -143,6 +143,7 @@ class EventReactorStorage implements IEventReactorStorage {
         let startTime = Date.now();
         const isAdmin: boolean = stage.admins.find(admin => admin.toString() === user._id.toString()) !== undefined;
         const previousStageId = user.stageId;
+        const previousStageMemberId = user.stageMemberId;
 
         // Create or get group member
         let stageMember = await Model.StageMemberModel.findOne({
@@ -152,6 +153,8 @@ class EventReactorStorage implements IEventReactorStorage {
         const wasUserAlreadyInStage = stageMember !== null;
         if (!stageMember) {
             stageMember = new Model.StageMemberModel();
+            stageMember.name = user.name;
+            stageMember.avatarUrl = user.avatarUrl;
             stageMember.userId = user._id;
             stageMember.volume = 1.0;
             stageMember.isDirector = false;
@@ -178,10 +181,10 @@ class EventReactorStorage implements IEventReactorStorage {
 
         if (previousStageId) {
             // Set old stage member offline
-            Model.StageMemberModel.updateOne({_id: user.stageMemberId}, {online: false}).exec()
+            Model.StageMemberModel.updateOne({_id: previousStageMemberId}, {online: false}).exec()
                 .then(() => this.server.sendToJoinedStageMembers(previousStageId, ServerStageEvents.GROUP_MEMBER_CHANGED, {
                     online: false,
-                    _id: user.stageMemberId
+                    _id: previousStageMemberId
                 }));
         }
 
@@ -299,12 +302,13 @@ class EventReactorStorage implements IEventReactorStorage {
     }
 
 
-    addProducer(deviceId: DeviceId, user: UserType, kind: "audio" | "video" | "ov", routerId?: RouterId): Promise<ProducerType> {
+    addProducer(deviceId: DeviceId, user: UserType, kind: "audio" | "video" | "ov", routerId?: RouterId, routerProducerId?: string): Promise<ProducerType> {
         const producer = new ProducerModel();
         producer.userId = user._id;
         producer.deviceId = deviceId;
         producer.kind = kind;
-        //    producer.routerId = routerId;
+        producer.routerId = routerId;
+        producer.routerProducerId = routerProducerId;
         if (user.stageMemberId) {
             producer.stageMemberId = user.stageMemberId;
         }
@@ -353,6 +357,9 @@ class EventReactorStorage implements IEventReactorStorage {
 
     //**** SEND / REVOKE METHODS *****/
     public async sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<any> {
+        if (user.stageMemberId) {
+            await Model.StageMemberModel.findByIdAndUpdate(user.stageMemberId, {online: true}).exec();
+        }
         const groupMembers = await Model.StageMemberModel.find({userId: user._id}).lean().exec();
         // Get all managed stages and stages, where the user was or is in
         const stages = await Model.StageModel.find({$or: [{_id: {$in: groupMembers.map(groupMember => groupMember.stageId)}}, {admins: user._id}]}).exec();

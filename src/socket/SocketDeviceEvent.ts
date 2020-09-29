@@ -10,6 +10,7 @@ import {DeviceType} from "../storage/mongo/mongo.types";
 import {omit} from "lodash";
 import DeviceModel = Model.DeviceModel;
 import ProducerModel = Model.ProducerModel;
+import StageMemberModel = Model.StageMemberModel;
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -71,10 +72,11 @@ class SocketDeviceHandler {
         this.socket.on(ClientStageEvents.ADD_PRODUCER, (
             payload: {
                 kind: "audio" | "video" | "ov",
-                routerId?: RouterId
+                routerId: RouterId,
+                routerProducerId: string
             }, fn: (producer: Producer) => void
         ) => {
-            return this.reactor.addProducer(this.device, payload.kind, payload.routerId)
+            return this.reactor.addProducer(this.device, payload.kind, payload.routerId, payload.routerProducerId)
                 .then(producer => fn(producer));
         });
         this.socket.on(ClientStageEvents.CHANGE_PRODUCER, (id: string, producer: Partial<Producer>, fn: (producer: Producer) => void) =>
@@ -88,6 +90,7 @@ class SocketDeviceHandler {
         );
 
         this.socket.on("disconnect", async () => {
+            console.log("DISCONNECTING");
             if (!this.device.mac) {
                 this.debug("Removed device '" + this.device.name + "' of " + this.user.name);
                 // Remove producers first
@@ -96,10 +99,10 @@ class SocketDeviceHandler {
                     await this.reactor.removeProducer(this.device._id, producer._id)
                 }
                 this.server.sendToUser(this.user._id, ServerDeviceEvents.DEVICE_REMOVED, this.device._id);
-                return this.device.remove();
+                await this.device.remove();
             } else {
                 this.debug("Switched device '" + this.device.name + "' of " + this.user.name + " to offline");
-                return this.device.updateOne({
+                await this.device.updateOne({
                     online: false
                 })
                     .then(() => {
@@ -108,6 +111,12 @@ class SocketDeviceHandler {
                             _id: this.device._id
                         });
                     })
+            }
+
+            if (this.user.stageMemberId) {
+                if (await DeviceModel.count({userId: this.user._id, online: true}) === 0) {
+                    return StageMemberModel.findByIdAndUpdate(this.user.stageMemberId, {online: false}).exec();
+                }
             }
         });
         this.trace("Registered socket handling for " + this.user.name + "!");

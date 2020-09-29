@@ -92,7 +92,7 @@ class SocketStageHandler {
                         return fn();
                     })
                     .catch(error => {
-                        return fn(error)
+                        return fn(error.message)
                     })
         );
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
