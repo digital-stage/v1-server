@@ -251,6 +251,7 @@ class EventReactorStorage implements IEventReactorStorage {
         const group = new Model.GroupModel();
         group.name = name;
         group.stageId = stageId;
+        group.volume = 1;
         return group.save()
             .then(group => this.server.sendToStage(stageId, ServerStageEvents.GROUP_ADDED, group.toObject()))
             .then(() => logger.debug("[EVENT REACTOR DATABASE] Added group " + group.name))

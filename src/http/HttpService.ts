@@ -13,9 +13,9 @@ namespace HttpService {
     import ProducerModel = Model.ProducerModel;
     export const init = (app: core.Express, authentication: IAuthentication) => {
         app.use(expressPino());
-
+        
         app.get('/beat', function (req, res) {
-            res.send('Hello World!');
+            res.send('Boom!');
         });
 
         app.post('/stages/create', function (req, res) {
