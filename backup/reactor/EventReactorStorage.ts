@@ -1,10 +1,10 @@
-import {StageMemberType, GroupType, StageType, UserType, ProducerType, DeviceType} from "../storage/mongo/mongo.types";
+import {StageMemberType, GroupType, StageType, UserType, ProducerType, DeviceType} from "../storage/mongoose/mongo.types";
 import {Device, DeviceId, GroupId, Producer, RouterId, StageId, User, UserId} from "../model.common";
-import ISocketServer from "../ISocketServer";
-import Model from "../storage/mongo/model.mongo";
-import {ServerDeviceEvents, ServerStageEvents} from "../events";
+import ISocketServer from "../../src/ISocketServer";
+import Model from "../storage/mongoose/model.mongo";
+import {ServerDeviceEvents, ServerStageEvents} from "../../src/events";
 import * as pino from "pino";
-import Server from "../model.server";
+import Server from "../../src/model.server";
 import * as socketIO from "socket.io";
 import StageMemberModel = Model.StageMemberModel;
 import GroupModel = Model.GroupModel;
@@ -12,7 +12,7 @@ import CustomGroupVolumeModel = Model.CustomGroupVolumeModel;
 import UserModel = Model.UserModel;
 import ProducerModel = Model.ProducerModel;
 import DeviceModel = Model.DeviceModel;
-import {serverAddress} from "../index";
+import {serverAddress} from "../../src";
 import {Set} from "immutable";
 
 

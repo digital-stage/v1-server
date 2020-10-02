@@ -1,12 +1,10 @@
 import * as socketIO from "socket.io";
 import {Request} from "express";
-import Auth from "../IAuthentication";
+import Auth from "./IAuthentication";
 import fetch from "node-fetch";
 import * as pino from "pino";
-import {AUTH_SERVER_URL} from "../../env";
-import {UserType} from "../../storage/mongo/mongo.types";
-import Model from "../../storage/mongo/model.mongo";
-import UserModel = Model.UserModel;
+import {UserType} from "../../backup/storage/mongoose/mongo.types";
+import {MongoDatabase} from "../database/MongoDatabase";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -18,32 +16,33 @@ export interface DefaultAuthUser {
 }
 
 const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
-    return fetch(AUTH_SERVER_URL + "/profile", {
+    return fetch(process.env.AUTH_URL + "/profile", {
         headers: {
             'Content-Type': 'application/json',
             Authorization: "Bearer " + token
         }
     })
-        .then(result => result.json() as DefaultAuthUser);
+        .then(result => result.json() as DefaultAuthUser)
 }
 
 class DefaultAuthentication implements Auth.IAuthentication {
+    private readonly database;
+
+
+    constructor(database: MongoDatabase) {
+        this.database = database;
+    }
 
     verifyWithToken(resolve, reject, token: string): Promise<UserType> {
         return getUserByToken(token)
             .then(authUser => {
-                return UserModel.findOne({uid: authUser._id}).exec()
+                return this.database.readUserByUid(authUser._id)
                     .then(user => {
                         if (!user) {
                             logger.trace("[AUTH] Creating new user " + authUser.name);
-                            const user = new Model.UserModel();
-                            user.uid = authUser._id;
-                            user.name = authUser.name;
-                            user.avatarUrl = authUser.avatarUrl;
-                            return user.save()
+                            return this.database.createUser(authUser._id, authUser.name, authUser.avatarUrl)
                                 .then(user => resolve(user));
                         }
-                        logger.trace("[AUTH] Signed in user " + authUser.name);
                         return resolve(user);
                     })
             })

@@ -1,11 +1,11 @@
 import * as socketIO from "socket.io";
 import {StageId, User} from "../model.common";
-import {ClientStageEvents, ServerStageEvents} from "../events";
+import {ClientStageEvents, ServerStageEvents} from "../../src/events";
 import * as pino from "pino";
-import Model from "../storage/mongo/model.mongo";
+import Model from "../storage/mongoose/model.mongo";
 import IEventReactor from "../reactor/IEventReactor";
-import ISocketServer from "../ISocketServer";
-import Server from "../model.server";
+import ISocketServer from "../../src/ISocketServer";
+import Server from "../../src/model.server";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -60,23 +60,26 @@ class SocketStageHandler {
         );
 
         // STAGE MEMBER MANAGEMENT
-        this.socket.on(ClientStageEvents.CHANGE_GROUP_MEMBER, (id: string, groupMember: Partial<Server.Group>) =>
+        this.socket.on(ClientStageEvents.CHANGE_GROUP_MEMBER, (payload: { id: string, stageMember: Partial<Server.StageMember> }) =>
             // CHANGE GROUP MEMBER
-            Model.StageMemberModel.findById(id).exec()
+            Model.StageMemberModel.findById(payload.id).exec()
                 .then(stageMember => {
-                    return Model.StageModel.findOne({_id: stageMember.stageId, admins: this.user._id}).lean().exec()
-                        .then(stage => {
-                            if (stage) {
-                                return stageMember.update(groupMember)
-                                    .then(stageMember => this.server.sendToStage(stageMember.stageId, ServerStageEvents.GROUP_MEMBER_CHANGED, {
-                                        ...groupMember,
-                                        _id: id
-                                    }))
-                                    .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + " updated group member " + id))
-                            }
-                        })
-                        .then(() => stageMember.update(groupMember)
-                            .then(() => stageMember.toObject()))
+                    if (stageMember)
+                        return Model.StageModel.findOne({_id: stageMember.stageId, admins: this.user._id}).lean().exec()
+                            .then(stage => {
+                                if (stage) {
+                                    return stageMember.updateOne(payload.stageMember)
+                                        .then(stageMember => {
+                                            return this.server.sendToJoinedStageMembers(stageMember.stageId, ServerStageEvents.GROUP_MEMBER_CHANGED, {
+                                                ...payload.stageMember,
+                                                _id: payload.id
+                                            })
+                                        })
+                                        .then(() => logger.trace("[SOCKET STAGE EVENT] User " + this.user.name + "(" + this.user._id + ") updated stage member " + stageMember.name + "(" + stageMember._id + ")"))
+                                }
+                            })
+                    else
+                        logger.warn("Stage member not found");
                 })
         );
 

@@ -1,14 +1,14 @@
 import {Device, DeviceId, GroupId, Producer, StageId, User, UserId} from "../model.common";
-import Model from "../storage/mongo/model.mongo";
+import Model from "../storage/mongoose/model.mongo";
 import IEventReactor from "./IEventReactor";
-import ISocketServer from "../ISocketServer";
+import ISocketServer from "../../src/ISocketServer";
 import GroupModel = Model.GroupModel;
-import {Errors} from "../errors";
+import {Errors} from "../../src/errors";
 import * as socketIO from "socket.io";
-import EventReactorStorage, {IEventReactorStorage} from "../reactor/EventReactorStorage";
+import EventReactorStorage, {IEventReactorStorage} from "./EventReactorStorage";
 import StageModel = Model.StageModel;
 import UserModel = Model.UserModel;
-import Server from "../model.server";
+import Server from "../../src/model.server";
 import ProducerModel = Model.ProducerModel;
 import * as pino from "pino";
 

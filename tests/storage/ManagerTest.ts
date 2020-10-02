@@ -1,4 +1,4 @@
-import MongoStageManager from "../../src/storage/mongo/MongoStageManager";
+import MongoStageManager from "../../backup/storage/mongoose/MongoStageManager";
 import * as mongoose from "mongoose";
 import {User} from "../../src/model.common";
 

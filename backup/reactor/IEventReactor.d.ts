@@ -1,7 +1,7 @@
 import {Device, DeviceId, GroupId, Producer, ProducerId, RouterId, StageId, User, UserId} from "../model.common";
 import * as socketIO from "socket.io";
-import Server from "../model.server";
-import {DeviceType} from "../storage/mongo/mongo.types";
+import Server from "../../src/model.server";
+import {DeviceType} from "../storage/mongoose/mongo.types";
 
 interface IEventReactor {
 

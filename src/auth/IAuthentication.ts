@@ -1,7 +1,7 @@
 import * as socketIO from "socket.io";
 import {Socket} from "socket.io";
 import {Request} from "express";
-import {UserType} from "../storage/mongo/mongo.types";
+import {UserType} from "../../backup/storage/mongoose/mongo.types";
 
 namespace Auth {
     export interface IAuthentication {

@@ -1,12 +1,12 @@
 import {Device, Producer, RouterId, User} from "../model.common";
 import * as socketIO from "socket.io";
 import * as pino from "pino";
-import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents} from "../events";
-import {serverAddress} from "../index";
-import Model from "../storage/mongo/model.mongo";
+import {ClientDeviceEvents, ClientStageEvents, ServerDeviceEvents} from "../../src/events";
+import {serverAddress} from "../../src";
+import Model from "../storage/mongoose/model.mongo";
 import IEventReactor from "../reactor/IEventReactor";
-import ISocketServer from "../ISocketServer";
-import {DeviceType} from "../storage/mongo/mongo.types";
+import ISocketServer from "../../src/ISocketServer";
+import {DeviceType} from "../storage/mongoose/mongo.types";
 import {omit} from "lodash";
 import DeviceModel = Model.DeviceModel;
 import ProducerModel = Model.ProducerModel;

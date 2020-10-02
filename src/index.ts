@@ -1,70 +1,42 @@
 import * as pino from "pino";
-import SocketServer from "./socket/SocketServer";
 import * as express from "express";
 import * as cors from "cors";
-import * as https from "https";
-import * as fs from "fs";
-import * as path from "path";
 import * as core from "express-serve-static-core";
-import {MONGO_URL, PORT} from "./env";
 import * as ip from "ip";
-import DefaultAuthentication from "./auth/default/DefaultAuthentication";
-import Model from "./storage/mongo/model.mongo";
-import * as mongoose from "mongoose";
 import HttpService from "./http/HttpService";
-import ProducerModel = Model.ProducerModel;
+import {parseEnv} from "./env";
+import {Reactor} from "./Reactor";
+
+parseEnv();
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
 });
 
-export const serverAddress = ip.address() + PORT;
+export const serverAddress = ip.address() + ":" + process.env.PORT;
 
 const app: core.Express = express();
 app.use(express.urlencoded({extended: true}));
 app.use(cors({origin: true}));
 app.options('*', cors());
-const server = (process.env.USE_SSL && process.env.USE_SSL === "true") ? https.createServer({
-    key: fs.readFileSync(
-        path.resolve(process.env.SSL_KEY || './ssl/key.pem')
-    ),
-    cert: fs.readFileSync(
-        path.resolve(process.env.SSL_CRT || './ssl/cert.pem')
-    ),
-    ca: process.env.SSL_CA ? fs.readFileSync(path.resolve(process.env.SSL_CA)) : undefined,
-    requestCert: true,
-    rejectUnauthorized: false
-}, app) : app.listen(PORT);
 
+const server = app.listen(process.env.PORT);
 
-const authentication = new DefaultAuthentication();
-const socketServer = new SocketServer(server, authentication);
+const reactor = new Reactor(server, process.env.MONGO_URL, serverAddress);
+
 
 const resetDevices = () => {
-    return Model.DeviceModel
-        .find({
-            server: serverAddress
-        })
-        .exec()
-        .then(devices => devices.map(device => {
-            return ProducerModel.remove({deviceId: device._id}).exec()
-                .then(() => device.remove());
-        }))
+    return reactor.database.removeDevicesByServer(serverAddress)
         .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
 }
 
 const init = async () => {
-    return mongoose.connect(MONGO_URL + "/digitalstage", {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useFindAndModify: false
-    })
-        .then(() => HttpService.init(app, authentication))
-        .then(() => socketServer.init())
-        .then(() => resetDevices())
+    return reactor.init(process.env.MONGO_DB)
+        .then(() => HttpService.init(app, reactor.authentication))
+        .then(() => resetDevices());
 }
 
 logger.info("[SERVER] Starting ...");
 init()
-    .then(() => logger.info("[SERVER] DONE, running on port " + PORT))
+    .then(() => logger.info("[SERVER] DONE, running on port " + process.env.PORT))
     .catch(error => logger.error("[SERVER] Could not start:\n" + error));
