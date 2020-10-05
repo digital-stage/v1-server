@@ -1,25 +1,23 @@
-import {serverAddress} from "./index";
-
-export type StageId = string;
-export type GroupId = string;
-export type UserId = string;
-export type StageMemberId = string;
-export type DeviceId = string;
-export type WebRTCDeviceId = string;
-export type TrackPresetId = string;
-export type RouterId = string;
-export type CustomGroupVolumeId = string;
-export type CustomStageMemberVolumeId = string;
-export type CustomGroupMemberVolumeId = string;
-export type VideoDeviceId = string;
-export type GlobalProducerId = string;
-export type RouterProducerId = string;
-export type SoundCardId = string;
-export type StageMemberProducerId = string;
-export type SoundCardChannelId = string;
-export type TrackId = string;
-export type StageMemberTrackId = string;
-export type CustomStageMemberTrackId = string;
+import {ObjectId} from "mongodb";
+export type StageId = string | ObjectId;
+export type GroupId = string | ObjectId;
+export type UserId = string | ObjectId;
+export type StageMemberId = string | ObjectId;
+export type DeviceId = string | ObjectId;
+export type WebRTCDeviceId = string | ObjectId;
+export type TrackPresetId = string | ObjectId;
+export type RouterId = string | ObjectId;
+export type CustomGroupId = string | ObjectId;
+export type CustomStageMemberId = string | ObjectId;
+export type VideoDeviceId = string | ObjectId;
+export type GlobalProducerId = string | ObjectId;
+export type RouterProducerId = string | ObjectId;
+export type SoundCardId = string | ObjectId;
+export type StageMemberProducerId = string | ObjectId;
+export type SoundCardChannelId = string | ObjectId;
+export type TrackId = string | ObjectId;
+export type StageMemberTrackId = string | ObjectId;
+export type CustomStageMemberTrackId = string | ObjectId;
 
 export interface Router {
     _id: RouterId;
@@ -31,15 +29,15 @@ export interface Router {
 }
 
 export interface User {
-    _id: UserId,
+    _id: UserId | ObjectId;
     uid?: string;
 
     // SETTINGS
     name: string;
     avatarUrl?: string;
 
-    stage?: string;          // <--- RELATION
-    stageMember?: string;    // <--- RELATION
+    stageId?: StageId;          // <--- RELATION
+    stageMemberId?: StageMemberId;    // <--- RELATION
 }
 
 /***
@@ -72,7 +70,7 @@ export interface User {
 
 export interface Device {
     _id: DeviceId;
-    user: UserId;
+    userId: UserId;
     online: boolean;
     mac?: string;
     name: string;
@@ -85,25 +83,25 @@ export interface Device {
     receiveAudio: boolean;
 
     // WebRTC video device
-    inputVideoDevices: WebRTCDevice[];
-    inputVideoDevice?: WebRTCDeviceId;
+    inputVideoDeviceIds: WebRTCDeviceId[];
+    inputVideoDeviceId?: WebRTCDeviceId;
 
     // WebRTC audio device
-    inputAudioDevices: WebRTCDevice[];
-    inputAudioDevice?: WebRTCDeviceId;
-    outputAudioDevices: WebRTCDevice[];
-    outputAudioDevice?: WebRTCDeviceId;
+    inputAudioDeviceIds: WebRTCDeviceId[];
+    inputAudioDeviceId?: WebRTCDeviceId;
+    outputAudioDeviceIds: WebRTCDeviceId[];
+    outputAudioDeviceId?: WebRTCDeviceId;
 
     // OV SoundCards
-    soundCards: SoundCardId[];        // refers to all available sound devices
-    soundCard?: SoundCardId;           // active sound device
+    soundCardIds: SoundCardId[];        // refers to all available sound devices
+    soundCardId?: SoundCardId;           // active sound device
 
     // Optional for ov-based clients
     senderJitter: number;
     receiverJitter: number;
 
     // Optimizations for performance
-    producers: GlobalProducerId[];
+    producerIds: GlobalProducerId[];
     server: string;
 }
 
@@ -116,6 +114,7 @@ export interface SoundCard {    // ov-specific
     _id: SoundCardId;
     name: string;       // unique together with deviceId
     deviceId: DeviceId; // <--- RELATION
+    userId: UserId;
 
     driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC",
 
@@ -123,7 +122,7 @@ export interface SoundCard {    // ov-specific
     numOutputChannels: number;
 
     trackPresets: TrackPresetId[];
-    trackPreset: TrackPresetId;     // Current default preset (outside or on new stages)
+    trackPreset?: TrackPresetId;     // Current default preset (outside or on new stages)
 
     sampleRate: number;
     periodSize: number;
@@ -135,9 +134,11 @@ export interface SoundCard {    // ov-specific
  */
 export interface TrackPreset {
     _id: TrackPresetId;
-    soundCard: SoundCardId;
+    userId: UserId;
+    deviceId: DeviceId;
+    soundCardId: SoundCardId;
     name: string;
-    tracks: TrackId[];
+    trackIds: TrackId[];
     outputChannels: number[];   // For the output use simple numbers TODO: @Giso, is this enough?
 }
 
@@ -147,9 +148,13 @@ export interface TrackPreset {
  */
 export interface Track {
     _id: TrackId;
-    readonly channel: number;
-    stageMember: StageMemberId; // <--- RELATION
-    trackPreset: TrackPresetId; // <--- RELATION Each track is assigned to a specific channel
+    channel: number;
+    deviceId: DeviceId;
+    userId: UserId;
+    stageId?: StageId;             // <--- RELATION
+    trackPresetId: TrackPresetId; // <--- RELATION Each track is assigned to a specific channel
+
+    online: boolean;
 
     gain: number;
     volume: number;
@@ -158,18 +163,24 @@ export interface Track {
 }
 
 // WEBRTC specific
-export interface WebRTCProducer {
+export interface GlobalProducer {
     _id: GlobalProducerId;
     kind: "audio" | "video";
+
+    deviceId: DeviceId;
+    userId: UserId;
+
+    stageId?: StageId;
+
     routerId: RouterId;
     routerProducerId: RouterProducerId;
 }
 
-export interface VideoProducer extends WebRTCProducer {
+export interface GlobalVideoProducer extends GlobalProducer {
     kind: "video";
 }
 
-export interface AudioProducer extends WebRTCProducer {
+export interface GlobalAudioProducer extends GlobalProducer {
     kind: "audio";
 }
 
@@ -194,7 +205,7 @@ export interface Stage {
 export interface Group {
     _id: GroupId;
     name: string;
-    stage: StageId;   // <--- RELATION
+    stageId: StageId;   // <--- RELATION
 
     // SETTINGS
     volume: number;
@@ -203,11 +214,11 @@ export interface Group {
 /**
  * Each user can overwrite the global group settings with personal preferences
  */
-export interface CustomGroupVolume {
-    _id: CustomGroupVolumeId;
-    user: UserId;             // <--- RELATION
-    stage: StageId;
-    group: GroupId;           // <--- RELATION
+export interface CustomGroup {
+    _id: CustomGroupId;
+    userId: UserId;             // <--- RELATION
+    stageId: StageId;
+    groupId: GroupId;           // <--- RELATION
 
     // SETTINGS
     volume: number;
@@ -219,13 +230,11 @@ export interface CustomGroupVolume {
  */
 export interface StageMember {
     _id: StageMemberId;
-    name: string;       // synchronized with data from user object
-    avatarUrl?: string; // synchronized with data from user object
-    stage: StageId;
-    group: GroupId;   // <--- RELATION
-    user: UserId;     // <--- RELATION
+    stageId: StageId;
+    groupId: GroupId;   // <--- RELATION
+    userId: UserId;     // <--- RELATION
 
-    track: StageMemberTrackId[];
+    tracks: StageMemberTrackId[];
 
     online: boolean;
 
@@ -245,10 +254,10 @@ export interface StageMember {
 /**
  * Each user can overwrite the global stage member settings with personal preferences
  */
-export interface CustomStageMemberVolume {
-    _id: CustomStageMemberVolumeId;
-    user: UserId;                 // <--- RELATION
-    stageMember: StageMemberId;   // <--- RELATION
+export interface CustomStageMember {
+    _id: CustomStageMemberId;
+    userId: UserId;                 // <--- RELATION
+    stageMemberId: StageMemberId;   // <--- RELATION
 
     // SETTINGS
     volume: number;
@@ -273,19 +282,24 @@ export interface CustomStageMemberVolume {
  */
 export interface StageMemberTrack {
     _id: StageMemberTrackId;
-    stageMember: StageMemberId;
+
+    stageId: StageId;
+    stageMemberId: StageMemberId;
+    userId: UserId;
 
     kind: "webrtc" | "ov";
 
+    online: boolean;
+
     // Either ov-based
-    track?: TrackId;
+    trackId?: TrackId;
     // or webrtc-based
-    producer?: GlobalProducerId;
+    producerId?: GlobalProducerId;
 
     gain: number;       // Overrides track gain (for stage)
     volume: number;     // Overrides track volume (for stage)
 
-    directivity: "omni" | "cardioid"; // Overrides track directivity (for stage)
+    directivity?: "omni" | "cardioid"; // Overrides track directivity (for stage)
 
     // Position relative to stage member
     x: number;  //TODO: Circular assignment inside room
@@ -299,14 +313,14 @@ export interface StageMemberTrack {
 
 export interface StageMemberWebTrack extends StageMemberTrack {
     kind: "webrtc";
-    producer: GlobalProducerId;
-    track: undefined;
+    producerId: GlobalProducerId;
+    trackId: undefined;
 }
 
 export interface StageMemberOvTrack extends StageMemberTrack {
     kind: "ov";
-    track: GlobalProducerId;
-    producer: undefined;
+    trackId: GlobalProducerId;
+    producerId: undefined;
 }
 
 
@@ -315,7 +329,9 @@ export interface StageMemberOvTrack extends StageMemberTrack {
  */
 export interface CustomStageMemberTrack {
     _id: CustomStageMemberTrackId;
-    stageMemberTrack: StageMemberTrackId;
+
+    stageId: StageId;
+    stageMemberTrackId: StageMemberTrackId;
 
     gain: number;       // Overrides track gain (for user)
     volume: number;     // Overrides track volume (for user)

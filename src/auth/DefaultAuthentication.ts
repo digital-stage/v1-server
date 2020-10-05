@@ -4,7 +4,7 @@ import Auth from "./IAuthentication";
 import fetch from "node-fetch";
 import * as pino from "pino";
 import {UserType} from "../../backup/storage/mongoose/mongo.types";
-import {MongoDatabase} from "../database/MongoDatabase";
+import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -29,7 +29,7 @@ class DefaultAuthentication implements Auth.IAuthentication {
     private readonly database;
 
 
-    constructor(database: MongoDatabase) {
+    constructor(database: IRealtimeDatabase) {
         this.database = database;
     }
 

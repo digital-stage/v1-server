@@ -5,7 +5,12 @@ import * as core from "express-serve-static-core";
 import * as ip from "ip";
 import HttpService from "./http/HttpService";
 import {parseEnv} from "./env";
-import {Reactor} from "./Reactor";
+import SocketHandler from "./socket/SocketHandler";
+import * as socketIO from "socket.io";
+import {MongoRealtimeDatabase} from "./database/MongoRealtimeDatabase";
+import Auth from "./auth/IAuthentication";
+import IAuthentication = Auth.IAuthentication;
+import DefaultAuthentication from "./auth/DefaultAuthentication";
 
 parseEnv();
 
@@ -20,19 +25,25 @@ app.use(express.urlencoded({extended: true}));
 app.use(cors({origin: true}));
 app.options('*', cors());
 
-const server = app.listen(process.env.PORT);
 
-const reactor = new Reactor(server, process.env.MONGO_URL, serverAddress);
+const server = app.listen(process.env.PORT);
+const io = socketIO(server);
+
+const database = new MongoRealtimeDatabase(io, process.env.MONGO_URL);
+const auth: IAuthentication = new DefaultAuthentication(database);
+const handler = new SocketHandler(serverAddress, database, auth, io);
 
 
 const resetDevices = () => {
-    return reactor.database.removeDevicesByServer(serverAddress)
+    return database.readDevicesByServer(serverAddress)
+        .then(devices => devices.map(device => database.deleteDevice(device._id)))
         .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
 }
 
 const init = async () => {
-    return reactor.init(process.env.MONGO_DB)
-        .then(() => HttpService.init(app, reactor.authentication))
+    return database.connect(process.env.MONGO_DB)
+        .then(() => handler.init())
+        .then(() => HttpService.init(app, auth))
         .then(() => resetDevices());
 }
 
