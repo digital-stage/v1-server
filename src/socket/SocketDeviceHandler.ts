@@ -79,7 +79,6 @@ export class SocketDeviceHandler {
                 trackPresets: [],
                 driver: "JACK",
                 ...initial,
-                deviceId: this.device._id,
                 userId: this.user._id
             })
                 .then(soundCard => fn(soundCard)));
@@ -101,7 +100,6 @@ export class SocketDeviceHandler {
                     ...initial,
                     soundCardId: initial.soundCardId,
                     trackIds: [],
-                    deviceId: this.device._id,
                     userId: this.user._id
                 })
                     .then(trackPreset => fn(trackPreset));

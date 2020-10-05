@@ -1,5 +1,4 @@
 import * as mongoose from "mongoose";
-import {Device, Producer, Router, User} from "../../model.common";
 import Server from "../../../src/model.server";
 
 export type StageType = Server.Stage & mongoose.Document;

@@ -6,8 +6,8 @@ import {
     SoundCardId,
     Stage,
     StageId,
-    StageMember, StageMemberId,
-    StageMemberTrack, StageMemberTrackId, Track, TrackId, TrackPreset, TrackPresetId,
+    StageMember, StageMemberAudioTrack, StageMemberId, StageMemberTrack,
+    Track, TrackId, TrackPreset, TrackPresetId,
     User,
     UserId
 } from "../model.server";
@@ -216,6 +216,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                 stageId: stage._id,
                 groupId: groupId,
                 tracks: [],
+                videoTracks: [],
                 online: true,
                 isDirector: false,
                 volume: 1,
@@ -294,38 +295,19 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     }, {upsert: true})
                 ));
 
-        this._db.collections<TrackPreset>(Collections.TRACK_PRESETS).find
+        // Iterate all devices of user
+        this._db.collection<Device>(Collections.DEVICES).find({
+            userId: user._id,
+            canOv: true
+        }).toArray()
+            .then(devices => devices.map(device => {
+                if (device.soundCardId) {
+                    // Sound card selected
+                    //TODO: Find assigned profiles of active soundcards
+                    //TODO: If there is no assigned profile, use default profile of soundcard
+                }
+            }))
 
-        // Assign tracks of user to new stage and inform their stage members (async!)
-        this._db.collection<GlobalProducer>(Collections.PRODUCERS).find({userId: user._id}).toArray()
-            .then(producers =>
-                // Upsert stage member track for each producer
-                producers.map(producer => this._db.collection<StageMemberTrack>(Collections.STAGE_TRACKS).updateOne({
-                        userId: user._id,
-                        producerId: producer._id,
-                        stageId: stage._id,
-                    }, {
-                        $set: {
-                            online: true
-                        },
-                        $setOnInsert: {
-                            userId: user._id,
-                            producerId: producer._id,
-                            stageId: stage._id,
-                            stageMemberId: stageMember._id,
-                            online: true,
-                            kind: "webrtc",
-                            gain: 1,
-                            volume: 1,
-                            x: 0,
-                            y: 0,
-                            z: 0,
-                            rX: 0,
-                            rY: 0,
-                            rZ: 0
-                        }
-                    }, {upsert: true})
-                ));
 
         console.log("joinStage: " + (Date.now() - startTime) + "ms");
         return Promise.resolve(undefined);
@@ -362,7 +344,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             objUserId: objUserId,
             stageMemberId: {$in: stageMemberIds}
         }).toArray();
-        const tracks: StageMemberTrack[] = await this._db.collection<StageMemberTrack>(Collections.TRACKS).find({
+        const tracks: StageMemberTrack[] = await this._db.collection<StageMemberAudioTrack>(Collections.TRACKS).find({
             objStageId: objStageId
         }).toArray();
         const customTracks: CustomStageMemberTrack[] = await this._db.collection<CustomStageMemberTrack>(Collections.CUSTOM_STAGE_MEMBER_TRACKS).find({
@@ -409,34 +391,31 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             .then(result => result.ops[0] as GlobalProducer)
             .then(producer => {
                 this.sendToUser(producer.userId, ServerDeviceEvents.PRODUCER_ADDED, producer);
-                if (producer.stageId) {
-                    //TODO: Discuss, if we might read user and use its stage id instead of the initial data
-                    // Create stage tracks for this producer
-                    this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOne({
-                        userId: producer.userId,
-                        stageId: producer.stageId
-                    })
-                        .then(stageMember => {
-                            if (stageMember) {
-                                const stageTrack: Omit<StageMemberTrack, "_id"> = {
-                                    stageId: stageMember.stageId,
-                                    stageMemberId: stageMember._id,
-                                    userId: initial.userId,
-                                    kind: "webrtc",
-                                    producerId: producer._id,
-                                    gain: 1,
-                                    volume: 1,
-                                    x: 0,
-                                    y: 0,
-                                    z: 0,
-                                    rX: 0,
-                                    rY: 0,
-                                    rZ: 0
-                                }
-                                return this.createStageMemberTrack(stageTrack);
+
+                this.readUser(producer.userId).then(
+                    user => {
+                        if (user.stageMemberId) {
+                            const stageTrack: Omit<StageMemberTrack, "_id"> = {
+                                stageId: user.stageId,
+                                stageMemberId: user.stageMemberId,
+                                userId: user._id,
+                                kind: "ov",
+                                producerId: producer._id,
+                                online: true,
+                                gain: 1,
+                                volume: 1,
+                                x: 0,
+                                y: 0,
+                                z: 0,
+                                rX: 0,
+                                rY: 0,
+                                rZ: 0
                             }
-                        });
-                }
+                            console.log("CREATE STAGE MEMBER TRACK");
+                            return this.createStageMemberTrack(stageTrack);
+                        }
+                    }
+                );
                 return producer;
             })
     }
@@ -536,6 +515,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         return this._db.collection<StageMemberTrack>(Collections.STAGE_TRACKS).insertOne(initial)
             .then(result => result.ops[0] as StageMemberTrack)
             .then(stageTrack => {
+                console.log("SEND " + ServerStageEvents.STAGE_MEMBER_TRACK_ADDED + " to " + stageTrack.stageId);
                 this.sendToJoinedStageMembers(stageTrack.stageId, ServerStageEvents.STAGE_MEMBER_TRACK_ADDED, stageTrack);
                 return stageTrack;
             });
@@ -546,35 +526,30 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             .then(result => result.ops[0] as Track)
             .then(track => {
                 this.sendToUser(track.userId, ServerDeviceEvents.TRACK_ADDED, track);
-                if (track.stageId) {
-                    //TODO: Discuss, if we might read user and use its stage id instead of the initial data
-                    // Create stage tracks for this producer
 
-                    this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOne({
-                        userId: track.userId,
-                        stageId: track.stageId
-                    })
-                        .then(stageMember => {
-                            if (stageMember) {
-                                const stageTrack: Omit<StageMemberTrack, "_id"> = {
-                                    stageId: stageMember.stageId,
-                                    stageMemberId: stageMember._id,
-                                    userId: stageMember.userId,
-                                    kind: "ov",
-                                    trackId: track._id,
-                                    gain: 1,
-                                    volume: 1,
-                                    x: 0,
-                                    y: 0,
-                                    z: 0,
-                                    rX: 0,
-                                    rY: 0,
-                                    rZ: 0
-                                }
-                                return this.createStageMemberTrack(stageTrack);
+                this.readUser(track.userId).then(
+                    user => {
+                        if (user.stageMemberId) {
+                            const stageTrack: Omit<StageMemberTrack, "_id"> = {
+                                stageId: user.stageId,
+                                stageMemberId: user.stageMemberId,
+                                userId: user._id,
+                                kind: "ov",
+                                trackId: track._id,
+                                online: true,
+                                gain: 1,
+                                volume: 1,
+                                x: 0,
+                                y: 0,
+                                z: 0,
+                                rX: 0,
+                                rY: 0,
+                                rZ: 0
                             }
-                        });
-                }
+                            return this.createStageMemberTrack(stageTrack);
+                        }
+                    }
+                )
                 return track;
             });
     }
@@ -883,21 +858,22 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
 
     sendToStage(stageId: StageId, event: string, payload?: any): Promise<void> {
         return Promise.all([
-            this._db.collection<Stage>(Collections.STAGES).findOne({_id: stageId}, {projection: {admins: 1}}).then(stage => stage.admins),
-            this._db.collection<StageMember>(Collections.STAGE_MEMBERS).find({stage: stageId}, {projection: {user: 1}}).toArray().then(stageMembers => stageMembers.map(stageMember => stageMember.userId))
+            this._db.collection<Stage>(Collections.STAGES).findOne({_id: new ObjectId(stageId)}, {projection: {admins: 1}}).then(stage => stage.admins),
+            this._db.collection<StageMember>(Collections.STAGE_MEMBERS).find({stageId: new ObjectId(stageId)}, {projection: {user: 1}}).toArray().then(stageMembers => stageMembers.map(stageMember => stageMember.userId))
         ])
             .then(result => Set<UserId>([...result[0], ...result[1]]).toArray())
             .then(userIds => userIds.forEach(userId => this.sendToUser(userId, event, payload)));
     }
 
     sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void> {
-        return this._db.collection(Collections.STAGES).findOne({_id: stageId}, {projection: {admins: 1}})
+        return this._db.collection(Collections.STAGES).findOne({_id: new ObjectId(stageId)}, {projection: {admins: 1}})
             .then(stage => stage.admins.forEach(admin => this.sendToUser(admin, event, payload)));
     }
 
     sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void> {
-        return this._db.collection(Collections.USERS).find({stage: stageId}, {projection: {_id: 1}}).toArray()
+        return this._db.collection(Collections.USERS).find({stageId: new ObjectId(stageId)}, {projection: {_id: 1}}).toArray()
             .then((users: { _id: string }[]) => {
+                console.log(users);
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
     }

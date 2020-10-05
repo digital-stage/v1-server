@@ -3,8 +3,8 @@ import {Request} from "express";
 import Auth from "./IAuthentication";
 import fetch from "node-fetch";
 import * as pino from "pino";
-import {UserType} from "../../backup/storage/mongoose/mongo.types";
 import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
+import {User} from "../model.server";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -33,7 +33,7 @@ class DefaultAuthentication implements Auth.IAuthentication {
         this.database = database;
     }
 
-    verifyWithToken(resolve, reject, token: string): Promise<UserType> {
+    verifyWithToken(resolve, reject, token: string): Promise<User> {
         return getUserByToken(token)
             .then(authUser => {
                 return this.database.readUserByUid(authUser._id)
@@ -53,8 +53,8 @@ class DefaultAuthentication implements Auth.IAuthentication {
             });
     }
 
-    authorizeSocket(socket: socketIO.Socket): Promise<UserType> {
-        return new Promise<UserType>((resolve, reject) => {
+    authorizeSocket(socket: socketIO.Socket): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 reject(new Error("Missing authorization"));
             }
@@ -62,8 +62,8 @@ class DefaultAuthentication implements Auth.IAuthentication {
         })
     }
 
-    authorizeRequest(req: Request): Promise<UserType> {
-        return new Promise<UserType>((resolve, reject) => {
+    authorizeRequest(req: Request): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
             if (!req.headers.authorization) {
                 reject(new Error("Missing authorization"));
             }

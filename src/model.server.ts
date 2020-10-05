@@ -1,4 +1,5 @@
 import {ObjectId} from "mongodb";
+
 export type StageId = string | ObjectId;
 export type GroupId = string | ObjectId;
 export type UserId = string | ObjectId;
@@ -16,6 +17,7 @@ export type SoundCardId = string | ObjectId;
 export type StageMemberProducerId = string | ObjectId;
 export type SoundCardChannelId = string | ObjectId;
 export type TrackId = string | ObjectId;
+export type StageMemberVideoTrackId = string | ObjectId;
 export type StageMemberTrackId = string | ObjectId;
 export type CustomStageMemberTrackId = string | ObjectId;
 
@@ -112,9 +114,9 @@ export interface WebRTCDevice {
 
 export interface SoundCard {    // ov-specific
     _id: SoundCardId;
-    name: string;       // unique together with deviceId
-    deviceId: DeviceId; // <--- RELATION
     userId: UserId;
+
+    name: string;       // unique together with deviceId
 
     driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC",
 
@@ -134,9 +136,8 @@ export interface SoundCard {    // ov-specific
  */
 export interface TrackPreset {
     _id: TrackPresetId;
-    userId: UserId;
-    deviceId: DeviceId;
-    soundCardId: SoundCardId;
+    userId: UserId;             // <--- RELATION
+    soundCardId: SoundCardId;   // <--- RELATION
     name: string;
     trackIds: TrackId[];
     outputChannels: number[];   // For the output use simple numbers TODO: @Giso, is this enough?
@@ -148,11 +149,10 @@ export interface TrackPreset {
  */
 export interface Track {
     _id: TrackId;
-    channel: number;
-    deviceId: DeviceId;
     userId: UserId;
-    stageId?: StageId;             // <--- RELATION
-    trackPresetId: TrackPresetId; // <--- RELATION Each track is assigned to a specific channel
+    channel: number;              // UNIQUE WITH TRACK PRESET ID
+    deviceId: DeviceId;
+    trackPresetId: TrackPresetId; // <--- RELATION
 
     online: boolean;
 
@@ -235,6 +235,7 @@ export interface StageMember {
     userId: UserId;     // <--- RELATION
 
     tracks: StageMemberTrackId[];
+    videoTracks: StageMemberVideoTrackId[];
 
     online: boolean;
 
@@ -271,6 +272,17 @@ export interface CustomStageMember {
     rZ: number;
 }
 
+export interface StageMemberVideoTrack {
+    _id: StageMemberVideoTrackId;
+    userId: UserId;
+
+    stageId: StageId;
+    stageMemberId: StageMemberId;
+
+    producerId: GlobalProducerId;
+
+}
+
 /**
  * A stage member track is a track, that has been published and assigned to the related stage member.
  * So all other stage members will receive this track.
@@ -282,12 +294,12 @@ export interface CustomStageMember {
  */
 export interface StageMemberTrack {
     _id: StageMemberTrackId;
+    userId: UserId;
 
     stageId: StageId;
     stageMemberId: StageMemberId;
-    userId: UserId;
 
-    kind: "webrtc" | "ov";
+    kind: "audio" | "video" | "ov";
 
     online: boolean;
 
@@ -311,19 +323,6 @@ export interface StageMemberTrack {
     rZ: number;
 }
 
-export interface StageMemberWebTrack extends StageMemberTrack {
-    kind: "webrtc";
-    producerId: GlobalProducerId;
-    trackId: undefined;
-}
-
-export interface StageMemberOvTrack extends StageMemberTrack {
-    kind: "ov";
-    trackId: GlobalProducerId;
-    producerId: undefined;
-}
-
-
 /**
  * Each user can overwrite the global stage member track settings with personal preferences.
  */
@@ -331,7 +330,7 @@ export interface CustomStageMemberTrack {
     _id: CustomStageMemberTrackId;
 
     stageId: StageId;
-    stageMemberTrackId: StageMemberTrackId;
+    stageMemberAudioTrackId: StageMemberTrackId;
 
     gain: number;       // Overrides track gain (for user)
     volume: number;     // Overrides track volume (for user)
