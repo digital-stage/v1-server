@@ -13,15 +13,15 @@ namespace HttpService {
         });
 
         // GET SPECIFIC PUBLIC PRODUCER
-        app.get('/producers/:id', function (req, res) {
+        app.get('/producers/:id', async function (req, res) {
             if (
                 !req.params.id
                 || typeof req.params.id !== 'string'
             ) {
                 return res.sendStatus(400);
             }
-            return authentication.authorizeRequest(req)
-                .then(async () => {
+            //return authentication.authorizeRequest(req)
+            //    .then(async () => {
                     let producer = await database.readVideoProducer(req.params.id).catch(error => console.error(error));
                     if (!producer) {
                         producer = await database.readAudioProducer(req.params.id);
@@ -30,11 +30,11 @@ namespace HttpService {
                         return res.status(200).json(producer);
                     }
                     return res.sendStatus(404);
-                })
+                /*})
                 .catch((error) => {
                     console.log(error);
                     return res.sendStatus(401);
-                });
+                });*/
         });
     }
 
