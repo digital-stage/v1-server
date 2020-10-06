@@ -5,10 +5,18 @@ import fetch from "node-fetch";
 import * as pino from "pino";
 import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
 import {User} from "../model.server";
+import {ObjectId} from "mongodb";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-const getUserByToken = (token: string): Promise<User> => {
+export interface DefaultAuthUser {
+    _id: string;
+    name: string;
+    email: string;
+    avatarUrl?: string;
+}
+
+const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
     return fetch(process.env.AUTH_URL + "/profile", {
         headers: {
             'Content-Type': 'application/json',
@@ -16,10 +24,6 @@ const getUserByToken = (token: string): Promise<User> => {
         }
     })
         .then(result => result.json())
-        .then(json => {
-            console.log("AUTH RESULT:");
-            return json;
-        })
 }
 
 class DefaultAuthentication implements Auth.IAuthentication {
@@ -33,6 +37,8 @@ class DefaultAuthentication implements Auth.IAuthentication {
     verifyWithToken(resolve, reject, token: string): Promise<User> {
         return getUserByToken(token)
             .then(authUser => {
+                console.log("AUTH USER IS:");
+                console.log(authUser);
                 return this.database.readUserByUid(authUser._id)
                     .then(user => {
                         if (!user) {
