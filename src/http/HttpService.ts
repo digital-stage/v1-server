@@ -3,6 +3,12 @@ import * as expressPino from "express-pino-logger";
 import * as asyncHandler from "express-async-handler";
 import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 import {IAuthentication} from "../auth/IAuthentication";
+import {GlobalAudioProducer, GlobalAudioProducerId, GlobalVideoProducer, GlobalVideoProducerId} from "../model.server";
+import * as pino from "pino";
+
+const logger = pino({
+    level: process.env.LOG_LEVEL || 'info'
+});
 
 class HttpService {
     private authentication: IAuthentication;
@@ -13,23 +19,50 @@ class HttpService {
         this.database = database;
     }
 
+    async handleBeat(): Promise<boolean> {
+        console.log("Database is " + this.database.db() !== undefined);
+        await this.database.db().collection("devices").find({}).toArray()
+            .then(devices => devices.map(device => {
+                console.log("DEVICE:")
+                console.log(device);
+            }))
+            .then(() => console.log("Finished device lockup"));
+        await this.database.db().collection("videoproducers").find({}).toArray()
+            .then(producers => producers.map(producer => {
+                console.log("PRODUCER:")
+                console.log(producer);
+            }));
+        return true;
+    }
+
+    async getProducer(id: GlobalAudioProducerId | GlobalVideoProducerId): Promise<GlobalAudioProducer | GlobalVideoProducer | null> {
+        let producer = await this.database.readVideoProducer(id);
+        if (!producer) {
+            producer = await this.database.readAudioProducer(id);
+        }
+        if (producer) {
+            return producer;
+        } else {
+            console.log("Was looking for " + id);
+            console.log("But only found following:");
+            await this.database.db().collection("devices").find({}).toArray()
+                .then(devices => devices.map(device => {
+                    console.log("DEVICE:")
+                    console.log(device);
+                }))
+            await this.database.db().collection("videoproducers").find({}).toArray()
+                .then(producers => producers.map(producer => {
+                    console.log("PRODUCER:")
+                    console.log(producer);
+                }))
+        }
+    }
+
     init(app: core.Express) {
         app.use(expressPino());
 
         app.get('/beat', asyncHandler(async (req, res) => {
-                console.log("Database is " + this.database.db() !== undefined);
-                await this.database.db().collection("devices").find({}).toArray()
-                    .then(devices => devices.map(device => {
-                        console.log("DEVICE:")
-                        console.log(device);
-                    }))
-                    .then(() => console.log("Finished device lockup"));
-                await this.database.db().collection("videoproducers").find({}).toArray()
-                    .then(producers => producers.map(producer => {
-                        console.log("PRODUCER:")
-                        console.log(producer);
-                    }));
-                console.log("Now sending boom");
+                await this.handleBeat();
                 res.send('Boom!');
             }
         ));
@@ -43,32 +76,18 @@ class HttpService {
                 return res.sendStatus(400);
             }
 
-            return this.authentication.authorizeRequest(req)
+            await this.authentication.authorizeRequest(req)
                 .then(async () => {
-                    let producer = await this.database.readVideoProducer(req.params.id);
-                    if (!producer) {
-                        producer = await this.database.readAudioProducer(req.params.id);
-                    }
+                    const producer = this.getProducer(req.params.id);
                     if (producer) {
+                        logger.debug("[HTTP SERVICE] Returning producer: " + req.params.id);
                         return res.status(200).json(producer);
-                    } else {
-                        console.log("Was looking for " + req.params.id);
-                        console.log("But only found following:");
-                        await this.database.db().collection("devices").find({}).toArray()
-                            .then(devices => devices.map(device => {
-                                console.log("DEVICE:")
-                                console.log(device);
-                            }))
-                        await this.database.db().collection("videoproducers").find({}).toArray()
-                            .then(producers => producers.map(producer => {
-                                console.log("PRODUCER:")
-                                console.log(producer);
-                            }))
                     }
+                    logger.warn("[HTTP SERVICE] Could not find requested producer: " + req.params.id);
                     return res.sendStatus(404);
                 })
                 .catch((error) => {
-                    console.log(error);
+                    logger.warn("[HTTP SERVICE] Unauthorized accesss to /producers/" + req.params.id + " from " + req.ip);
                     return res.sendStatus(401);
                 });
         }));
