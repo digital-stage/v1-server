@@ -8,14 +8,7 @@ import {User} from "../model.server";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
-export interface DefaultAuthUser {
-    _id: string;
-    name: string;
-    email: string;
-    avatarUrl?: string;
-}
-
-const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
+const getUserByToken = (token: string): Promise<User> => {
     return fetch(process.env.AUTH_URL + "/profile", {
         headers: {
             'Content-Type': 'application/json',
@@ -25,8 +18,7 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
         .then(result => result.json())
         .then(json => {
             console.log("AUTH RESULT:");
-            console.log(json);
-            return json as DefaultAuthUser
+            return json;
         })
 }
 
