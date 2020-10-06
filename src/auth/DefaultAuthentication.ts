@@ -22,7 +22,12 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
             Authorization: "Bearer " + token
         }
     })
-        .then(result => result.json() as DefaultAuthUser)
+        .then(result => result.json())
+        .then(json => {
+            console.log("AUTH RESULT:");
+            console.log(json);
+            return json as DefaultAuthUser
+        })
 }
 
 class DefaultAuthentication implements Auth.IAuthentication {
