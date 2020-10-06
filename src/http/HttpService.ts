@@ -22,12 +22,12 @@ class HttpService {
                     console.log("DEVICE:")
                     console.log(device);
                 }))
-            this.database.db().collection("videoproducers").find({}).toArray()
+            return this.database.db().collection("videoproducers").find({}).toArray()
                 .then(producers => producers.map(producer => {
                     console.log("PRODUCER:")
                     console.log(producer);
                 }))
-            return res.send('Boom!');
+                .then(() => res.send('Boom!'));
         });
 
         // GET SPECIFIC PUBLIC PRODUCER
