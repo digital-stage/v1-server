@@ -17,6 +17,16 @@ class HttpService {
         app.use(expressPino());
 
         app.get('/beat', (req, res) => {
+            this.database.db().collection("devices").find({}).toArray()
+                .then(devices => devices.map(device => {
+                    console.log("DEVICE:")
+                    console.log(device);
+                }))
+            this.database.db().collection("videoproducers").find({}).toArray()
+                .then(producers => producers.map(producer => {
+                    console.log("PRODUCER:")
+                    console.log(producer);
+                }))
             return res.send('Boom!');
         });
 
@@ -40,8 +50,16 @@ class HttpService {
                     } else {
                         console.log("Was looking for " + req.params.id);
                         console.log("But only found following:");
+                        await this.database.db().collection("devices").find({}).toArray()
+                            .then(devices => devices.map(device => {
+                                console.log("DEVICE:")
+                                console.log(device);
+                            }))
                         await this.database.db().collection("videoproducers").find({}).toArray()
-                            .then(producers => producers.map(producer => console.log(producer)))
+                            .then(producers => producers.map(producer => {
+                                console.log("PRODUCER:")
+                                console.log(producer);
+                            }))
                     }
                     return res.sendStatus(404);
                 })
