@@ -36,8 +36,6 @@ class DefaultAuthentication implements Auth.IAuthentication {
     verifyWithToken(resolve, reject, token: string): Promise<User> {
         return getUserByToken(token)
             .then(authUser => {
-                console.log("AUTH USER IS:");
-                console.log(authUser);
                 return this.database.readUserByUid(authUser._id)
                     .then(user => {
                         if (!user) {
