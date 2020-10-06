@@ -1,7 +1,7 @@
 import * as core from "express-serve-static-core";
 import * as expressPino from "express-pino-logger";
 import Auth from "../auth/IAuthentication";
-import asyncHandler from "express-async-handler";
+import * as asyncHandler from "express-async-handler";
 import IAuthentication = Auth.IAuthentication;
 import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 
