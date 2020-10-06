@@ -374,3 +374,22 @@ export interface CustomStageMemberOvTrack {
     // Optimizations for performance
     stageId: StageId;
 }
+
+export interface StagePackage {
+    users: User[];
+
+    stage?: Stage;
+    groups?: Group[];
+    stageMembers: StageMember[];
+    customGroups: CustomGroup[];
+    customStageMembers: CustomStageMember[];
+    videoProducers: StageMemberVideoProducer[];
+    audioProducers: StageMemberAudioProducer[];
+    customAudioProducers: CustomStageMemberAudioProducer[];
+    ovTracks: StageMemberOvTrack[];
+    customOvTracks: CustomStageMemberOvTrack[];
+}
+export interface InitialStagePackage extends StagePackage {
+    stageId: StageId;
+    groupId: GroupId;
+}

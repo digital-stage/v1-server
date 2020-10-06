@@ -29,7 +29,7 @@ import {
     GlobalVideoProducerId,
     StageMemberVideoProducerId,
     StageMemberAudioProducerId,
-    StageMemberOvTrackId, CustomStageMemberOvTrack, CustomStageMemberAudioProducer
+    StageMemberOvTrackId, CustomStageMemberOvTrack, CustomStageMemberAudioProducer, InitialStagePackage, StagePackage
 } from "../model.server";
 import {ServerDeviceEvents, ServerStageEvents} from "../events";
 import * as socketIO from "socket.io";
@@ -604,23 +604,14 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         return this._db.collection<Stage>(Collections.STAGES).findOne({_id: new ObjectId(id)});
     }
 
-    private async getWholeStage(userId: UserId, stageId: StageId, skipStageAndGroups: boolean = false): Promise<{
-        stage?: Stage;
-        groups?: Group[];
-        stageMembers: StageMember[];
-        customGroups: CustomGroup[];
-        customStageMembers: CustomStageMember[];
-        videoProducers: StageMemberVideoProducer[];
-        audioProducers: StageMemberAudioProducer[];
-        customAudioProducers: CustomStageMemberAudioProducer[];
-        ovTracks: StageMemberOvTrack[];
-        customOvTracks: CustomStageMemberOvTrack[];
-    }> {
+    private async getWholeStage(userId: UserId, stageId: StageId, skipStageAndGroups: boolean = false): Promise<StagePackage> {
         const objStageId = new ObjectId(stageId);
         const objUserId = new ObjectId(userId);
         const stage = skipStageAndGroups ? undefined : await this._db.collection<Stage>(Collections.STAGES).findOne({_id: objStageId});
         const groups = skipStageAndGroups ? undefined : await this._db.collection<Group>(Collections.GROUPS).find({stageId: objStageId}).toArray();
         const stageMembers = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS).find({stageId: objStageId}).toArray();
+        const stageMemberUserIds = stageMembers.map(stageMember => stageMember.userId);
+        const users = await this._db.collection<User>(Collections.USERS).find({userId: {$in: stageMemberUserIds}}).toArray();
         const customGroups = await this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).find({
             userId: objUserId,
             stageId: objStageId
@@ -648,6 +639,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         }).toArray();
 
         return {
+            users,
             stage,
             groups,
             stageMembers,
@@ -1020,12 +1012,13 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         if (stageMemberId) {
             const stageMember = stageMembers.find(groupMember => groupMember._id.toString() === user.stageMemberId.toString());
             if (stageMember) {
-                const wholeStage = await this.getWholeStage(user._id, user.stageId, true);
-                this.sendToDevice(socket, ServerStageEvents.STAGE_JOINED, {
+                const wholeStage: StagePackage = await this.getWholeStage(user._id, user.stageId, true);
+                const initialStage: InitialStagePackage = {
                     ...wholeStage,
                     stageId: user.stageId,
                     groupId: stageMember.groupId
-                });
+                }
+                this.sendToDevice(socket, ServerStageEvents.STAGE_JOINED, initialStage);
             } else {
                 logger.error("Group member or stage should exists, but could not be found");
             }
