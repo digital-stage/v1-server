@@ -32,7 +32,7 @@ const io = socketIO(server);
 const database = new MongoRealtimeDatabase(io, process.env.MONGO_URL);
 const auth: IAuthentication = new DefaultAuthentication(database);
 const handler = new SocketHandler(serverAddress, database, auth, io);
-const httpService: HttpService = new HttpService(database, auth);
+const httpService = new HttpService(database, auth);
 
 const resetDevices = () => {
     return database.readDevicesByServer(serverAddress)

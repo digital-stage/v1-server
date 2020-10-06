@@ -4,7 +4,7 @@ import Auth from "../auth/IAuthentication";
 import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
 import IAuthentication = Auth.IAuthentication;
 
-class HttpServer {
+class HttpService {
     private authentication: IAuthentication;
     private database: IRealtimeDatabase;
 
