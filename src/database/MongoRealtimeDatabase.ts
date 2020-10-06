@@ -170,18 +170,11 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                             });
                         }
                     });
-                // Test video producer
-                this.readVideoProducer(producer._id)
-                    .then(result => {
-                        console.log("RESULT IS:");
-                        console.log(result);
-                    })
                 return producer;
             });
     }
 
     readVideoProducer(id: GlobalVideoProducerId): Promise<GlobalVideoProducer> {
-        console.log("readVideoProducer(" + id + ")")
         return this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS).findOne({
             _id: new ObjectId(id)
         }).then(result => {
@@ -1057,7 +1050,6 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void> {
         return this._db.collection(Collections.USERS).find({stageId: new ObjectId(stageId)}, {projection: {_id: 1}}).toArray()
             .then((users: { _id: string }[]) => {
-                console.log(users);
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
     }
