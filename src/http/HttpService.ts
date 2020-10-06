@@ -22,7 +22,7 @@ namespace HttpService {
             }
             return authentication.authorizeRequest(req)
                 .then(async () => {
-                    console.log("Fetching producer");
+                    console.log("Fetching producer " + req.params.id);
                     let producer = await database.readVideoProducer(req.params.id);
                     console.log(producer);
                     if (!producer) {
@@ -30,7 +30,7 @@ namespace HttpService {
                     }
                     console.log("Fetched producer");
                     console.log(producer);
-                    if( producer ) {
+                    if (producer) {
                         console.log("Have producer");
                         return res.status(200).json(producer);
                     }
