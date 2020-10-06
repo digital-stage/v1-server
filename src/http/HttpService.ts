@@ -17,11 +17,12 @@ class HttpService {
         app.use(expressPino());
 
         app.get('/beat', asyncHandler(async (req, res) => {
-                this.database.db().collection("devices").find({}).toArray()
+                await this.database.db().collection("devices").find({}).toArray()
                     .then(devices => devices.map(device => {
                         console.log("DEVICE:")
                         console.log(device);
                     }))
+                    .then(() => console.log("Finished device lockup"));
                 return this.database.db().collection("videoproducers").find({}).toArray()
                     .then(producers => producers.map(producer => {
                         console.log("PRODUCER:")
