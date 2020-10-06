@@ -360,10 +360,14 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
 
     async connect(database: string): Promise<void> {
         if (this._mongoClient.isConnected()) {
+            logger.warn("[MONGO REALTIME DATABASE] Reconnecting");
             await this.disconnect()
         }
         this._mongoClient = await this._mongoClient.connect();
         this._db = this._mongoClient.db(database);
+        if (this._mongoClient.isConnected()) {
+            logger.info("[MONGO REALTIME DATABASE] Connected to " + database);
+        }
         //TODO: Clean up old devices etc.
     }
 

@@ -40,22 +40,7 @@ class HttpService {
         if (!producer) {
             producer = await this.database.readAudioProducer(id);
         }
-        if (producer) {
-            return producer;
-        } else {
-            console.log("Was looking for " + id);
-            console.log("But only found following:");
-            await this.database.db().collection("devices").find({}).toArray()
-                .then(devices => devices.map(device => {
-                    console.log("DEVICE:")
-                    console.log(device);
-                }))
-            await this.database.db().collection("videoproducers").find({}).toArray()
-                .then(producers => producers.map(producer => {
-                    console.log("PRODUCER:")
-                    console.log(producer);
-                }))
-        }
+        return producer;
     }
 
     init(app: core.Express) {
@@ -78,7 +63,7 @@ class HttpService {
 
             await this.authentication.authorizeRequest(req)
                 .then(async () => {
-                    const producer = this.getProducer(req.params.id);
+                    const producer = await this.getProducer(req.params.id);
                     if (producer) {
                         logger.debug("[HTTP SERVICE] Returning producer: " + req.params.id);
                         return res.status(200).json(producer);
