@@ -22,19 +22,13 @@ namespace HttpService {
             }
             return authentication.authorizeRequest(req)
                 .then(async () => {
-                    console.log("Fetching producer " + req.params.id);
-                    let producer = await database.readVideoProducer(req.params.id);
-                    console.log(producer);
+                    let producer = await database.readVideoProducer(req.params.id).catch(error => console.error(error));
                     if (!producer) {
                         producer = await database.readAudioProducer(req.params.id);
                     }
-                    console.log("Fetched producer");
-                    console.log(producer);
                     if (producer) {
-                        console.log("Have producer");
                         return res.status(200).json(producer);
                     }
-                    console.log("Have no producer");
                     return res.sendStatus(404);
                 })
                 .catch((error) => {

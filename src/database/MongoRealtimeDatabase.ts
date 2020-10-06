@@ -139,7 +139,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     this.sendToUser(result.value.userId, ServerDeviceEvents.AUDIO_PRODUCER_REMOVED, result.value._id);
                     // Also delete all published producers
                     this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS).find({
-                        globalAudioProducerId: result.value._id
+                        globalProducerId: result.value._id
                     }, {projection: {_id: 1}})
                         .toArray()
                         .then(globalProducers => globalProducers.map(globalProducer => this.deleteStageMemberAudioProducer(globalProducer._id)));
@@ -166,17 +166,20 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                             });
                         }
                     });
+                // Test video producer
+                this.readVideoProducer(producer._id)
+                    .then(result => {
+                        console.log("RESULT IS:");
+                        console.log(result);
+                    })
                 return producer;
             });
     }
 
     readVideoProducer(id: GlobalVideoProducerId): Promise<GlobalVideoProducer> {
-        console.log("readVideoProducer(" + id + ")")
         return this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS).findOne({
             _id: new ObjectId(id)
         }).then(result => {
-            console.log("RESULT:");
-            console.log(result);
             return result;
         })
     }
@@ -209,7 +212,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     this.sendToUser(result.value.userId, ServerDeviceEvents.VIDEO_PRODUCER_REMOVED, result.value._id);
                     // Also delete all published producers
                     this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
-                        globalVideoProducerId: result.value._id
+                        globalProducerId: result.value._id
                     }, {projection: {_id: 1}})
                         .toArray()
                         .then(globalProducers => globalProducers.map(globalProducer => this.deleteStageMemberVideoProducer(globalProducer._id)));

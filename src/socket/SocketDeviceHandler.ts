@@ -73,6 +73,7 @@ export class SocketDeviceHandler {
             }, fn: (producer: GlobalVideoProducer) => void
         ) => {
             // Get current stage id
+            logger.debug("[SOCKET DEVICE HANDLER] ADD VIDEO PRODUCER " + payload.routerId);
             return this.database.createVideoProducer({
                 ...payload,
                 deviceId: this.device._id,
@@ -80,12 +81,16 @@ export class SocketDeviceHandler {
             })
                 .then(producer => fn(producer));
         });
-        this.socket.on(ClientDeviceEvents.CHANGE_VIDEO_PRODUCER, (id: GlobalVideoProducerId, producer: Partial<GlobalVideoProducer>, fn: (producer: GlobalVideoProducer) => void) =>
-            //TODO: Validate data
-            this.database.updateVideoProducer(this.device._id, id, producer)
-                .then(producer => fn(producer))
+        this.socket.on(ClientDeviceEvents.CHANGE_VIDEO_PRODUCER, (payload: { id: GlobalVideoProducerId, producer: Partial<GlobalVideoProducer> }, fn: (producer: GlobalVideoProducer) => void) =>
+                //TODO: Validate data
+            {
+                logger.debug("[SOCKET DEVICE HANDLER] CHANGE VIDEO PRODUCER " + payload.id);
+                return this.database.updateVideoProducer(this.device._id, payload.id, payload.producer)
+                    .then(producer => fn(producer))
+            }
         );
         this.socket.on(ClientDeviceEvents.REMOVE_VIDEO_PRODUCER, (id: GlobalVideoProducerId, fn: () => void) => {
+            logger.debug("[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER " + id);
                 return this.database.deleteVideoProducer(this.device._id, id)
                     .then(() => fn())
             }
