@@ -36,6 +36,13 @@ class HttpService {
     }
 
     async getProducer(id: GlobalAudioProducerId | GlobalVideoProducerId): Promise<GlobalAudioProducer | GlobalVideoProducer | null> {
+        await this.database.db().collection("videoproducers").findOne({
+            _id: id
+        }).then(result => {
+            console.log("Result of search:");
+            console.log(result);
+        })
+
         let producer = await this.database.readVideoProducer(id);
         if (!producer) {
             producer = await this.database.readAudioProducer(id);
