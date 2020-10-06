@@ -8,9 +8,8 @@ import {parseEnv} from "./env";
 import SocketHandler from "./socket/SocketHandler";
 import * as socketIO from "socket.io";
 import {MongoRealtimeDatabase} from "./database/MongoRealtimeDatabase";
-import Auth from "./auth/IAuthentication";
-import IAuthentication = Auth.IAuthentication;
 import DefaultAuthentication from "./auth/DefaultAuthentication";
+import {IAuthentication} from "./auth/IAuthentication";
 
 parseEnv();
 

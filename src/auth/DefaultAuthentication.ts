@@ -1,10 +1,10 @@
 import * as socketIO from "socket.io";
 import {Request} from "express";
-import Auth from "./IAuthentication";
 import fetch from "node-fetch";
 import * as pino from "pino";
 import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
 import {User} from "../model.server";
+import {IAuthentication, IAuthenticationMiddleware} from "./IAuthentication";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -25,7 +25,7 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => {
         .then(result => result.json())
 }
 
-class DefaultAuthentication implements Auth.IAuthentication {
+class DefaultAuthentication implements IAuthentication {
     private readonly database;
 
 
@@ -80,7 +80,7 @@ class DefaultAuthentication implements Auth.IAuthentication {
     }
 }
 
-export const DefaultAuthenticationMiddleware: Auth.IAuthenticationMiddleware = ((socket, next) => {
+export const DefaultAuthenticationMiddleware: IAuthenticationMiddleware = ((socket, next) => {
     let token = socket.handshake.query.token;
     getUserByToken(token).then(user => next());
     return next(new Error('authentication error'));

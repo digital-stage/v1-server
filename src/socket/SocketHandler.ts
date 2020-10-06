@@ -1,5 +1,3 @@
-import Auth from "../auth/IAuthentication";
-import IAuthentication = Auth.IAuthentication;
 import * as Redis from "ioredis";
 import * as socketIO from "socket.io";
 import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
@@ -9,6 +7,7 @@ import {SocketDeviceHandler} from "./SocketDeviceHandler";
 import {SocketStageHandler} from "./SocketStageHandler";
 import {ServerGlobalEvents, ServerUserEvents} from "../events";
 import * as pino from "pino";
+import {IAuthentication} from "../auth/IAuthentication";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'

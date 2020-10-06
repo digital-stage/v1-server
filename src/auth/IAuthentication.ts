@@ -3,14 +3,10 @@ import {Socket} from "socket.io";
 import {Request} from "express";
 import {User} from "../model.server";
 
-namespace Auth {
-    export interface IAuthentication {
-        authorizeSocket(socket: socketIO.Socket): Promise<User>;
+export interface IAuthentication {
+    authorizeSocket(socket: socketIO.Socket): Promise<User>;
 
-        authorizeRequest(req: Request): Promise<User>;
-    }
-
-    export type IAuthenticationMiddleware = (socket: Socket, fn: (err?: any) => void) => void;
+    authorizeRequest(req: Request): Promise<User>;
 }
 
-export default Auth;
+export type IAuthenticationMiddleware = (socket: Socket, fn: (err?: any) => void) => void;
