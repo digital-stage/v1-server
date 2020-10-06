@@ -50,9 +50,7 @@ class HttpService {
         });
 
         // GET SPECIFIC PUBLIC PRODUCER
-        app.get('/producers/:id', (req, res) => {
-            return this.handleProducerRequest(req, res);
-        });
+        app.get('/producers/:id', this.handleProducerRequest);
     }
 }
 
