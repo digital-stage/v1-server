@@ -30,6 +30,7 @@ class HttpService {
             }
             return this.authentication.authorizeRequest(req)
                 .then(async () => {
+                    console.log(this.database);
                     let producer = await this.database.readVideoProducer(req.params.id).catch(error => console.error(error));
                     if (!producer) {
                         producer = await this.database.readAudioProducer(req.params.id);
