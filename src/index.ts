@@ -43,7 +43,7 @@ const resetDevices = () => {
 const init = async () => {
     return database.connect(process.env.MONGO_DB)
         .then(() => handler.init())
-        .then(() => HttpService.init(app, auth))
+        .then(() => HttpService.init(app, database, auth))
         .then(() => resetDevices());
 }
 
