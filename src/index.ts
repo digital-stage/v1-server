@@ -43,7 +43,12 @@ const init = async () => {
     return database.connect(process.env.MONGO_DB)
         .then(() => handler.init())
         .then(() => httpService.init(app))
-        .then(() => resetDevices());
+        .then(() => resetDevices())
+        .then(() => {
+            console.log("DEVIES:");
+            database.db().collection("devices").find({}).toArray()
+                .then(devices => devices.map(device => console.log(device)));
+        })
 }
 
 logger.info("[SERVER] Starting ...");
