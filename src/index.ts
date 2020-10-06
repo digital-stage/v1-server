@@ -44,11 +44,6 @@ const init = async () => {
         .then(() => handler.init())
         .then(() => httpService.init(app))
         .then(() => resetDevices())
-        .then(() => {
-            console.log("DEVIES:");
-            database.db().collection("devices").find({}).toArray()
-                .then(devices => devices.map(device => console.log(device)));
-        })
 }
 
 logger.info("[SERVER] Starting ...");
