@@ -260,7 +260,7 @@ export interface CustomStageMember {
 export interface StageMemberVideoProducer {
     _id: StageMemberVideoProducerId;
     stageMemberId: StageMemberId;           // <-- RELATION
-    globalVideoProducerId: GlobalVideoProducerId; // <-- RELATION
+    globalProducerId: GlobalVideoProducerId; // <-- RELATION
 
     online: boolean;
 
@@ -273,7 +273,7 @@ export interface StageMemberVideoProducer {
 export interface StageMemberAudioProducer {
     _id: StageMemberVideoProducerId;
     stageMemberId: StageMemberId;           // <-- RELATION
-    globalAudioProducerId: GlobalAudioProducerId; // <-- RELATION
+    globalProducerId: GlobalAudioProducerId; // <-- RELATION
 
     volume: number;
 

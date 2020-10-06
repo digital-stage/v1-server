@@ -87,7 +87,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                         if (user.stageMemberId) {
                             return this.createStageMemberAudioProducer({
                                 stageMemberId: user.stageMemberId,
-                                globalAudioProducerId: producer._id,
+                                globalProducerId: producer._id,
                                 volume: 1,
                                 x: 0,
                                 y: 0,
@@ -159,7 +159,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                         if (user.stageMemberId) {
                             return this.createStageMemberVideoProducer({
                                 stageMemberId: user.stageMemberId,
-                                globalVideoProducerId: producer._id,
+                                globalProducerId: producer._id,
                                 userId: user._id,
                                 stageId: user.stageId,
                                 online: true

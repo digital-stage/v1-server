@@ -2,6 +2,7 @@ module.exports = {
     apps: [{
         name: "server",
         script: "dist/index.js",
+        params: "",
 
         // Options reference: https://pm2.keymetrics.io/docs/usage/application-declaration/
         instances: 1,
