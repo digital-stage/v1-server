@@ -48,8 +48,8 @@ enum Collections {
     SOUND_CARDS = "soundcards",
     TRACK_PRESETS = "trackpresets",
     TRACKS = "tracks",
-    AUDIO_PRODUCERS = "audio-producers",
-    VIDEO_PRODUCERS = "video-producers",
+    AUDIO_PRODUCERS = "audioproducers",
+    VIDEO_PRODUCERS = "videoproducers",
 
     STAGES = "stages",
     GROUPS = "groups",
