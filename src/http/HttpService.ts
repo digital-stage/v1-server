@@ -17,33 +17,35 @@ class HttpService {
         app.use(expressPino());
 
         app.get('/beat', asyncHandler(async (req, res) => {
+                console.log("Database is " + this.database.db() !== undefined);
                 await this.database.db().collection("devices").find({}).toArray()
                     .then(devices => devices.map(device => {
                         console.log("DEVICE:")
                         console.log(device);
                     }))
                     .then(() => console.log("Finished device lockup"));
-                return this.database.db().collection("videoproducers").find({}).toArray()
+                await this.database.db().collection("videoproducers").find({}).toArray()
                     .then(producers => producers.map(producer => {
                         console.log("PRODUCER:")
                         console.log(producer);
-                    }))
-                    .then(() => res.send('Boom!'));
+                    }));
+                console.log("Now sending boom");
+                res.send('Boom!');
             }
         ));
 
         // GET SPECIFIC PUBLIC PRODUCER
-        app.get('/producers/:id', asyncHandler((req, res) => {
+        app.get('/producers/:id', asyncHandler(async (req, res) => {
             if (
                 !req.params.id
                 || typeof req.params.id !== 'string'
             ) {
                 return res.sendStatus(400);
             }
+
             return this.authentication.authorizeRequest(req)
                 .then(async () => {
-                    console.log(this.database);
-                    let producer = await this.database.readVideoProducer(req.params.id).catch(error => console.error(error));
+                    let producer = await this.database.readVideoProducer(req.params.id);
                     if (!producer) {
                         producer = await this.database.readAudioProducer(req.params.id);
                     }
