@@ -1,6 +1,7 @@
 import * as core from "express-serve-static-core";
 import * as expressPino from "express-pino-logger";
 import Auth from "../auth/IAuthentication";
+import asyncHandler from "express-async-handler";
 import IAuthentication = Auth.IAuthentication;
 import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 
@@ -16,22 +17,23 @@ class HttpService {
     init(app: core.Express) {
         app.use(expressPino());
 
-        app.get('/beat', (req, res) => {
-            this.database.db().collection("devices").find({}).toArray()
-                .then(devices => devices.map(device => {
-                    console.log("DEVICE:")
-                    console.log(device);
-                }))
-            return this.database.db().collection("videoproducers").find({}).toArray()
-                .then(producers => producers.map(producer => {
-                    console.log("PRODUCER:")
-                    console.log(producer);
-                }))
-                .then(() => res.send('Boom!'));
-        });
+        app.get('/beat', asyncHandler(async (req, res) => {
+                this.database.db().collection("devices").find({}).toArray()
+                    .then(devices => devices.map(device => {
+                        console.log("DEVICE:")
+                        console.log(device);
+                    }))
+                return this.database.db().collection("videoproducers").find({}).toArray()
+                    .then(producers => producers.map(producer => {
+                        console.log("PRODUCER:")
+                        console.log(producer);
+                    }))
+                    .then(() => res.send('Boom!'));
+            }
+        ));
 
         // GET SPECIFIC PUBLIC PRODUCER
-        app.get('/producers/:id', (req, res) => {
+        app.get('/producers/:id', asyncHandler((req, res) => {
             if (
                 !req.params.id
                 || typeof req.params.id !== 'string'
@@ -67,7 +69,7 @@ class HttpService {
                     console.log(error);
                     return res.sendStatus(401);
                 });
-        });
+        }));
     }
 }
 
