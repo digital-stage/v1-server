@@ -360,14 +360,12 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
 
 
     createUser(initial: Omit<User, "_id" | "stageId" | "stageMemberId">): Promise<User> {
-        return this._db.collection(Collections.USERS).insertOne(initial)
+        return this._db.collection<User>(Collections.USERS).insertOne(initial)
             .then(result => result.ops[0]);
     }
 
     readUser(id: UserId): Promise<User | null> {
-        return this._db.collection<User | {
-            _id: ObjectId
-        }>(Collections.USERS).findOne({_id: new ObjectId(id)});
+        return this._db.collection<User>(Collections.USERS).findOne({_id: new ObjectId(id)});
     }
 
     readUserByUid(uid: string): Promise<User | null> {

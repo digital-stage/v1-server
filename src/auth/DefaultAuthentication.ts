@@ -5,7 +5,6 @@ import fetch from "node-fetch";
 import * as pino from "pino";
 import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
 import {User} from "../model.server";
-import {ObjectId} from "mongodb";
 
 const logger = pino({level: process.env.LOG_LEVEL || 'info'});
 
@@ -43,7 +42,11 @@ class DefaultAuthentication implements Auth.IAuthentication {
                     .then(user => {
                         if (!user) {
                             logger.trace("[AUTH] Creating new user " + authUser.name);
-                            return this.database.createUser(authUser._id, authUser.name, authUser.avatarUrl)
+                            return this.database.createUser({
+                                uid: authUser._id,
+                                name: authUser.name,
+                                avatarUrl: authUser.avatarUrl
+                            })
                                 .then(user => resolve(user));
                         }
                         return resolve(user);
