@@ -20,21 +20,26 @@ namespace HttpService {
             ) {
                 return res.sendStatus(400);
             }
-            //return authentication.authorizeRequest(req)
-            //    .then(async () => {
+            return authentication.authorizeRequest(req)
+                .then(async () => {
                     let producer = await database.readVideoProducer(req.params.id).catch(error => console.error(error));
                     if (!producer) {
                         producer = await database.readAudioProducer(req.params.id);
                     }
                     if (producer) {
                         return res.status(200).json(producer);
+                    } else {
+                        console.log("Was looking for " + req.params.id);
+                        console.log("But only found following:");
+                        await database.db().collection("videoproducers").find({}).toArray()
+                            .then(producers => producers.map(producer => console.log(producer)))
                     }
                     return res.sendStatus(404);
-                /*})
+                })
                 .catch((error) => {
                     console.log(error);
                     return res.sendStatus(401);
-                });*/
+                });
         });
     }
 

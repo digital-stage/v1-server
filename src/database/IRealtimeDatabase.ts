@@ -26,10 +26,12 @@ import {
     UserId
 } from "../model.server";
 import * as socketIO from "socket.io";
+import {Db} from "mongodb";
 
 export interface IRealtimeDatabase {
     connect(database: string): Promise<void>;
 
+    db(): Db;
 
     // USER HANDLING
     createUser(initial: Omit<User, "_id" | "stageId" | "stageMemberId">): Promise<User>;

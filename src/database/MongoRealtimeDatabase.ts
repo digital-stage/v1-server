@@ -76,6 +76,10 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         });
     }
 
+    db() {
+        return this._db;
+    }
+
     createAudioProducer(initial: Omit<GlobalAudioProducer, "_id">): Promise<GlobalAudioProducer> {
         return this._db.collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS).insertOne(initial)
             .then(result => result.ops[0])
