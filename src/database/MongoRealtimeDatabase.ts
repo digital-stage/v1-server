@@ -181,6 +181,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     readVideoProducer(id: GlobalVideoProducerId): Promise<GlobalVideoProducer> {
+        console.log("readVideoProducer(" + id + ")")
         return this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS).findOne({
             _id: new ObjectId(id)
         }).then(result => {
