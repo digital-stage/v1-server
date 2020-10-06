@@ -1,10 +1,11 @@
 import * as core from "express-serve-static-core";
 import * as expressPino from "express-pino-logger";
 import Auth from "../auth/IAuthentication";
+import {IRealtimeDatabase} from "../database/IRealtimeDatabase";
 
 namespace HttpService {
     import IAuthentication = Auth.IAuthentication;
-    export const init = (app: core.Express, authentication: IAuthentication) => {
+    export const init = (app: core.Express, database: IRealtimeDatabase, authentication: IAuthentication) => {
         app.use(expressPino());
 
         app.get('/beat', function (req, res) {
@@ -21,8 +22,14 @@ namespace HttpService {
             }
             console.log(req.params);
             return authentication.authorizeRequest(req)
-                .then(() => {
-                    //TODO: FIND AND RETURN PRODUCER, WHERE STAGEMEMBERID IS NOT NULL
+                .then(async () => {
+                    let producer = await database.readVideoProducer(req.params.id);
+                    if (!producer) {
+                        producer = await database.readAudioProducer(req.params.id);
+                    }
+                    if( producer ) {
+                        return res.status(200).json(producer);
+                    }
                     return res.sendStatus(404);
                 })
                 .catch((error) => {

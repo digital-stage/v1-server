@@ -11,15 +11,18 @@ export type RouterId = string | ObjectId;
 export type CustomGroupId = string | ObjectId;
 export type CustomStageMemberId = string | ObjectId;
 export type VideoDeviceId = string | ObjectId;
-export type GlobalProducerId = string | ObjectId;
+export type GlobalAudioProducerId = string | ObjectId;
+export type GlobalVideoProducerId = string | ObjectId;
 export type RouterProducerId = string | ObjectId;
 export type SoundCardId = string | ObjectId;
 export type StageMemberProducerId = string | ObjectId;
 export type SoundCardChannelId = string | ObjectId;
 export type TrackId = string | ObjectId;
-export type StageMemberVideoTrackId = string | ObjectId;
-export type StageMemberTrackId = string | ObjectId;
-export type CustomStageMemberTrackId = string | ObjectId;
+export type StageMemberVideoProducerId = string | ObjectId;
+export type StageMemberAudioProducerId = string | ObjectId;
+export type CustomStageMemberAudioProducerId = string | ObjectId;
+export type StageMemberOvTrackId = string | ObjectId;
+export type CustomStageMemberOvTrackId = string | ObjectId;
 
 export interface Router {
     _id: RouterId;
@@ -28,10 +31,11 @@ export interface Router {
     ipv6: string;
     port: number;
     availableSlots: number;
+    userId: UserId;
 }
 
 export interface User {
-    _id: UserId | ObjectId;
+    _id: UserId;
     uid?: string;
 
     // SETTINGS
@@ -41,34 +45,6 @@ export interface User {
     stageId?: StageId;          // <--- RELATION
     stageMemberId?: StageMemberId;    // <--- RELATION
 }
-
-/***
- * Ich bin in einer Stage, wähle eine Soundkarte aus.
- * Nun möchte ich alle Eingangskanäle und Ausgangskanäle angezeigt bekommen.
- * Es gibt 8 Eingangskanäle und 4 Ausgangskanäle.
- * Hier wähle ich die Eingangskanäle 1, 2 und 3 aus.
- * Nun werden im Hintergrund 3 Producer erzeugt, welche jeweils den Kanal 1, 2 und 3 übertragen.
- * Alle anderen in der Stage bekommen diese Information.
- *
- * In der Positionierungs-Karte sehe ich nun neben meinem Avatar 3 weitere Icons.
- * Der Admin verschiebt diese für mich in die richtige Position.
- * Außerdem regelt er das Gain der einzelnen Kanälen.
- * Zusätzlich regelt er ebenfalls das Playback-Volume aller Kanäle, sodass sie zusammen passen.
- * Alle anderen bekommen die neuen Information.
- *
- * Bei allen anderen nimmt der ovclient automatisch die Verbindung mit diesen Tracks auf und gibt diese auf deren
- * Lautsprecher aus.
- *
- * Nun wechsle ich die Stage. Dort wähle ich evtl. eine andere Soundkarte oder andere Kanäle aus.
- * Die Einstellungen sind in der neuen Stage nicht mehr die alten.
- *
- * Danach wechsle ich wieder zurück und wähle die Soundkarte von vorhin aus.
- * Die Channels sind alle bereits ausgewählt und so eingestellt wie zuvor.
- * Das betrifft gain, position, rotation und volume.
- * Evtl. haben ein paar andere Nutzer ein personalisiertes volume eingestellt - auch das ist weiterhin vorhanden.
- * Es scheint, als wäre ich nicht gewechselt - konnte mich einfach wieder anmelden und alle einstellungen waren wie gehabt.
- *
- */
 
 export interface Device {
     _id: DeviceId;
@@ -103,7 +79,6 @@ export interface Device {
     receiverJitter: number;
 
     // Optimizations for performance
-    producerIds: GlobalProducerId[];
     server: string;
 }
 
@@ -123,12 +98,14 @@ export interface SoundCard {    // ov-specific
     numInputChannels: number;
     numOutputChannels: number;
 
-    trackPresets: TrackPresetId[];
     trackPreset?: TrackPresetId;     // Current default preset (outside or on new stages)
 
     sampleRate: number;
     periodSize: number;
     numPeriods: number; // default to 2
+
+    // Optimizations for performance
+    //trackPresets: TrackPresetId[];
 }
 
 /**
@@ -139,8 +116,10 @@ export interface TrackPreset {
     userId: UserId;             // <--- RELATION
     soundCardId: SoundCardId;   // <--- RELATION
     name: string;
-    trackIds: TrackId[];
     outputChannels: number[];   // For the output use simple numbers TODO: @Giso, is this enough?
+
+    // Optimization
+    //trackIds: TrackId[];
 }
 
 /**
@@ -149,10 +128,8 @@ export interface TrackPreset {
  */
 export interface Track {
     _id: TrackId;
-    userId: UserId;
-    channel: number;              // UNIQUE WITH TRACK PRESET ID
-    deviceId: DeviceId;
     trackPresetId: TrackPresetId; // <--- RELATION
+    channel: number;              // UNIQUE WITH TRACK PRESET ID
 
     online: boolean;
 
@@ -160,28 +137,29 @@ export interface Track {
     volume: number;
 
     directivity: "omni" | "cardioid"
+
+    // Optimizations for performance
+    userId: UserId;
+    soundCardId: SoundCardId;
 }
 
 // WEBRTC specific
-export interface GlobalProducer {
-    _id: GlobalProducerId;
-    kind: "audio" | "video";
-
-    deviceId: DeviceId;
-    userId: UserId;
-
-    stageId?: StageId;
+interface GlobalProducer {
+    deviceId: DeviceId; // <-- RELATION
 
     routerId: RouterId;
     routerProducerId: RouterProducerId;
+
+    // Optimizations for performance
+    userId: UserId;
 }
 
 export interface GlobalVideoProducer extends GlobalProducer {
-    kind: "video";
+    _id: GlobalVideoProducerId;
 }
 
 export interface GlobalAudioProducer extends GlobalProducer {
-    kind: "audio";
+    _id: GlobalAudioProducerId;
 }
 
 export interface Stage {
@@ -217,11 +195,13 @@ export interface Group {
 export interface CustomGroup {
     _id: CustomGroupId;
     userId: UserId;             // <--- RELATION
-    stageId: StageId;
     groupId: GroupId;           // <--- RELATION
 
     // SETTINGS
     volume: number;
+
+    // Optimizations for performance
+    stageId: StageId;
 }
 
 /**
@@ -230,12 +210,8 @@ export interface CustomGroup {
  */
 export interface StageMember {
     _id: StageMemberId;
-    stageId: StageId;
     groupId: GroupId;   // <--- RELATION
     userId: UserId;     // <--- RELATION
-
-    tracks: StageMemberTrackId[];
-    videoTracks: StageMemberVideoTrackId[];
 
     online: boolean;
 
@@ -250,6 +226,12 @@ export interface StageMember {
     rX: number;
     rY: number;
     rZ: number;
+
+    // Optimizations for performance
+    stageId: StageId;
+    //videoProducers: StageMemberVideoProducerId[];
+    //audioProducers: StageMemberAudioProducerId[];
+    //ovTracks: StageMemberOvTrackId[];
 }
 
 /**
@@ -270,17 +252,65 @@ export interface CustomStageMember {
     rX: number;
     rY: number;
     rZ: number;
+
+    // Optimizations for performance
+    stageId: StageId;
 }
 
-export interface StageMemberVideoTrack {
-    _id: StageMemberVideoTrackId;
+export interface StageMemberVideoProducer {
+    _id: StageMemberVideoProducerId;
+    stageMemberId: StageMemberId;           // <-- RELATION
+    globalVideoProducerId: GlobalVideoProducerId; // <-- RELATION
+
+    online: boolean;
+
+    // Optimizations for performance
     userId: UserId;
-
     stageId: StageId;
-    stageMemberId: StageMemberId;
+}
 
-    producerId: GlobalProducerId;
 
+export interface StageMemberAudioProducer {
+    _id: StageMemberVideoProducerId;
+    stageMemberId: StageMemberId;           // <-- RELATION
+    globalAudioProducerId: GlobalAudioProducerId; // <-- RELATION
+
+    volume: number;
+
+    online: boolean;
+
+    // Position relative to stage member
+    x: number;
+    y: number;
+    z: number;
+    // Rotation relative to stage
+    rX: number;
+    rY: number;
+    rZ: number;
+
+    // Optimizations for performance
+    userId: UserId;
+    stageId: StageId;
+}
+
+export interface CustomStageMemberAudioProducer {
+    _id: CustomStageMemberAudioProducerId;
+    userId: UserId;                                         // <-- RELATION
+    stageMemberAudioProducerId: StageMemberAudioProducerId; // <-- RELATION
+
+    volume: number;
+
+    // Position relative to stage member
+    x: number;  //TODO: Circular assignment inside room
+    y: number;
+    z: number;
+    // Rotation relative to stage
+    rX: number;
+    rY: number;
+    rZ: number;
+
+    // Optimizations for performance
+    stageId: StageId;
 }
 
 /**
@@ -292,26 +322,17 @@ export interface StageMemberVideoTrack {
  * However, spatial audio settings are stored for both, maybe for integrating webrtc and ov later and use
  * the web audio api panner for 3D audio interpolation later.
  */
-export interface StageMemberTrack {
-    _id: StageMemberTrackId;
-    userId: UserId;
-
-    stageId: StageId;
-    stageMemberId: StageMemberId;
-
-    kind: "audio" | "video" | "ov";
+export interface StageMemberOvTrack extends Track {
+    _id: StageMemberOvTrackId;
+    trackId: TrackId;                // <-- RELATION
+    stageMemberId: StageMemberId;    // <-- RELATION
 
     online: boolean;
-
-    // Either ov-based
-    trackId?: TrackId;
-    // or webrtc-based
-    producerId?: GlobalProducerId;
 
     gain: number;       // Overrides track gain (for stage)
     volume: number;     // Overrides track volume (for stage)
 
-    directivity?: "omni" | "cardioid"; // Overrides track directivity (for stage)
+    directivity: "omni" | "cardioid"; // Overrides track directivity (for stage)
 
     // Position relative to stage member
     x: number;  //TODO: Circular assignment inside room
@@ -321,16 +342,20 @@ export interface StageMemberTrack {
     rX: number;
     rY: number;
     rZ: number;
+
+    // Optimizations for performance
+    userId: UserId;
+    stageId: StageId;
 }
 
 /**
  * Each user can overwrite the global stage member track settings with personal preferences.
  */
-export interface CustomStageMemberTrack {
-    _id: CustomStageMemberTrackId;
+export interface CustomStageMemberOvTrack {
+    _id: CustomStageMemberOvTrackId;
 
-    stageId: StageId;
-    stageMemberAudioTrackId: StageMemberTrackId;
+    userId: UserId;                             // <-- RELATION
+    stageMemberOvTrackId: StageMemberOvTrackId; // <-- RELATION
 
     gain: number;       // Overrides track gain (for user)
     volume: number;     // Overrides track volume (for user)
@@ -345,4 +370,7 @@ export interface CustomStageMemberTrack {
     rX: number;
     rY: number;
     rZ: number;
+
+    // Optimizations for performance
+    stageId: StageId;
 }

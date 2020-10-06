@@ -1,10 +1,25 @@
 import {
-    CustomGroup, CustomGroupId, CustomStageMember, CustomStageMemberId,
+    CustomGroup,
+    CustomGroupId,
+    CustomStageMember,
+    CustomStageMemberId,
     Device,
-    DeviceId, GlobalProducer, GlobalProducerId, Group, GroupId,
+    DeviceId,
+    GlobalAudioProducer, GlobalAudioProducerId,
+    GlobalVideoProducer, GlobalVideoProducerId,
+    Group,
+    GroupId,
     SoundCard,
-    SoundCardId, Stage, StageId, StageMember, StageMemberId, StageMemberTrack, StageMemberTrackId,
-    Track, TrackId,
+    SoundCardId,
+    Stage,
+    StageId,
+    StageMember,
+    StageMemberAudioProducer, StageMemberAudioProducerId,
+    StageMemberId,
+    StageMemberOvTrack,
+    StageMemberOvTrackId, StageMemberVideoProducer, StageMemberVideoProducerId,
+    Track,
+    TrackId,
     TrackPreset,
     TrackPresetId,
     User,
@@ -67,13 +82,21 @@ export interface IRealtimeDatabase {
 
     deleteTrack(deviceId: DeviceId, id: TrackId): Promise<Track>;
 
-    createProducer(initial: Omit<GlobalProducer, "_id">): Promise<GlobalProducer>;
+    createAudioProducer(initial: Omit<GlobalAudioProducer, "_id">): Promise<GlobalAudioProducer>;
 
-    readProducer(deviceId: DeviceId , id: GlobalProducerId): Promise<GlobalProducer>;
+    readAudioProducer(id: GlobalAudioProducerId): Promise<GlobalAudioProducer>;
 
-    updateProducer(deviceId: DeviceId, id: GlobalProducerId, update: Partial<Omit<GlobalProducer, "_id">>): Promise<GlobalProducer>;
+    updateAudioProducer(deviceId: DeviceId, id: GlobalAudioProducerId, update: Partial<Omit<GlobalAudioProducer, "_id">>): Promise<GlobalAudioProducer>;
 
-    deleteProducer(deviceId: DeviceId, id: GlobalProducerId): Promise<GlobalProducer>;
+    deleteAudioProducer(deviceId: DeviceId, id: GlobalAudioProducerId): Promise<GlobalAudioProducer>;
+
+    createVideoProducer(initial: Omit<GlobalVideoProducer, "_id">): Promise<GlobalVideoProducer>;
+
+    readVideoProducer(id: GlobalVideoProducerId): Promise<GlobalVideoProducer>;
+
+    updateVideoProducer(deviceId: DeviceId, id: GlobalVideoProducerId, update: Partial<Omit<GlobalVideoProducer, "_id">>): Promise<GlobalVideoProducer>;
+
+    deleteVideoProducer(deviceId: DeviceId, id: GlobalVideoProducerId): Promise<GlobalVideoProducer>;
 
 
     // STAGE HANDLING
@@ -121,13 +144,29 @@ export interface IRealtimeDatabase {
 
     deleteCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember>;
 
-    createStageMemberTrack(initial: Omit<StageMemberTrack, "_id">): Promise<StageMemberTrack>;
+    createStageMemberOvTrack(initial: Omit<StageMemberOvTrack, "_id">): Promise<StageMemberOvTrack>;
 
-    readStageMemberTrack(id: StageMemberTrackId): Promise<StageMemberTrack>;
+    readStageMemberOvTrack(id: StageMemberOvTrackId): Promise<StageMemberOvTrack>;
 
-    updateStageMemberTrack(id: StageMemberTrackId, update: Partial<Omit<StageMemberTrack, "_id">>): Promise<StageMemberTrack>;
+    updateStageMemberOvTrack(id: StageMemberOvTrackId, update: Partial<Omit<StageMemberOvTrack, "_id">>): Promise<StageMemberOvTrack>;
 
-    deleteStageMemberTrack(id: StageMemberTrackId): Promise<StageMemberTrack>;
+    deleteStageMemberOvTrack(id: StageMemberOvTrackId): Promise<StageMemberOvTrack>;
+
+    createStageMemberAudioProducer(initial: Omit<StageMemberAudioProducer, "_id">): Promise<StageMemberAudioProducer>;
+
+    readStageMemberAudioProducer(id: StageMemberAudioProducerId): Promise<StageMemberAudioProducer>;
+
+    updateStageMemberAudioProducer(id: StageMemberAudioProducerId, update: Partial<Omit<StageMemberAudioProducer, "_id">>): Promise<StageMemberAudioProducer>;
+
+    deleteStageMemberAudioProducer(id: StageMemberAudioProducerId): Promise<StageMemberAudioProducer>;
+
+    createStageMemberVideoProducer(initial: Omit<StageMemberVideoProducer, "_id">): Promise<StageMemberVideoProducer>;
+
+    readStageMemberVideoProducer(id: StageMemberVideoProducerId): Promise<StageMemberVideoProducer>;
+
+    updateStageMemberVideoProducer(id: StageMemberVideoProducerId, update: Partial<Omit<StageMemberVideoProducer, "_id">>): Promise<StageMemberVideoProducer>;
+
+    deleteStageMemberVideoProducer(id: StageMemberVideoProducerId): Promise<StageMemberVideoProducer>;
 
 
     // MESSAGING

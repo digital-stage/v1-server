@@ -29,9 +29,13 @@ export enum ServerDeviceEvents {
     TRACK_CHANGED = "track-changed",
     TRACK_REMOVED = "track-removed",
 
-    PRODUCER_ADDED = "producer-added",
-    PRODUCER_CHANGED = "producer-changed",
-    PRODUCER_REMOVED = "producer-removed",
+    AUDIO_PRODUCER_ADDED = "audio-producer-added",
+    AUDIO_PRODUCER_CHANGED = "audio-producer-changed",
+    AUDIO_PRODUCER_REMOVED = "audio-producer-removed",
+
+    VIDEO_PRODUCER_ADDED = "video-producer-added",
+    VIDEO_PRODUCER_CHANGED = "video-producer-changed",
+    VIDEO_PRODUCER_REMOVED = "video-producer-removed",
 
     ROUTER_ADDED = "router-added",
     ROUTER_CHANGED = "router-changed",
@@ -41,9 +45,13 @@ export enum ServerDeviceEvents {
 export enum ClientDeviceEvents {
     UPDATE_DEVICE = "update-device",
 
-    ADD_PRODUCER = "add-producer",
-    CHANGE_PRODUCER = "change-producer",
-    REMOVE_PRODUCER = "remove-producer",
+    ADD_AUDIO_PRODUCER = "add-audio-producer",
+    CHANGE_AUDIO_PRODUCER = "change-audio-producer",
+    REMOVE_AUDIO_PRODUCER = "remove-audio-producer",
+
+    ADD_VIDEO_PRODUCER = "add-video-producer",
+    CHANGE_VIDEO_PRODUCER = "change-video-producer",
+    REMOVE_VIDEO_PRODUCER = "remove-video-producer",
 
     ADD_SOUND_CARD = "add-sound-card",
     CHANGE_SOUND_CARD = "change-sound-card",
@@ -89,13 +97,25 @@ export enum ServerStageEvents {
     CUSTOM_STAGE_MEMBER_CHANGED = "custom-stage-member-changed",
     CUSTOM_STAGE_MEMBER_REMOVED = "custom-stage-member-removed",
 
-    STAGE_MEMBER_TRACK_ADDED = "stage-member-track-added",
-    STAGE_MEMBER_TRACK_CHANGED = "stage-member-track-changed",
-    STAGE_MEMBER_TRACK_REMOVED = "stage-member-track-removed",
+    STAGE_MEMBER_VIDEO_ADDED = "stage-member-video-added",
+    STAGE_MEMBER_VIDEO_CHANGED = "stage-member-video-changed",
+    STAGE_MEMBER_VIDEO_REMOVED = "stage-member-video-removed",
 
-    CUSTOM_STAGE_MEMBER_TRACK_ADDED = "stage-member-track-added",
-    CUSTOM_STAGE_MEMBER_TRACK_CHANGED = "stage-member-track-changed",
-    CUSTOM_STAGE_MEMBER_TRACK_REMOVED = "stage-member-track-removed",
+    STAGE_MEMBER_AUDIO_ADDED = "stage-member-audio-added",
+    STAGE_MEMBER_AUDIO_CHANGED = "stage-member-audio-changed",
+    STAGE_MEMBER_AUDIO_REMOVED = "stage-member-audio-removed",
+
+    STAGE_MEMBER_OV_ADDED = "stage-member-ov-added",
+    STAGE_MEMBER_OV_CHANGED = "stage-member-ov-changed",
+    STAGE_MEMBER_OV_REMOVED = "stage-member-ov-removed",
+
+    CUSTOM_STAGE_MEMBER_AUDIO_ADDED = "custom-stage-member-audio-added",
+    CUSTOM_STAGE_MEMBER_AUDIO_CHANGED = "custom-stage-member-audio-changed",
+    CUSTOM_STAGE_MEMBER_AUDIO_REMOVED = "custom-stage-member-audio-removed",
+
+    CUSTOM_STAGE_MEMBER_OV_ADDED = "custom-stage-member-ov-added",
+    CUSTOM_STAGE_MEMBER_OV_CHANGED = "custom-stage-member-ov-changed",
+    CUSTOM_STAGE_MEMBER_OV_REMOVED = "custom-stage-member-ov-removed",
 }
 
 export enum ClientStageEvents {
@@ -105,9 +125,10 @@ export enum ClientStageEvents {
     LEAVE_STAGE = "leave-stage",
     LEAVE_STAGE_FOR_GOOD = "leave-stage-for-good",
 
-    SET_CUSTOM_GROUP = "set-custom-group",
-    SET_CUSTOM_STAGE_MEMBER = "set-custom-stage-member",
-    SET_CUSTOM_STAGE_MEMBER_TRACK = "set-custom-stage-member-track",
+    SET_CUSTOM_GROUP = "set-custom-group",                          // upsert
+    SET_CUSTOM_STAGE_MEMBER = "set-custom-stage-member",            // upsert
+    SET_CUSTOM_STAGE_MEMBER_AUDIO = "set-custom-stage-member-audio",// upsert
+    SET_CUSTOM_STAGE_MEMBER_OV = "set-custom-stage-member-ov",      // upsert
 
     // Following shall be only possible if client is admin of stage
     CHANGE_STAGE = "change-stage",
@@ -118,6 +139,8 @@ export enum ClientStageEvents {
     REMOVE_GROUP = "remove-group",
 
     CHANGE_STAGE_MEMBER = "update-stage-member",
+    REMOVE_STAGE_MEMBER = "remove-stage-member",
 
-    CHANGE_STAGE_MEMBER_TRACK = "update-stage-member-track"
+    CHANGE_STAGE_MEMBER_OV = "update-stage-member-ov",
+    CHANGE_STAGE_MEMBER_AUDIO = "update-stage-member-audio"
 }

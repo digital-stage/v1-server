@@ -1,6 +1,15 @@
 import * as socketIO from "socket.io";
 
-import {Device, GlobalProducer, RouterId, SoundCard, Track, TrackPreset, User} from "../model.server";
+import {
+    Device,
+    GlobalAudioProducer, GlobalAudioProducerId,
+    GlobalVideoProducer, GlobalVideoProducerId,
+    RouterId,
+    SoundCard,
+    Track,
+    TrackPreset,
+    User
+} from "../model.server";
 import {serverAddress} from "../index";
 import {ClientDeviceEvents, ServerDeviceEvents} from "../events";
 import * as pino from "pino";
@@ -32,37 +41,52 @@ export class SocketDeviceHandler {
             return this.database.updateDevice(this.user._id, payload._id, omit(payload, '_id'));
         });
 
-        this.socket.on(ClientDeviceEvents.ADD_PRODUCER, (
+        this.socket.on(ClientDeviceEvents.ADD_AUDIO_PRODUCER, (
             payload: {
-                kind: "audio" | "video",
                 routerId: RouterId,
                 routerProducerId: string
-            }, fn: (producer: GlobalProducer) => void
+            }, fn: (producer: GlobalAudioProducer) => void
         ) => {
             // Get current stage id
-            return this.database.readUser(this.user._id)
-                .then(user => {
-                    return this.database.createProducer({
-                        ...payload,
-                        deviceId: this.device._id,
-                        userId: this.user._id,
-                        stageId: user.stageId
-                    })
-                        .then(producer => fn(producer));
-                })
+            return this.database.createAudioProducer({
+                ...payload,
+                deviceId: this.device._id,
+                userId: this.user._id,
+            })
+                .then(producer => fn(producer));
         });
-        this.socket.on(ClientDeviceEvents.CHANGE_PRODUCER, (id: string, producer: Partial<GlobalProducer>, fn: (producer: GlobalProducer) => void) =>
+        this.socket.on(ClientDeviceEvents.CHANGE_AUDIO_PRODUCER, (id: GlobalAudioProducerId, producer: Partial<GlobalAudioProducer>, fn: (producer: GlobalAudioProducer) => void) =>
             //TODO: Validate data
-            this.database.updateProducer(this.device._id, id, producer)
+            this.database.updateAudioProducer(this.device._id, id, producer)
                 .then(producer => fn(producer))
         );
-        this.socket.on(ClientDeviceEvents.REMOVE_PRODUCER, (id: string, fn: () => void) => {
-                this.database.readProducer(id)
-                    .then(producer => {
-                        console.log("THE PRODUCER IS:");
-                        console.log(producer)
-                    });
-                return this.database.deleteProducer(this.device._id, id)
+        this.socket.on(ClientDeviceEvents.REMOVE_AUDIO_PRODUCER, (id: GlobalAudioProducerId, fn: () => void) => {
+                return this.database.deleteAudioProducer(this.device._id, id)
+                    .then(() => fn())
+            }
+        );
+
+        this.socket.on(ClientDeviceEvents.ADD_VIDEO_PRODUCER, (
+            payload: {
+                routerId: RouterId,
+                routerProducerId: string
+            }, fn: (producer: GlobalVideoProducer) => void
+        ) => {
+            // Get current stage id
+            return this.database.createVideoProducer({
+                ...payload,
+                deviceId: this.device._id,
+                userId: this.user._id,
+            })
+                .then(producer => fn(producer));
+        });
+        this.socket.on(ClientDeviceEvents.CHANGE_VIDEO_PRODUCER, (id: GlobalVideoProducerId, producer: Partial<GlobalVideoProducer>, fn: (producer: GlobalVideoProducer) => void) =>
+            //TODO: Validate data
+            this.database.updateVideoProducer(this.device._id, id, producer)
+                .then(producer => fn(producer))
+        );
+        this.socket.on(ClientDeviceEvents.REMOVE_VIDEO_PRODUCER, (id: GlobalVideoProducerId, fn: () => void) => {
+                return this.database.deleteVideoProducer(this.device._id, id)
                     .then(() => fn())
             }
         );
@@ -76,7 +100,6 @@ export class SocketDeviceHandler {
                 sampleRate: 48000,
                 periodSize: 96,
                 numPeriods: 2,
-                trackPresets: [],
                 driver: "JACK",
                 ...initial,
                 userId: this.user._id
@@ -99,7 +122,6 @@ export class SocketDeviceHandler {
                     outputChannels: [],
                     ...initial,
                     soundCardId: initial.soundCardId,
-                    trackIds: [],
                     userId: this.user._id
                 })
                     .then(trackPreset => fn(trackPreset));
@@ -115,7 +137,7 @@ export class SocketDeviceHandler {
         );
 
         this.socket.on(ClientDeviceEvents.ADD_TRACK, (id: string, initial: Partial<Omit<Track, "_id">>, fn: (track: Track) => void) => {
-            if (initial.trackPresetId) {
+            if (initial.trackPresetId && initial.soundCardId) {
                 return this.database.createTrack({
                     channel: 0,
                     gain: 1,
@@ -123,9 +145,9 @@ export class SocketDeviceHandler {
                     directivity: "omni",
                     ...initial,
                     trackPresetId: initial.trackPresetId,
+                    soundCardId: initial.soundCardId,
                     online: true,
-                    deviceId: this.device._id,
-                    userId: this.user._id
+                    userId: this.user._id,
                 })
                     .then(track => fn(track));
             }
@@ -182,7 +204,6 @@ export class SocketDeviceHandler {
             receiveVideo: false,
             name: "",
             ...initialDevice,
-            producerIds: [],
             soundCardIds: [],
             server: serverAddress,
             userId: this.user._id,
