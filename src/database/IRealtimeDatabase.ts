@@ -5,8 +5,10 @@ import {
     CustomStageMemberId,
     Device,
     DeviceId,
-    GlobalAudioProducer, GlobalAudioProducerId,
-    GlobalVideoProducer, GlobalVideoProducerId,
+    GlobalAudioProducer,
+    GlobalAudioProducerId,
+    GlobalVideoProducer,
+    GlobalVideoProducerId,
     Group,
     GroupId,
     SoundCard,
@@ -14,10 +16,13 @@ import {
     Stage,
     StageId,
     StageMember,
-    StageMemberAudioProducer, StageMemberAudioProducerId,
+    StageMemberAudioProducer,
+    StageMemberAudioProducerId,
     StageMemberId,
     StageMemberOvTrack,
-    StageMemberOvTrackId, StageMemberVideoProducer, StageMemberVideoProducerId,
+    StageMemberOvTrackId,
+    StageMemberVideoProducer,
+    StageMemberVideoProducerId,
     Track,
     TrackId,
     TrackPreset,
@@ -106,7 +111,11 @@ export interface IRealtimeDatabase {
 
     readStage(id: StageId): Promise<Stage>;
 
-    joinStage(userId: UserId, stageId: StageId, groupId: GroupId): Promise<Stage>;
+    readManagedStage(userId: UserId, id: StageId): Promise<Stage>;
+
+    readManagedStageByGroupId(userId: UserId, id: GroupId): Promise<Stage>;
+
+    joinStage(userId: UserId, stageId: StageId, groupId: GroupId, password?: string): Promise<Stage>;
 
     leaveStage(userId: UserId, skipLeaveNotification?: boolean): Promise<Stage>;
 

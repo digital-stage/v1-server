@@ -1,28 +1,29 @@
 import {ObjectId} from "mongodb";
+import {ThreeDimensionAudioProperties} from "./model.utils";
 
-export type StageId = string | ObjectId;
-export type GroupId = string | ObjectId;
-export type UserId = string | ObjectId;
-export type StageMemberId = string | ObjectId;
-export type DeviceId = string | ObjectId;
-export type WebRTCDeviceId = string | ObjectId;
-export type TrackPresetId = string | ObjectId;
-export type RouterId = string | ObjectId;
-export type CustomGroupId = string | ObjectId;
-export type CustomStageMemberId = string | ObjectId;
-export type VideoDeviceId = string | ObjectId;
-export type GlobalAudioProducerId = string | ObjectId;
-export type GlobalVideoProducerId = string | ObjectId;
-export type RouterProducerId = string | ObjectId;
-export type SoundCardId = string | ObjectId;
-export type StageMemberProducerId = string | ObjectId;
-export type SoundCardChannelId = string | ObjectId;
-export type TrackId = string | ObjectId;
-export type StageMemberVideoProducerId = string | ObjectId;
-export type StageMemberAudioProducerId = string | ObjectId;
-export type CustomStageMemberAudioProducerId = string | ObjectId;
-export type StageMemberOvTrackId = string | ObjectId;
-export type CustomStageMemberOvTrackId = string | ObjectId;
+export type StageId = ObjectId;
+export type GroupId = ObjectId;
+export type UserId = ObjectId;
+export type StageMemberId = ObjectId;
+export type DeviceId = ObjectId;
+export type WebRTCDeviceId = ObjectId;
+export type TrackPresetId = ObjectId;
+export type RouterId = ObjectId;
+export type CustomGroupId = ObjectId;
+export type CustomStageMemberId = ObjectId;
+export type VideoDeviceId = ObjectId;
+export type GlobalAudioProducerId = ObjectId;
+export type GlobalVideoProducerId = ObjectId;
+export type SoundCardId = ObjectId;
+export type StageMemberProducerId = ObjectId;
+export type SoundCardChannelId = ObjectId;
+export type TrackId = ObjectId;
+export type StageMemberVideoProducerId = ObjectId;
+export type StageMemberAudioProducerId = ObjectId;
+export type CustomStageMemberAudioProducerId = ObjectId;
+export type StageMemberOvTrackId = ObjectId;
+export type CustomStageMemberOvTrackId = ObjectId;
+
 
 export interface Router {
     _id: RouterId;
@@ -148,7 +149,7 @@ interface GlobalProducer {
     deviceId: DeviceId; // <-- RELATION
 
     routerId: RouterId;
-    routerProducerId: RouterProducerId;
+    routerProducerId: string;
 
     // Optimizations for performance
     userId: UserId;
@@ -208,7 +209,7 @@ export interface CustomGroup {
  * A stage member is the associated between a user and a stage.
  * Settings can be only modified by admins.
  */
-export interface StageMember {
+export interface StageMember extends ThreeDimensionAudioProperties {
     _id: StageMemberId;
     groupId: GroupId;   // <--- RELATION
     userId: UserId;     // <--- RELATION
@@ -217,15 +218,6 @@ export interface StageMember {
 
     // SETTINGS (modifiable only by admins)
     isDirector: boolean;
-    volume: number;
-    // Position relative to stage
-    x: number;  //TODO: Circular assignment inside room
-    y: number;
-    z: number;
-    // Rotation relative to stage
-    rX: number;
-    rY: number;
-    rZ: number;
 
     // Optimizations for performance
     stageId: StageId;
@@ -237,21 +229,10 @@ export interface StageMember {
 /**
  * Each user can overwrite the global stage member settings with personal preferences
  */
-export interface CustomStageMember {
+export interface CustomStageMember extends ThreeDimensionAudioProperties {
     _id: CustomStageMemberId;
     userId: UserId;                 // <--- RELATION
     stageMemberId: StageMemberId;   // <--- RELATION
-
-    // SETTINGS
-    volume: number;
-    // Position relative to stage
-    x: number;  //TODO: Circular assignment inside room
-    y: number;
-    z: number;
-    // Rotation relative to stage
-    rX: number;
-    rY: number;
-    rZ: number;
 
     // Optimizations for performance
     stageId: StageId;
@@ -270,44 +251,22 @@ export interface StageMemberVideoProducer {
 }
 
 
-export interface StageMemberAudioProducer {
+export interface StageMemberAudioProducer extends ThreeDimensionAudioProperties {
     _id: StageMemberVideoProducerId;
     stageMemberId: StageMemberId;           // <-- RELATION
     globalProducerId: GlobalAudioProducerId; // <-- RELATION
 
-    volume: number;
-
     online: boolean;
-
-    // Position relative to stage member
-    x: number;
-    y: number;
-    z: number;
-    // Rotation relative to stage
-    rX: number;
-    rY: number;
-    rZ: number;
 
     // Optimizations for performance
     userId: UserId;
     stageId: StageId;
 }
 
-export interface CustomStageMemberAudioProducer {
+export interface CustomStageMemberAudioProducer extends ThreeDimensionAudioProperties {
     _id: CustomStageMemberAudioProducerId;
     userId: UserId;                                         // <-- RELATION
     stageMemberAudioProducerId: StageMemberAudioProducerId; // <-- RELATION
-
-    volume: number;
-
-    // Position relative to stage member
-    x: number;  //TODO: Circular assignment inside room
-    y: number;
-    z: number;
-    // Rotation relative to stage
-    rX: number;
-    rY: number;
-    rZ: number;
 
     // Optimizations for performance
     stageId: StageId;
@@ -322,7 +281,7 @@ export interface CustomStageMemberAudioProducer {
  * However, spatial audio settings are stored for both, maybe for integrating webrtc and ov later and use
  * the web audio api panner for 3D audio interpolation later.
  */
-export interface StageMemberOvTrack extends Track {
+export interface StageMemberOvTrack extends Track, ThreeDimensionAudioProperties {
     _id: StageMemberOvTrackId;
     trackId: TrackId;                // <-- RELATION
     stageMemberId: StageMemberId;    // <-- RELATION
@@ -330,18 +289,8 @@ export interface StageMemberOvTrack extends Track {
     online: boolean;
 
     gain: number;       // Overrides track gain (for stage)
-    volume: number;     // Overrides track volume (for stage)
 
     directivity: "omni" | "cardioid"; // Overrides track directivity (for stage)
-
-    // Position relative to stage member
-    x: number;  //TODO: Circular assignment inside room
-    y: number;
-    z: number;
-    // Rotation relative to stage
-    rX: number;
-    rY: number;
-    rZ: number;
 
     // Optimizations for performance
     userId: UserId;
@@ -351,25 +300,15 @@ export interface StageMemberOvTrack extends Track {
 /**
  * Each user can overwrite the global stage member track settings with personal preferences.
  */
-export interface CustomStageMemberOvTrack {
+export interface CustomStageMemberOvTrack extends ThreeDimensionAudioProperties {
     _id: CustomStageMemberOvTrackId;
 
     userId: UserId;                             // <-- RELATION
     stageMemberOvTrackId: StageMemberOvTrackId; // <-- RELATION
 
     gain: number;       // Overrides track gain (for user)
-    volume: number;     // Overrides track volume (for user)
 
     directivity: "omni" | "cardioid"; // Overrides track directivity (for user)
-
-    // Position relative to stage member
-    x: number;  //TODO: Circular assignment inside room
-    y: number;
-    z: number;
-    // Rotation relative to stage
-    rX: number;
-    rY: number;
-    rZ: number;
 
     // Optimizations for performance
     stageId: StageId;
@@ -389,6 +328,7 @@ export interface StagePackage {
     ovTracks: StageMemberOvTrack[];
     customOvTracks: CustomStageMemberOvTrack[];
 }
+
 export interface InitialStagePackage extends StagePackage {
     stageId: StageId;
     groupId: GroupId;

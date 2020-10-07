@@ -4,6 +4,7 @@ import * as asyncHandler from "express-async-handler";
 import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 import {IAuthentication} from "../auth/IAuthentication";
 import * as pino from "pino";
+import {ObjectId} from "mongodb";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -36,9 +37,10 @@ class HttpService {
 
             await this.authentication.authorizeRequest(req)
                 .then(async () => {
-                    let producer = await this.database.readVideoProducer(req.params.id);
+                    const id = new ObjectId(req.params.id);
+                    let producer = await this.database.readVideoProducer(id);
                     if (!producer) {
-                        producer = await this.database.readAudioProducer(req.params.id);
+                        producer = await this.database.readAudioProducer(id);
                     }
                     if (producer) {
                         logger.debug("[HTTP SERVICE] Returning producer: " + req.params.id);

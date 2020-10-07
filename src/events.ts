@@ -46,11 +46,9 @@ export enum ClientDeviceEvents {
     UPDATE_DEVICE = "update-device",
 
     ADD_AUDIO_PRODUCER = "add-audio-producer",
-    CHANGE_AUDIO_PRODUCER = "change-audio-producer",
     REMOVE_AUDIO_PRODUCER = "remove-audio-producer",
 
     ADD_VIDEO_PRODUCER = "add-video-producer",
-    CHANGE_VIDEO_PRODUCER = "change-video-producer",
     REMOVE_VIDEO_PRODUCER = "remove-video-producer",
 
     ADD_SOUND_CARD = "add-sound-card",
