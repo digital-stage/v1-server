@@ -2,7 +2,7 @@ import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 import * as socketIO from "socket.io";
 import {User} from "../model.server";
 import * as pino from "pino";
-import {ClientStageEvents} from "../events";
+import {ClientStageEvents, ServerStageEvents} from "../events";
 import {ObjectId} from "mongodb";
 import {
     AddGroupPayload,
@@ -170,7 +170,6 @@ export class SocketStageHandler {
                         }
                     }));
         });*/
-
 
         logger.debug("[SOCKET STAGE HANDLER] Registered handler for user " + this.user.name + " at socket " + this.socket.id);
     }

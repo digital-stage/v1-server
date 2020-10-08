@@ -37,10 +37,8 @@ import {
 } from "../model.server";
 import {ServerDeviceEvents, ServerStageEvents} from "../events";
 import * as socketIO from "socket.io";
-import {Set} from "immutable";
 import * as pino from "pino";
 import {IRealtimeDatabase} from "./IRealtimeDatabase";
-import {UserModel} from "../../../auth-server/src/store/UserModel";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -378,7 +376,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     updateUser(id: UserId, update: Partial<Omit<User, "_id">>): Promise<void> {
-        return this._db.collection<User>(Collections.USERS).findOneAndUpdate({_id: id}, {$set: {update}})
+        return this._db.collection<User>(Collections.USERS).findOneAndUpdate({_id: id}, {$set: update})
             .then(result => {
                 //TODO: Update all associated (Stage Members), too
 
@@ -449,7 +447,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             user: userId,
             _id: id,
         });
-        return this._db.collection<Device>(Collections.DEVICES).findOneAndUpdate({_id: id}, {$set: {update}})
+        return this._db.collection<Device>(Collections.DEVICES).findOneAndUpdate({_id: id}, {$set: update})
             .then(result => {
                 //TODO: Update all associated (Stage Members), too
 
@@ -464,21 +462,20 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     deleteDevice(id: DeviceId): Promise<void> {
-        const objId = id;
-        return this._db.collection<Device>(Collections.DEVICES).findOneAndDelete({_id: objId})
+        return this._db.collection<Device>(Collections.DEVICES).findOneAndDelete({_id: id})
             .then(result => {
                 if (result.value) {
                     this.sendToUser(result.value.userId, ServerDeviceEvents.DEVICE_REMOVED, id);
 
                     // Delete associated producers
                     this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS).find({
-                        deviceId: objId
+                        deviceId: id
                     }, {projection: {_id: 1}})
                         .toArray()
                         .then(producers => producers.map(producer => this.deleteVideoProducer(id, producer._id)));
 
                     this._db.collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS).find({
-                        deviceId: objId
+                        deviceId: id
                     }, {projection: {_id: 1}})
                         .toArray()
                         .then(producers => producers.map(producer => this.deleteAudioProducer(id, producer._id)));
@@ -623,6 +620,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             user.stageMemberId = undefined;
             await this.updateUser(user._id, {stageId: undefined, stageMemberId: undefined});
             this.sendToUser(user._id, ServerStageEvents.STAGE_LEFT);
+
             console.log("User updated " + (Date.now() - startTime) + "ms");
 
             // Set old stage member offline (async!)
@@ -1053,8 +1051,12 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
 
     public async sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<any> {
         if (user.stageMemberId) {
+            console.log("USER IS IN STAGE")
             // Switch current stage member online
             await this._db.collection(Collections.STAGE_MEMBERS).updateOne({stageMemberId: user.stageMemberId}, {$set: {online: true}});
+        } else {
+            console.log("USER IS NOT IN STAGE")
+            console.log(user);
         }
         const stageMembers = await this._db.collection(Collections.STAGE_MEMBERS).find({userId: user._id}).toArray();
         // Get all managed stages and stages, where the user was or is in
