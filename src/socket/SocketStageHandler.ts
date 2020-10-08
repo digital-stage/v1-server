@@ -139,6 +139,7 @@ export class SocketStageHandler {
                         return fn();
                     })
                     .catch(error => {
+                        logger.error(error);
                         return fn(error.message)
                     })
             }
@@ -146,7 +147,7 @@ export class SocketStageHandler {
         this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
             // LEAVE STAGE
             this.database.leaveStage(this.user._id)
-                .then(() => logger.info("Join stage finsihed"))
+                .then(() => logger.info(this.user.name + " left stage"))
         );
         /*
         this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {

@@ -19,9 +19,9 @@ import * as pino from "pino";
 import {omit} from "lodash";
 import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 import {
-    AddAudioProducerPayload,
-    AddVideoProducerPayload,
-    RemoveAudioProducerPayload,
+    AddAudioProducerPayload, AddSoundCardPayload, AddTrackPayload, AddTrackPresetPayload,
+    AddVideoProducerPayload, ChangeSoundCardPayload, ChangeTrackPayload, ChangeTrackPresetPayload,
+    RemoveAudioProducerPayload, RemoveSoundCardPayload, RemoveTrackPayload, RemoveTrackPresetPayload,
     RemoveVideoProducerPayload
 } from "../payloads";
 
@@ -90,7 +90,7 @@ export class SocketDeviceHandler {
             }
         );
 
-        this.socket.on(ClientDeviceEvents.ADD_SOUND_CARD, (initial: Partial<SoundCard>, fn: (soundCard: SoundCard) => void) =>
+        this.socket.on(ClientDeviceEvents.ADD_SOUND_CARD, (payload: AddSoundCardPayload, fn: (soundCard: SoundCard) => void) =>
             //TODO: Validate data
             this.database.createSoundCard({
                 name: "",
@@ -100,63 +100,78 @@ export class SocketDeviceHandler {
                 periodSize: 96,
                 numPeriods: 2,
                 driver: "JACK",
-                ...initial,
+                ...payload.initial,
+                trackPresetId: payload.initial.trackPresetId ? new ObjectId(payload.initial.trackPresetId) : undefined,
                 userId: this.user._id
             })
                 .then(soundCard => fn(soundCard)));
-        this.socket.on(ClientDeviceEvents.CHANGE_SOUND_CARD, (id: SoundCardId, update: Partial<Omit<SoundCard, "_id">>, fn: (soundCard: SoundCard) => void) =>
-            //TODO: Validate data
-            this.database.updateSoundCard(this.device._id, id, update)
-                .then(soundCard => fn(soundCard))
-        );
-        this.socket.on(ClientDeviceEvents.REMOVE_SOUND_CARD, (id: SoundCardId, fn: () => void) =>
-            this.database.deleteSoundCard(this.device._id, id)
-                .then(() => fn())
-        );
-
-        this.socket.on(ClientDeviceEvents.ADD_TRACK_PRESET, (initial: Partial<Omit<TrackPreset, "_id">>, fn: (trackPreset: TrackPreset) => void) => {
-            if (initial.soundCardId) {
-                return this.database.createTrackPreset({
-                    name: "",
-                    outputChannels: [],
-                    ...initial,
-                    soundCardId: initial.soundCardId,
-                    userId: this.user._id
-                })
-                    .then(trackPreset => fn(trackPreset));
-            }
+        this.socket.on(ClientDeviceEvents.CHANGE_SOUND_CARD, (payload: ChangeSoundCardPayload, fn: (soundCard: Partial<SoundCard>) => void) => {
+            const id = new ObjectId(payload.id);
+            const trackPresetId = payload.update.trackPresetId ? new ObjectId(payload.update.trackPresetId) : undefined;
+            this.database.updateSoundCard(this.device._id, id, {
+                ...payload.update,
+                trackPresetId: trackPresetId
+            })
+                .then(() => fn({
+                    ...payload.update,
+                    trackPresetId: trackPresetId,
+                    _id: id
+                }))
         });
-        this.socket.on(ClientDeviceEvents.CHANGE_TRACK_PRESET, (id: TrackPresetId, update: Partial<TrackPreset>, fn: (trackPreset: TrackPreset) => void) =>
-            this.database.updateTrackPreset(this.device._id, id, update)
-                .then(trackPreset => fn(trackPreset))
-        );
-        this.socket.on(ClientDeviceEvents.REMOVE_TRACK_PRESET, (id: TrackPresetId, fn: () => void) =>
-            this.database.deleteTrackPreset(this.device._id, id)
+        this.socket.on(ClientDeviceEvents.REMOVE_SOUND_CARD, (id: RemoveSoundCardPayload, fn: () => void) =>
+            this.database.deleteSoundCard(this.device._id, new ObjectId(id))
                 .then(() => fn())
         );
 
-        this.socket.on(ClientDeviceEvents.ADD_TRACK, (initial: Partial<Omit<Track, "_id">>, fn: (track: Track) => void) => {
-            if (initial.trackPresetId && initial.soundCardId) {
+        this.socket.on(ClientDeviceEvents.ADD_TRACK_PRESET, (payload: AddTrackPresetPayload, fn: (trackPreset: TrackPreset) => void) => {
+            const soundCardId = new ObjectId(payload.initial.soundCardId);
+            return this.database.createTrackPreset({
+                name: "",
+                outputChannels: [],
+                ...payload.initial,
+                soundCardId: soundCardId,
+                userId: this.user._id
+            })
+                .then(trackPreset => fn(trackPreset));
+        });
+        this.socket.on(ClientDeviceEvents.CHANGE_TRACK_PRESET, (payload: ChangeTrackPresetPayload, fn: (trackPreset: Partial<TrackPreset>) => void) => {
+            const id = new ObjectId(payload.id);
+            return this.database.updateTrackPreset(this.device._id, id, payload.update)
+                .then(() => fn({
+                    ...payload.update,
+                    _id: id
+                }));
+        });
+        this.socket.on(ClientDeviceEvents.REMOVE_TRACK_PRESET, (id: RemoveTrackPresetPayload, fn: () => void) =>
+            this.database.deleteTrackPreset(this.device._id, new ObjectId(id))
+                .then(() => fn())
+        );
+
+        this.socket.on(ClientDeviceEvents.ADD_TRACK, (payload: AddTrackPayload, fn: (track: Track) => void) => {
+            if (payload.initial.trackPresetId) {
+                const trackPresetId = new ObjectId(payload.initial.trackPresetId);
                 return this.database.createTrack({
-                    channel: 0,
-                    gain: 1,
-                    volume: 1,
-                    directivity: "omni",
-                    ...initial,
-                    trackPresetId: initial.trackPresetId,
-                    soundCardId: initial.soundCardId,
+                    channel: payload.initial.channel || 0,
+                    gain: payload.initial.gain || 0,
+                    volume: payload.initial.volume || 1,
+                    directivity: payload.initial.directivity || "omni",
+                    trackPresetId: trackPresetId,
                     online: true,
                     userId: this.user._id,
                 })
                     .then(track => fn(track));
             }
         });
-        this.socket.on(ClientDeviceEvents.CHANGE_TRACK, (id: TrackId, update: Partial<Track>, fn: (track: Track) => void) =>
-            this.database.updateTrack(this.device._id, id, update)
-                .then(track => fn(track))
-        );
-        this.socket.on(ClientDeviceEvents.REMOVE_TRACK, (id: TrackId, fn: () => void) =>
-            this.database.deleteTrack(this.device._id, id)
+        this.socket.on(ClientDeviceEvents.CHANGE_TRACK, (payload: ChangeTrackPayload, fn: (track: Partial<Track>) => void) => {
+            const id = new ObjectId(payload.id);
+            return this.database.updateTrack(this.device._id, id, payload.update)
+                .then(() => fn({
+                    ...payload.update,
+                    _id: id
+                }))
+        });
+        this.socket.on(ClientDeviceEvents.REMOVE_TRACK, (id: RemoveTrackPayload, fn: () => void) =>
+            this.database.deleteTrack(this.device._id, new ObjectId(id))
                 .then(() => fn())
         );
 

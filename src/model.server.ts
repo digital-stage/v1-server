@@ -99,7 +99,7 @@ export interface SoundCard {    // ov-specific
     numInputChannels: number;
     numOutputChannels: number;
 
-    trackPreset?: TrackPresetId;     // Current default preset (outside or on new stages)
+    trackPresetId?: TrackPresetId;     // Current default preset (outside or on new stages)
 
     sampleRate: number;
     periodSize: number;
@@ -141,7 +141,7 @@ export interface Track {
 
     // Optimizations for performance
     userId: UserId;
-    soundCardId: SoundCardId;
+    //soundCardId: SoundCardId;
 }
 
 // WEBRTC specific
