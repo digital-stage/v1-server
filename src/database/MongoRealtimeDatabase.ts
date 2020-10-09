@@ -738,7 +738,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     deleteStage(id: StageId): Promise<any> {
         return this._db.collection<Group>(Collections.GROUPS).find({stageId: id}, {projection: {_id: 1}})
             .toArray()
-            .then(groups => groups.map(group => this.deleteGroup(group._id)))
+            .then(groups => Promise.all(groups.map(group => this.deleteGroup(group._id))))
             .then(() => this.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id))
             .then(() => this._db.collection<Stage>(Collections.STAGES).deleteOne({_id: id}));
     }
@@ -1024,7 +1024,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     updateStageMember(id: StageMemberId, update: Partial<Omit<StageMember, "_id">>): Promise<void> {
-        return this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOneAndUpdate({_id: id}, {$set: update},{projection: {stageId: 1}})
+        return this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {stageId: 1}})
             .then(result => {
                 if (result.value) {
                     this.sendToJoinedStageMembers(result.value.stageId, ServerStageEvents.GROUP_CHANGED, {
