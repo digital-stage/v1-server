@@ -35,7 +35,7 @@ import {
     User,
     UserId
 } from "../model.server";
-import {ServerDeviceEvents, ServerStageEvents} from "../events";
+import {ServerDeviceEvents, ServerStageEvents, ServerUserEvents} from "../events";
 import * as socketIO from "socket.io";
 import * as pino from "pino";
 import {IRealtimeDatabase} from "./IRealtimeDatabase";
@@ -380,7 +380,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             .then(result => {
                 //TODO: Update all associated (Stage Members), too
 
-                this.sendToUser(id, ServerStageEvents.USER_CHANGED, {
+                this.sendToUser(id, ServerUserEvents.USER_CHANGED, {
                     ...update,
                     _id: id
                 })
@@ -681,7 +681,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         const groups = skipStageAndGroups ? undefined : await this._db.collection<Group>(Collections.GROUPS).find({stageId: stageId}).toArray();
         const stageMembers = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS).find({stageId: stageId}).toArray();
         const stageMemberUserIds = stageMembers.map(stageMember => stageMember.userId);
-        const users = await this._db.collection<User>(Collections.USERS).find({userId: {$in: stageMemberUserIds}}).toArray();
+        const users = await this._db.collection<User>(Collections.USERS).find({_id: {$in: stageMemberUserIds}}).toArray();
         const customGroups = await this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).find({
             userId: userId,
             stageId: stageId
