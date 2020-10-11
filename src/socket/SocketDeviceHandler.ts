@@ -51,7 +51,7 @@ export class SocketDeviceHandler {
         });
 
         this.socket.on(ClientDeviceEvents.ADD_AUDIO_PRODUCER, (
-            payload: AddAudioProducerPayload, fn: (producer: GlobalAudioProducer) => void
+            payload: AddAudioProducerPayload, fn: (error: string | undefined, producer?: GlobalAudioProducer) => void
         ) => {
             const routerId = new ObjectId(payload.routerId);
             // Get current stage id
@@ -61,16 +61,19 @@ export class SocketDeviceHandler {
                 deviceId: this.device._id,
                 userId: this.user._id,
             })
-                .then(producer => fn(producer));
+                .then(producer => fn(undefined, producer))
+                .catch(error => fn(error.message))
         });
-        this.socket.on(ClientDeviceEvents.REMOVE_AUDIO_PRODUCER, (id: RemoveAudioProducerPayload, fn: () => void) => {
-                return this.database.deleteAudioProducer(this.device._id, new ObjectId(id))
+        this.socket.on(ClientDeviceEvents.REMOVE_AUDIO_PRODUCER, (payload: RemoveAudioProducerPayload, fn: (error?: string) => void) => {
+                const id = new ObjectId(payload);
+                return this.database.deleteAudioProducer(this.user._id, id)
                     .then(() => fn())
+                    .catch(error => fn(error.message))
             }
         );
 
         this.socket.on(ClientDeviceEvents.ADD_VIDEO_PRODUCER, (
-            payload: AddVideoProducerPayload, fn: (producer: GlobalVideoProducer) => void
+            payload: AddVideoProducerPayload, fn: (error: string | undefined, producer?: GlobalVideoProducer) => void
         ) => {
             // Get current stage id
             logger.debug("[SOCKET DEVICE HANDLER] ADD VIDEO PRODUCER " + payload.routerId);
@@ -81,12 +84,13 @@ export class SocketDeviceHandler {
                 deviceId: this.device._id,
                 userId: this.user._id,
             })
-                .then(producer => fn(producer));
+                .then(producer => fn(undefined, producer))
+                .catch(error => fn(error.message))
         });
-        this.socket.on(ClientDeviceEvents.REMOVE_VIDEO_PRODUCER, (id: RemoveVideoProducerPayload, fn: () => void) => {
+        this.socket.on(ClientDeviceEvents.REMOVE_VIDEO_PRODUCER, (id: RemoveVideoProducerPayload, fn: (error?: string) => void) => {
                 logger.debug("[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER " + id);
                 return this.database.deleteVideoProducer(this.device._id, new ObjectId(id))
-                    .then(() => fn())
+                    .catch(error => fn(error.message))
             }
         );
 
