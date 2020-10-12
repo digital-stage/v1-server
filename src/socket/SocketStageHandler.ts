@@ -135,6 +135,7 @@ export class SocketStageHandler {
                 const stageId = new ObjectId(payload.stageId);
                 const groupId = new ObjectId(payload.groupId);
                 return this.database.joinStage(this.user._id, stageId, groupId, payload.password)
+                    .then(() => logger.info(this.user.name + " joined stage " + stageId + " and group " + groupId))
                     .then(() => {
                         return fn();
                     })

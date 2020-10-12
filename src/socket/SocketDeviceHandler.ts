@@ -88,8 +88,8 @@ export class SocketDeviceHandler {
                 .catch(error => fn(error.message))
         });
         this.socket.on(ClientDeviceEvents.REMOVE_VIDEO_PRODUCER, (payload: RemoveVideoProducerPayload, fn: (error?: string) => void) => {
-            const id = new ObjectId(payload);
-            logger.debug("[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER " + payload);
+                const id = new ObjectId(payload);
+                logger.debug("[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER " + payload);
                 return this.database.deleteVideoProducer(this.user._id, id)
                     .catch(error => fn(error.message))
             }
@@ -183,10 +183,12 @@ export class SocketDeviceHandler {
         this.socket.on("disconnect", async () => {
             if (this.device && !this.device.mac) {
                 logger.debug("Removed device '" + this.device.name + "' of " + this.user.name);
-                return this.database.deleteDevice(this.device._id);
+                return this.database.deleteDevice(this.device._id)
+                    .then(() => this.database.renewOnlineStatus(this.user._id));
             } else {
                 logger.debug("Switched device '" + this.device.name + "' of " + this.user.name + " to offline");
-                return this.database.updateDevice(this.user._id, this.device._id, {online: false});
+                return this.database.updateDevice(this.user._id, this.device._id, {online: false})
+                    .then(() => this.database.renewOnlineStatus(this.user._id));
             }
             /*if (this.user.stageMemberId) {
                 if (await DeviceModel.count({userId: this.user._id, online: true}) === 0) {

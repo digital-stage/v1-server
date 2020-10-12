@@ -83,6 +83,32 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         return this._db;
     }
 
+    renewOnlineStatus(userId: UserId): Promise<void> {
+        console.log("renewOnlineStatus");
+        // Has the user online devices?
+        return this._db.collection<User>(Collections.USERS).findOne({_id: userId}, {projection: {stageMemberId: 1}})
+            .then(user => {
+                if (user.stageMemberId) {
+                    // Use is inside stage
+                    return this._db.collection<Device>(Collections.DEVICES).countDocuments({
+                        userId: userId,
+                        online: true
+                    })
+                        .then(numDevicesOnline => {
+                            if (numDevicesOnline > 0) {
+                                console.log("renewOnlineStatus: has more than one device")
+                                // User is online
+                                return this.updateStageMember(user.stageMemberId, {online: true});
+                            } else {
+                                // User has no more online devices
+                                console.log("renewOnlineStatus: has no more devices")
+                                return this.updateStageMember(user.stageMemberId, {online: false});
+                            }
+                        })
+                }
+            });
+    }
+
     createAudioProducer(initial: Omit<GlobalAudioProducer, "_id">): Promise<GlobalAudioProducer> {
         return this._db.collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS).insertOne(initial)
             .then(result => result.ops[0])
@@ -414,12 +440,12 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             })
     }
 
-
     createDevice(init: Omit<Device, "_id">): Promise<Device> {
         return this._db.collection(Collections.DEVICES).insertOne(init)
             .then(result => result.ops[0])
             .then(device => {
-                this.sendToUser(init.userId, ServerDeviceEvents.DEVICE_ADDED, device)
+                this.sendToUser(init.userId, ServerDeviceEvents.DEVICE_ADDED, device);
+                this.renewOnlineStatus(init.userId);
                 return device;
             })
     }
@@ -448,15 +474,9 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             _id: id,
         });
         return this._db.collection<Device>(Collections.DEVICES).updateOne({_id: id}, {$set: update})
-            .then(result => {
-                //TODO: Update all associated (Stage Members), too
-
-                if (Object.keys(update).find(key => key === "online")) {
-                    if (update.online) {
-
-                    } else {
-
-                    }
+            .then((result) => {
+                if (result.modifiedCount > 0) {
+                    return this.renewOnlineStatus(userId);
                 }
             });
     }
@@ -480,6 +500,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                         .toArray()
                         .then(producers => producers.map(producer => this.deleteAudioProducer(producer.userId, producer._id)));
 
+                    return this.renewOnlineStatus(result.value.userId);
                     /*
                     this._db.collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS).find({
                         deviceId: objId
@@ -521,16 +542,15 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             throw new Error("Invalid password");
         }
 
-        const isAdmin: boolean = stage.admins.find(admin => admin.toString() === userId.toString()) !== undefined;
+        const isAdmin: boolean = stage.admins.find(admin => admin.equals(userId)) !== undefined;
         const previousStageMemberId = user.stageMemberId;
 
-        let stageMember = await this._db.collection(Collections.STAGE_MEMBERS).findOne({
+        let stageMember = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOne({
             userId: user._id,
             stageId: stage._id
         });
         const wasUserAlreadyInStage = stageMember !== null;
         if (!stageMember) {
-            console.log("User was not in stage before")
             // Create stage member
             stageMember = await this.createStageMember({
                 userId: user._id,
@@ -546,26 +566,32 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                 rY: 0,
                 rZ: 0
             });
-        } else {
+            console.log("stage member created " + (Date.now() - startTime) + "ms");
+        } else if (!stageMember.groupId.equals(groupId) || !stageMember.online) {
             // Update stage member
+            stageMember.online = true;
+            stageMember.groupId = groupId;
             await this.updateStageMember(stageMember._id, {
                 groupId: groupId,
                 online: true
             });
+            console.log("stage member updated " + (Date.now() - startTime) + "ms");
         }
-        console.log("stage member updated " + (Date.now() - startTime) + "ms");
 
         // Update user
-        user.stageId = stage._id;
-        user.stageMemberId = stageMember._id;
-        await this.updateUser(user._id, {
-            stageId: stage._id,
-            stageMemberId: stageMember._id,
-        })
-        console.log("user updated " + (Date.now() - startTime) + "ms");
+        if (!previousStageMemberId || !previousStageMemberId.equals(stageMember._id)) {
+            user.stageId = stage._id;
+            user.stageMemberId = stageMember._id;
+            await this.updateUser(user._id, {
+                stageId: stage._id,
+                stageMemberId: stageMember._id,
+            })
+            console.log("user updated " + (Date.now() - startTime) + "ms");
+        }
 
         // Send whole stage
-        this.getWholeStage(user._id, stage._id, isAdmin || wasUserAlreadyInStage)
+        console.log("Get whole stage");
+        await this.getWholeStage(user._id, stage._id, isAdmin || wasUserAlreadyInStage)
             .then(wholeStage => {
                 this.sendToUser(user._id, ServerStageEvents.STAGE_JOINED, {
                     ...wholeStage,
@@ -574,9 +600,11 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                 });
             });
 
-        if (previousStageMemberId) {
+        if (previousStageMemberId && !previousStageMemberId.equals(stageMember._id)) {
+            console.log("Updating previous stage member");
+            console.log(previousStageMemberId, stageMember._id);
             // Set old stage member offline (async!)
-            this.updateStageMember(previousStageMemberId, {online: false});
+            await this.updateStageMember(previousStageMemberId, {online: false});
             // Set old stage member tracks offline (async!)
             this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS).find({
                 stageMemberId: previousStageMemberId
@@ -586,7 +614,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     online: false
                 })));
 
-            this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
+            await this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
                 stageMemberId: previousStageMemberId
             })
                 .toArray()
@@ -594,13 +622,14 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     online: false
                 })));
 
-            this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS).find({
+            await this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS).find({
                 stageMemberId: previousStageMemberId
             })
                 .toArray()
                 .then(tracks => tracks.map(track => this.updateStageMemberOvTrack(track._id, {
                     online: false
                 })));
+            console.log("Set previous stage member offline " + (Date.now() - startTime) + "ms");
         }
 
         // Assign tracks of user to new stage and inform their stage members (async!)
@@ -613,18 +642,21 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         let user: User = await this.readUser(userId);
 
         if (user.stageId) {
+            console.log("User was in stage");
             const previousStageMemberId = user.stageMemberId;
 
             // Leave the user <-> stage member connection
             user.stageId = undefined;
             user.stageMemberId = undefined;
+            console.log("Updating user");
             await this.updateUser(user._id, {stageId: undefined, stageMemberId: undefined});
             this.sendToUser(user._id, ServerStageEvents.STAGE_LEFT);
 
             console.log("User updated " + (Date.now() - startTime) + "ms");
 
+            console.log("Updating stage member");
             // Set old stage member offline (async!)
-            this.updateStageMember(previousStageMemberId, {online: false});
+            await this.updateStageMember(previousStageMemberId, {online: false});
             // Set old stage member tracks offline (async!)
             this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS).find({
                 stageMemberId: previousStageMemberId
@@ -783,6 +815,8 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     createStageMember(initial: Omit<StageMember, "_id">): Promise<StageMember> {
+        console.log("createStageMember");
+        console.log(initial);
         return this._db.collection<StageMember>(Collections.STAGE_MEMBERS).insertOne(initial)
             .then(result => result.ops[0] as StageMember)
             .then(stageMember => {
@@ -1024,10 +1058,11 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     updateStageMember(id: StageMemberId, update: Partial<Omit<StageMember, "_id">>): Promise<void> {
+        console.log("Updating stage member " + id.toHexString());
         return this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {stageId: 1}})
             .then(result => {
                 if (result.value) {
-                    this.sendToJoinedStageMembers(result.value.stageId, ServerStageEvents.GROUP_CHANGED, {
+                    return this.sendToJoinedStageMembers(result.value.stageId, ServerStageEvents.STAGE_MEMBER_CHANGED, {
                         ...update,
                         _id: id
                     });
@@ -1102,6 +1137,9 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     async sendToStage(stageId: StageId, event: string, payload?: any): Promise<void> {
+        if (process.env.DEBUG_PAYLOAD) {
+            logger.trace("[SOCKETSERVER] SEND TO STAGE '" + stageId + "' " + event + ": ");
+        }
         const adminIds: UserId[] = await this._db.collection<Stage>(Collections.STAGES).findOne({_id: stageId}, {projection: {admins: 1}}).then(stage => stage.admins);
         const stageMemberIds: UserId[] = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS).find({stageId: stageId}, {projection: {userId: 1}}).toArray().then(stageMembers => stageMembers.map(stageMember => stageMember.userId));
         const userIds: {
@@ -1113,12 +1151,16 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
 
     sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void> {
+        if (process.env.DEBUG_PAYLOAD) {
+            logger.trace("[SOCKETSERVER] SEND TO STAGE MEMBERS '" + stageId + "' " + event + ": ");
+        }
         return this._db.collection(Collections.STAGES).findOne({_id: new ObjectId(stageId)}, {projection: {admins: 1}})
             .then(stage => stage.admins.forEach(admin => this.sendToUser(admin, event, payload)));
     }
 
     sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void> {
-        return this._db.collection(Collections.USERS).find({stageId: new ObjectId(stageId)}, {projection: {_id: 1}}).toArray()
+        return this._db.collection<User>(Collections.USERS).find({stageId: stageId}, {projection: {_id: 1}})
+            .toArray()
             .then((users: { _id: UserId }[]) => {
                 users.forEach(user => this.sendToUser(user._id, event, payload));
             });
