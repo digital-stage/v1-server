@@ -470,15 +470,15 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     // Delete associated producers
                     this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS).find({
                         deviceId: id
-                    }, {projection: {_id: 1}})
+                    }, {projection: {_id: 1, userId: 1}})
                         .toArray()
-                        .then(producers => producers.map(producer => this.deleteVideoProducer(id, producer._id)));
+                        .then(producers => producers.map(producer => this.deleteVideoProducer(producer.userId, producer._id)));
 
                     this._db.collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS).find({
                         deviceId: id
-                    }, {projection: {_id: 1}})
+                    }, {projection: {_id: 1, userId: 1}})
                         .toArray()
-                        .then(producers => producers.map(producer => this.deleteAudioProducer(id, producer._id)));
+                        .then(producers => producers.map(producer => this.deleteAudioProducer(producer.userId, producer._id)));
 
                     /*
                     this._db.collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS).find({
