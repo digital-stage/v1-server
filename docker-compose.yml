@@ -18,6 +18,7 @@ services:
     restart: always
     environment:
       MONGO_URL: 'mongodb://mongo:27017'
+      MONGO_DB: 'digitalserverdb'
       PORT: '4000'
     ports:
       - '4000:4000'
