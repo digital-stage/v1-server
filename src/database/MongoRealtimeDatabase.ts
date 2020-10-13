@@ -75,6 +75,10 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
     constructor(io: socketIO.Server, url: string) {
         this._io = io;
         this._mongoClient = new MongoClient(url, {
+            poolSize: 10,
+            bufferMaxEntries: 0,
+            reconnectTries: 5000,
+            useUnifiedTopology: true,
             useNewUrlParser: true
         });
     }
