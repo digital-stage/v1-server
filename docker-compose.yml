@@ -19,6 +19,7 @@ services:
     environment:
       MONGO_URL: 'mongodb://mongo:27017'
       MONGO_DB: 'digitalserverdb'
+      AUTH_URL: 'http://digital-auth:5000'
       PORT: '4000'
     ports:
       - '4000:4000'

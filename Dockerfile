@@ -5,6 +5,7 @@ ENV PORT=4000
 ENV USE_SSL=false
 ENV USE_REDIS=false
 ENV MONGO_URL=mongodb://mongo:27017
+ENV AUTH_URL=http://digital-auth:5000
 
 COPY package.json ./
 COPY tsconfig.json ./
