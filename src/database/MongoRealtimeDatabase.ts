@@ -605,26 +605,24 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             });
 
         if (previousStageMemberId && !previousStageMemberId.equals(stageMember._id)) {
-            console.log("Updating previous stage member");
-            console.log(previousStageMemberId, stageMember._id);
             // Set old stage member offline (async!)
             await this.updateStageMember(previousStageMemberId, {online: false});
             // Set old stage member tracks offline (async!)
+            // Remove stage member related audio and video
             this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS).find({
                 stageMemberId: previousStageMemberId
             })
                 .toArray()
-                .then(producers => producers.map(producer => this.updateStageMemberAudioProducer(producer._id, {
-                    online: false
-                })));
+                .then(producers => producers.map(producer => this.deleteStageMemberAudioProducer(producer._id)));
 
-            await this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
+            this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
                 stageMemberId: previousStageMemberId
             })
                 .toArray()
-                .then(producers => producers.map(producer => this.updateStageMemberVideoProducer(producer._id, {
-                    online: false
-                })));
+                .then(producers => producers.map(producer => {
+                    console.log("Removing stage related video")
+                    return this.deleteStageMemberVideoProducer(producer._id);
+                }))
 
             await this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS).find({
                 stageMemberId: previousStageMemberId
@@ -634,6 +632,21 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     online: false
                 })));
             console.log("Set previous stage member offline " + (Date.now() - startTime) + "ms");
+        } else {
+            // Create stage related audio and video producers
+            this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS)
+                .find({userId: userId}, {projection: {_id: 1}})
+                .toArray()
+                .then(producers => producers.map(producer => {
+                    console.log("Adding stage related video");
+                    return this.createStageMemberVideoProducer({
+                        stageMemberId: user.stageMemberId,
+                        globalProducerId: producer._id,
+                        userId: user._id,
+                        stageId: user.stageId,
+                        online: true
+                    })
+                }));
         }
 
         // Assign tracks of user to new stage and inform their stage members (async!)
@@ -661,23 +674,23 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             console.log("Updating stage member");
             // Set old stage member offline (async!)
             await this.updateStageMember(previousStageMemberId, {online: false});
-            // Set old stage member tracks offline (async!)
+
+            // Remove old stage member related video and audio
             this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS).find({
                 stageMemberId: previousStageMemberId
             })
                 .toArray()
-                .then(producers => producers.map(producer => this.updateStageMemberAudioProducer(producer._id, {
-                    online: false
-                })));
-
+                .then(producers => producers.map(producer => this.deleteStageMemberAudioProducer(producer._id)));
             this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
                 stageMemberId: previousStageMemberId
             })
                 .toArray()
-                .then(producers => producers.map(producer => this.updateStageMemberVideoProducer(producer._id, {
-                    online: false
-                })));
+                .then(producers => producers.map(producer => {
+                    console.log("Removing stage related video")
+                    return this.deleteStageMemberVideoProducer(producer._id);
+                }))
 
+            // Set old stage related tracks offline
             this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS).find({
                 stageMemberId: previousStageMemberId
             })
