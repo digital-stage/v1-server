@@ -48,3 +48,23 @@ Below the router and router distribution serivce is illustrated.
 For better understanding the connection between to datacenters is thickened.
 
 ![Cloud infrastructure overview](https://github.com/digital-stage/server/blob/master/doc/routers-between-datacenters.svg?raw=true)
+
+#### Client implementation
+A client initially provides the user the possibility to sign up or sign in.
+When authenticated by the auth service, it fetches JSON web token and uses it to connect to the stage management service.
+The stage member notifies other clients belonging to the user about a new client.
+In digital stage a single device represents a single client.
+The permission for the requests by the clients is proved always by the stage management service first, before the request is performed and eventually notifications are sent to other clients.
+
+##### Web Client
+The web client provides the user the handling of stages and the control of its client or other remote clients.
+The handling of stages includes to create, modify or delete stages and its sub data, as well as to join and leave a stage.
+We are using mediasoup to stream and receive WebRTC audio and video from routers.
+
+##### OV client
+This is a headless client, written in C++.
+It uses TASCAR as a 3D audio render engine and provides ultra low latency, uncompressed audio transmission.
+
+##### Ov Box
+The ov-box is a subset of configurations and software (including ov-client) to use ARM-devices (Rapsberry Pis) to send and receive ov based audio.
+SInce we are integrating the ov-client, we'll fully support ov-boxes inside the digital stage platform.
