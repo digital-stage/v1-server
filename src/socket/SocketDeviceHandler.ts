@@ -67,8 +67,13 @@ export class SocketDeviceHandler {
         this.socket.on(ClientDeviceEvents.REMOVE_AUDIO_PRODUCER, (payload: RemoveAudioProducerPayload, fn: (error?: string) => void) => {
                 const id = new ObjectId(payload);
                 return this.database.deleteAudioProducer(this.user._id, id)
-                    .then(() => fn())
-                    .catch(error => fn(error.message))
+                    .then(() => {
+                        fn()
+                    })
+                    .catch(error => {
+                        logger.error(error);
+                        fn(error.message);
+                    })
             }
         );
 
@@ -91,7 +96,13 @@ export class SocketDeviceHandler {
                 const id = new ObjectId(payload);
                 logger.debug("[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER " + payload);
                 return this.database.deleteVideoProducer(this.user._id, id)
-                    .catch(error => fn(error.message))
+                    .then(() => {
+                        fn()
+                    })
+                    .catch(error => {
+                        logger.error(error);
+                        fn(error.message);
+                    })
             }
         );
 
