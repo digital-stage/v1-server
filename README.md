@@ -67,4 +67,13 @@ It uses TASCAR as a 3D audio render engine and provides ultra low latency, uncom
 
 ##### Ov Box
 The ov-box is a subset of configurations and software (including ov-client) to use ARM-devices (Rapsberry Pis) to send and receive ov based audio.
-SInce we are integrating the ov-client, we'll fully support ov-boxes inside the digital stage platform.
+Since we are integrating the ov-client, we'll fully support ov-boxes inside the digital stage platform.
+
+## Scalability
+Since we want to provide the digital stage for a hugh community, we always take an eye on the scalability of the project.
+Featured by Digital Ocean we are running several instances of each service.
+For socket.IO we are using REDIS to synchronize the events between all instances.
+This regards the stage management and auth service.
+Further instead of using a single MongoDB droplet we decided to use multiple MongoDB droplets running inside a cluster.
+
+To secure the whole platform we are using the virtual private networks to allow only private connections between services and databases, that don't need to communicate with the outer world.
