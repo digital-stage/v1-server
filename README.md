@@ -5,6 +5,16 @@ This service orchestrates the application state inside the digital-stage platfor
 The stage management includes the persistent storage and distribution of all stages, their associated data and devices.
 Internal we are handling the states event-driven and communicate over socket.IO.
 
+
+# docker usage for development
+
+First run `docker-compose build` to build.
+
+`docker-compuse up -d` starts a mongodb (ephemeral) and the server.
+
+If the container should be run with `docker run` instead of 'docker-compose' it is import to set `--init`
+
+
 # The Digital stage platform
 ## Platform overview
 
