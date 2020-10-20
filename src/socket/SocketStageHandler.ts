@@ -5,14 +5,15 @@ import * as pino from "pino";
 import {ClientStageEvents, ServerStageEvents} from "../events";
 import {ObjectId} from "mongodb";
 import {
+    AddCustomGroupPayload,
     AddGroupPayload,
     AddStagePayload,
     ChangeGroupPayload,
     ChangeStageMemberPayload,
     ChangeStagePayload,
-    JoinStagePayload,
+    JoinStagePayload, RemoveCustomGroupPayload,
     RemoveGroupPayload,
-    RemoveStagePayload
+    RemoveStagePayload, SetCustomGroupPayload, UpdateCustomGroupPayload
 } from "../payloads";
 
 const logger = pino({
@@ -88,8 +89,7 @@ export class SocketStageHandler {
                                 .then(stage => {
                                     if (stage)
                                         return this.database.updateGroup(id, {
-                                            name: payload.update.name,
-                                            volume: payload.update.volume
+                                            ...payload.update
                                         })
                                 })
                         }
@@ -109,6 +109,35 @@ export class SocketStageHandler {
                                 })
                         }
                     })
+            }
+        );
+
+        this.socket.on(ClientStageEvents.ADD_CUSTOM_GROUP, (payload: AddCustomGroupPayload) => {// CHANGE GROUP
+                const groupId = new ObjectId(payload.groupId);
+                return this.database.createCustomGroup({
+                    userId: this.user._id,
+                    groupId: groupId,
+                    volume: payload.volume
+                });
+            }
+        );
+
+        this.socket.on(ClientStageEvents.SET_CUSTOM_GROUP, (payload: SetCustomGroupPayload) => {// CHANGE GROUP
+                const groupId = new ObjectId(payload.groupId);
+                return this.database.setCustomGroup(this.user._id, groupId, payload.volume);
+            }
+        );
+
+        this.socket.on(ClientStageEvents.UPDATE_CUSTOM_GROUP, (payload: UpdateCustomGroupPayload) => {// CHANGE GROUP
+                const customGroupId = new ObjectId(payload.customGroupId);
+                return this.database.updateCustomGroupByUser(this.user._id, customGroupId, payload.volume);
+            }
+        );
+
+
+        this.socket.on(ClientStageEvents.REMOVE_CUSTOM_GROUP, (payload: RemoveCustomGroupPayload) => {// CHANGE GROUP
+                const customGroupId = new ObjectId(payload.customGroupId);
+                return this.database.deleteCustomGroupByUserAndGroup(this.user._id, customGroupId);
             }
         );
 

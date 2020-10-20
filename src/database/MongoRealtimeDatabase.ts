@@ -606,7 +606,7 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             });
 
         if (!previousStageMemberId || !previousStageMemberId.equals(stageMember._id)) {
-            if( previousStageMemberId ) {
+            if (previousStageMemberId) {
                 // Set old stage member offline (async!)
                 await this.updateStageMember(previousStageMemberId, {online: false});
                 // Set old stage member tracks offline (async!)
@@ -877,6 +877,17 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             });
     }
 
+    deleteCustomGroupByUserAndGroup(userId: UserId, groupId: GroupId): Promise<void> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndDelete({
+            userId: userId,
+            groupId: groupId
+        }, {projection: {_id: 1, userId: 1}})
+            .then(result => {
+                if (result.value)
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_REMOVED, result.value._id);
+            })
+    }
+
     deleteCustomGroup(id: CustomGroupId): Promise<void> {
         return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
             .then(result => {
@@ -998,6 +1009,10 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({_id: id});
     }
 
+    readCustomGroupByUserAndGroup(userId: UserId, groupId: GroupId): Promise<CustomGroup> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({userId: userId, groupId: groupId});
+    }
+
     readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember> {
         return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOne({_id: id});
     }
@@ -1018,6 +1033,25 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         return this._db.collection<Track>(Collections.TRACKS).findOne({_id: id});
     }
 
+    setCustomGroup(userId: UserId, groupId: GroupId, volume: number): Promise<void> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate(
+            {userId: userId, groupId: groupId},
+            {$set: {volume: volume}},
+            {upsert: true}
+        )
+            .then(result => {
+                if (result.value) {
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_SET, {
+                        volume: volume,
+                        groupId: groupId,
+                        userId: userId,
+                        _id: result.value._id,
+                    });
+                }
+            })
+    }
+
+
     updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, "_id">>): Promise<void> {
         return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})
             .then(result => {
@@ -1029,6 +1063,19 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                 }
             });
     }
+
+    updateCustomGroupByUser(userId: UserId, id: CustomGroupId, volume: number): Promise<void> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate({_id: id, userId: userId}, {$set: {volume: volume}}, {projection: {userId: 1}})
+            .then(result => {
+                if (result.value) {
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
+                        volume: volume,
+                        _id: id
+                    });
+                }
+            });
+    }
+
 
     updateCustomStageMember(id: CustomStageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void> {
         return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})

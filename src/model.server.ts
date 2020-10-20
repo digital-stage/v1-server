@@ -203,7 +203,7 @@ export interface CustomGroup {
     volume: number;
 
     // Optimizations for performance
-    stageId: StageId;
+    //stageId: StageId;
 }
 
 /**

@@ -143,9 +143,23 @@ export interface ChangeGroupPayload {
 export type RemoveGroupPayload = string;
 
 // CUSTOM GROUP
+export interface AddCustomGroupPayload {
+    groupId: string;
+    volume: number;
+}
+
 export interface SetCustomGroupPayload {
     groupId: string;
     volume: number;
+}
+
+export interface UpdateCustomGroupPayload {
+    customGroupId: string;
+    volume: number;
+}
+
+export interface RemoveCustomGroupPayload {
+    customGroupId: string;
 }
 
 // STAGE MEMBER

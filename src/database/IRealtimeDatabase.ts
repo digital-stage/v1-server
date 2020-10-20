@@ -135,7 +135,11 @@ export interface IRealtimeDatabase {
 
     readCustomGroup(id: CustomGroupId): Promise<CustomGroup>;
 
-    updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, "_id">>): Promise<void>;
+    setCustomGroup(userId: UserId, groupId: GroupId, volume: number): Promise<void>;
+
+    updateCustomGroupByUser(userId: UserId, id: CustomGroupId, volume: number): Promise<void>;
+
+    deleteCustomGroupByUserAndGroup(userId: UserId, groupId: GroupId): Promise<void>;
 
     deleteCustomGroup(id: CustomGroupId): Promise<void>;
 
