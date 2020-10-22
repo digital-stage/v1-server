@@ -3,9 +3,9 @@ import {
     CustomGroup,
     CustomGroupId,
     CustomStageMember,
-    CustomStageMemberAudioProducer,
+    CustomStageMemberAudioProducer, CustomStageMemberAudioProducerId,
     CustomStageMemberId,
-    CustomStageMemberOvTrack,
+    CustomStageMemberOvTrack, CustomStageMemberOvTrackId,
     Device,
     DeviceId,
     GlobalAudioProducer,
@@ -787,24 +787,6 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             .then(() => this._db.collection<Stage>(Collections.STAGES).deleteOne({_id: id}));
     }
 
-    createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).insertOne(initial)
-            .then(result => result.ops[0] as CustomGroup)
-            .then(customGroup => {
-                this.sendToUser(customGroup.userId, ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
-                return customGroup;
-            });
-    }
-
-    createCustomStageMember(initial: Omit<CustomStageMember, "_id">): Promise<CustomStageMember> {
-        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).insertOne(initial)
-            .then(result => result.ops[0] as CustomStageMember)
-            .then(customStageMember => {
-                this.sendToUser(customStageMember.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED, customStageMember);
-                return customStageMember;
-            });
-    }
-
     createGroup(initial: Omit<Group, "_id">): Promise<Group> {
         return this._db.collection<Group>(Collections.GROUPS).insertOne({
             ...initial,
@@ -877,32 +859,6 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             });
     }
 
-    deleteCustomGroupByUserAndGroup(userId: UserId, groupId: GroupId): Promise<void> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndDelete({
-            userId: userId,
-            groupId: groupId
-        }, {projection: {_id: 1, userId: 1}})
-            .then(result => {
-                if (result.value)
-                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_REMOVED, result.value._id);
-            })
-    }
-
-    deleteCustomGroup(id: CustomGroupId): Promise<void> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
-            .then(result => {
-                //TODO: Check if anything has to be done here
-                this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_REMOVED, id);
-            });
-    }
-
-    deleteCustomStageMember(id: CustomGroupId): Promise<void> {
-        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
-            .then(result => {
-                //TODO: Check if anything has to be done here
-                this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_REMOVED, id);
-            });
-    }
 
     deleteGroup(id: GroupId): Promise<void> {
         return this._db.collection<Group>(Collections.GROUPS).findOneAndDelete({_id: id}, {
@@ -1005,18 +961,6 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         return this._db.collection<TrackPreset>(Collections.TRACK_PRESETS).findOne({_id: id});
     }
 
-    readCustomGroup(id: CustomGroupId): Promise<CustomGroup> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({_id: id});
-    }
-
-    readCustomGroupByUserAndGroup(userId: UserId, groupId: GroupId): Promise<CustomGroup> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({userId: userId, groupId: groupId});
-    }
-
-    readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember> {
-        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOne({_id: id});
-    }
-
     readGroup(id: GroupId): Promise<Group> {
         return this._db.collection<Group>(Collections.GROUPS).findOne({_id: id});
     }
@@ -1031,62 +975,6 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
 
     readTrack(id: TrackId): Promise<Track> {
         return this._db.collection<Track>(Collections.TRACKS).findOne({_id: id});
-    }
-
-    setCustomGroup(userId: UserId, groupId: GroupId, volume: number): Promise<void> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate(
-            {userId: userId, groupId: groupId},
-            {$set: {volume: volume}},
-            {upsert: true}
-        )
-            .then(result => {
-                if (result.value) {
-                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_SET, {
-                        volume: volume,
-                        groupId: groupId,
-                        userId: userId,
-                        _id: result.value._id,
-                    });
-                }
-            })
-    }
-
-
-    updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, "_id">>): Promise<void> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})
-            .then(result => {
-                if (result.value) {
-                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
-                        ...update,
-                        _id: id
-                    });
-                }
-            });
-    }
-
-    updateCustomGroupByUser(userId: UserId, id: CustomGroupId, volume: number): Promise<void> {
-        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate({_id: id, userId: userId}, {$set: {volume: volume}}, {projection: {userId: 1}})
-            .then(result => {
-                if (result.value) {
-                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
-                        volume: volume,
-                        _id: id
-                    });
-                }
-            });
-    }
-
-
-    updateCustomStageMember(id: CustomStageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void> {
-        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})
-            .then(result => {
-                if (result.value) {
-                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, {
-                        ...update,
-                        _id: id
-                    });
-                }
-            });
     }
 
     updateGroup(id: GroupId, update: Partial<Omit<Group, "_id">>): Promise<void> {
@@ -1159,6 +1047,248 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
             });
     }
 
+    /* CUSTOMIZED STATES FOR EACH STAGE MEMBER */
+
+    createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).insertOne(initial)
+            .then(result => result.ops[0] as CustomGroup)
+            .then(customGroup => {
+                this.sendToUser(customGroup.userId, ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
+                return customGroup;
+            });
+    }
+
+    updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, "_id">>): Promise<void> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate({
+            _id: id
+        }, {$set: update}, {projection: {userId: 1}})
+            .then(result => {
+                if (result.value) {
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
+                        ...update,
+                        _id: id
+                    });
+                }
+            });
+    }
+
+    setCustomGroup(userId: UserId, groupId: GroupId, volume: number): Promise<void> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate(
+            {userId: userId, groupId: groupId},
+            {$set: {volume: volume}},
+            {upsert: true, projection: {_id: 1}}
+        )
+            .then(result => {
+                if (result.value) {
+                    // Return updated document
+                    this.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
+                        volume: volume,
+                        _id: result.value._id,
+                    });
+                } else {
+                    if (result.ok) {
+                        // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
+                        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({
+                            userId: userId, groupId: groupId
+                        }).then(result => this.sendToUser(result.userId, ServerStageEvents.CUSTOM_GROUP_ADDED, result));
+                    }
+                }
+            })
+    }
+
+    readCustomGroup(id: CustomGroupId): Promise<CustomGroup> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({_id: id});
+    }
+
+    deleteCustomGroup(id: CustomGroupId): Promise<void> {
+        return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
+            .then(result => {
+                //TODO: Check if anything has to be done here
+                this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_REMOVED, id);
+            });
+    }
+
+    createCustomStageMember(initial: Omit<CustomStageMember, "_id">): Promise<CustomStageMember> {
+        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).insertOne(initial)
+            .then(result => result.ops[0] as CustomStageMember)
+            .then(customStageMember => {
+                this.sendToUser(customStageMember.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED, customStageMember);
+                return customStageMember;
+            });
+    }
+
+    updateCustomStageMember(id: CustomStageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void> {
+        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})
+            .then(result => {
+                if (result.value) {
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, {
+                        ...update,
+                        _id: id
+                    });
+                }
+            });
+    }
+
+    setCustomStageMember(userId: UserId, stageMemberId: StageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void> {
+        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndUpdate(
+            {
+                stageMemberId: stageMemberId,
+                userId: userId
+            },
+            {$set: update},
+            {upsert: true, projection: {_id: 1}}
+        )
+            .then(result => {
+                if (result.value) {
+                    // Return updated document
+                    this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, {
+                        ...update,
+                        _id: result.value._id,
+                    });
+                } else {
+                    if (result.ok) {
+                        // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
+                        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOne({
+                            stageMemberId: stageMemberId,
+                            userId: userId
+                        }).then(result => this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED, result));
+                    }
+                }
+            })
+    }
+
+    readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember> {
+        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOne({_id: id});
+    }
+
+    deleteCustomStageMember(id: CustomGroupId): Promise<void> {
+        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
+            .then(result => {
+                this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_REMOVED, id);
+            });
+    }
+
+    createCustomStageMemberAudioProducer(initial: Omit<CustomStageMemberAudioProducer, "_id">): Promise<CustomStageMemberAudioProducer> {
+        return this._db.collection<CustomStageMemberAudioProducer>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS).insertOne(initial)
+            .then(result => result.ops[0] as CustomStageMemberAudioProducer)
+            .then(customStageMemberAudioProducer => {
+                this.sendToUser(customStageMemberAudioProducer.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED, customStageMemberAudioProducer);
+                return customStageMemberAudioProducer;
+            });
+    }
+
+    readCustomStageMemberAudioProducer(id: StageMemberAudioProducerId): Promise<CustomStageMemberAudioProducer> {
+        return this._db.collection<CustomStageMemberAudioProducer>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS).findOne({_id: id});
+    }
+
+    setCustomStageMemberAudioProducer(userId: UserId, stageMemberAudioProducerId: StageMemberAudioProducerId, update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>): Promise<void> {
+        return this._db.collection<CustomStageMemberAudioProducer>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS).findOneAndUpdate(
+            {
+                stageMemberAudioProducerId: stageMemberAudioProducerId,
+                userId: userId
+            },
+            {$set: update},
+            {upsert: true, projection: {_id: 1}}
+        )
+            .then(result => {
+                if (result.value) {
+                    // Return updated document
+                    this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED, {
+                        ...update,
+                        _id: result.value._id,
+                    });
+                } else {
+                    if (result.ok) {
+                        // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
+                        return this._db.collection<CustomStageMemberAudioProducer>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS).findOne({
+                            stageMemberAudioProducerId: stageMemberAudioProducerId,
+                            userId: userId
+                        }).then(result => this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED, result));
+                    }
+                }
+            })
+    }
+
+    updateCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId, update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>): Promise<void> {
+        return this._db.collection<CustomStageMemberAudioProducer>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})
+            .then(result => {
+                if (result.value) {
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED, {
+                        ...update,
+                        _id: id
+                    });
+                }
+            });
+    }
+
+    deleteCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId): Promise<void> {
+        return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
+            .then(result => {
+                this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_REMOVED, id);
+            });
+    }
+
+    createCustomStageMemberOvTrack(initial: Omit<CustomStageMemberOvTrack, "_id">): Promise<CustomStageMemberOvTrack> {
+        return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS).insertOne(initial)
+            .then(result => result.ops[0] as CustomStageMemberOvTrack)
+            .then(customStageMemberOvTrack => {
+                this.sendToUser(customStageMemberOvTrack.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED, customStageMemberOvTrack);
+                return customStageMemberOvTrack;
+            });
+    }
+
+    readCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<CustomStageMemberOvTrack> {
+        return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS).findOne({_id: id});
+    }
+
+    setCustomStageMemberOvTrack(userId: UserId, stageMemberOvTrackId: StageMemberOvTrackId, update: Partial<Omit<CustomStageMemberOvTrack, "_id">>): Promise<void> {
+        return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS).findOneAndUpdate(
+            {
+                stageMemberOvTrackId: stageMemberOvTrackId,
+                userId: userId
+            },
+            {$set: update},
+            {upsert: true, projection: {_id: 1}}
+        )
+            .then(result => {
+                if (result.value) {
+                    // Return updated document
+                    this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, {
+                        ...update,
+                        _id: result.value._id,
+                    });
+                } else {
+                    if (result.ok) {
+                        // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
+                        return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS).findOne({
+                            stageMemberOvTrackId: stageMemberOvTrackId,
+                            userId: userId
+                        }).then(result => this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED, result));
+                    }
+                }
+            })
+    }
+
+    updateCustomStageMemberOvTrack(id: ObjectId, update: Partial<Pick<CustomStageMemberOvTrack, "stageId" | "userId" | "volume" | "x" | "y" | "z" | "rX" | "rY" | "rZ" | "stageMemberOvTrackId" | "gain" | "directivity">>): Promise<void> {
+        return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS).findOneAndUpdate({_id: id}, {$set: update}, {projection: {userId: 1}})
+            .then(result => {
+                if (result.value) {
+                    this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, {
+                        ...update,
+                        _id: id
+                    });
+                }
+            });
+    }
+
+    deleteCustomStageMemberOvTrack(id: ObjectId): Promise<void> {
+        return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS).findOneAndDelete({_id: id}, {projection: {userId: 1}})
+            .then(result => {
+                this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_REMOVED, id);
+            });
+    }
+
+    /* SENDING METHODS */
 
     public async sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<any> {
         if (user.stageMemberId) {

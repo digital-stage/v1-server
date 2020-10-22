@@ -1,8 +1,8 @@
 import {
     CustomGroup,
     CustomGroupId,
-    CustomStageMember,
-    CustomStageMemberId,
+    CustomStageMember, CustomStageMemberAudioProducer, CustomStageMemberAudioProducerId,
+    CustomStageMemberId, CustomStageMemberOvTrack, CustomStageMemberOvTrackId,
     Device,
     DeviceId,
     GlobalAudioProducer,
@@ -113,8 +113,6 @@ export interface IRealtimeDatabase {
 
     readManagedStage(userId: UserId, id: StageId): Promise<Stage>;
 
-    readManagedStageByGroupId(userId: UserId, id: GroupId): Promise<Stage>;
-
     joinStage(userId: UserId, stageId: StageId, groupId: GroupId, password?: string): Promise<void>;
 
     leaveStage(userId: UserId, skipLeaveNotification?: boolean): Promise<void>;
@@ -131,18 +129,6 @@ export interface IRealtimeDatabase {
 
     deleteGroup(id: GroupId): Promise<void>;
 
-    createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup>;
-
-    readCustomGroup(id: CustomGroupId): Promise<CustomGroup>;
-
-    setCustomGroup(userId: UserId, groupId: GroupId, volume: number): Promise<void>;
-
-    updateCustomGroupByUser(userId: UserId, id: CustomGroupId, volume: number): Promise<void>;
-
-    deleteCustomGroupByUserAndGroup(userId: UserId, groupId: GroupId): Promise<void>;
-
-    deleteCustomGroup(id: CustomGroupId): Promise<void>;
-
     createStageMember(initial: Omit<StageMember, "_id">): Promise<StageMember>;
 
     readStageMember(id: StageMemberId): Promise<StageMember>;
@@ -150,14 +136,6 @@ export interface IRealtimeDatabase {
     updateStageMember(id: StageMemberId, update: Partial<Omit<StageMember, "_id">>): Promise<void>;
 
     deleteStageMember(id: StageMemberId): Promise<void>;
-
-    createCustomStageMember(initial: Omit<CustomStageMember, "_id">): Promise<CustomStageMember>;
-
-    readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember>;
-
-    updateCustomStageMember(id: CustomStageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void>;
-
-    deleteCustomStageMember(id: CustomStageMemberId): Promise<void>;
 
     createStageMemberOvTrack(initial: Omit<StageMemberOvTrack, "_id">): Promise<StageMemberOvTrack>;
 
@@ -182,6 +160,48 @@ export interface IRealtimeDatabase {
     updateStageMemberVideoProducer(id: StageMemberVideoProducerId, update: Partial<Omit<StageMemberVideoProducer, "_id">>): Promise<void>;
 
     deleteStageMemberVideoProducer(id: StageMemberVideoProducerId): Promise<void>;
+
+
+    // Customized elements for each stage member
+    createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup>;
+
+    readCustomGroup(id: CustomGroupId): Promise<CustomGroup>;
+
+    setCustomGroup(userId: UserId, groupId: GroupId, volume: number): Promise<void>;
+
+    updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, "_id">>): Promise<void>;
+
+    deleteCustomGroup(id: CustomGroupId): Promise<void>;
+
+    createCustomStageMember(initial: Omit<CustomStageMember, "_id">): Promise<CustomStageMember>;
+
+    readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember>;
+
+    setCustomStageMember(userId: UserId, stageMemberId: StageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void>;
+
+    updateCustomStageMember(id: CustomStageMemberId, update: Partial<Omit<CustomStageMember, "_id">>): Promise<void>;
+
+    deleteCustomStageMember(id: CustomStageMemberId): Promise<void>;
+
+    createCustomStageMemberAudioProducer(initial: Omit<CustomStageMemberAudioProducer, "_id">): Promise<CustomStageMemberAudioProducer>;
+
+    readCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId): Promise<CustomStageMemberAudioProducer>;
+
+    setCustomStageMemberAudioProducer(userId: UserId, stageMemberAudioProducerId: StageMemberAudioProducerId, update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>): Promise<void>;
+
+    updateCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId, update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>): Promise<void>;
+
+    deleteCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId): Promise<void>;
+
+    createCustomStageMemberOvTrack(initial: Omit<CustomStageMemberOvTrack, "_id">): Promise<CustomStageMemberOvTrack>;
+
+    readCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<CustomStageMemberOvTrack>;
+
+    setCustomStageMemberOvTrack(userId: UserId, stageMemberOvTrackId: StageMemberOvTrackId, update: Partial<Omit<CustomStageMemberOvTrack, "_id">>): Promise<void>;
+
+    updateCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId, update: Partial<Omit<CustomStageMemberOvTrack, "_id">>): Promise<void>;
+
+    deleteCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<void>;
 
 
     // MESSAGING

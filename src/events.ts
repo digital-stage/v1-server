@@ -88,8 +88,6 @@ export enum ServerStageEvents {
     CUSTOM_GROUP_CHANGED = "custom-group-changed",
     CUSTOM_GROUP_REMOVED = "custom-group-removed",
 
-    // NEW
-    CUSTOM_GROUP_SET = "custom-group-set",
 
     STAGE_MEMBER_ADDED = "stage-member-added",
     STAGE_MEMBER_CHANGED = "stage-member-changed",
@@ -127,14 +125,25 @@ export enum ClientStageEvents {
     LEAVE_STAGE = "leave-stage",
     LEAVE_STAGE_FOR_GOOD = "leave-stage-for-good",
 
-    ADD_CUSTOM_GROUP = "add-custom-group",                          // upsert
-    UPDATE_CUSTOM_GROUP = "update-custom-group",                          // upsert
-    SET_CUSTOM_GROUP = "set-custom-group",                          // upsert
+    ADD_CUSTOM_GROUP = "add-custom-group",
+    UPDATE_CUSTOM_GROUP = "update-custom-group",
+    SET_CUSTOM_GROUP = "set-custom-group",
     REMOVE_CUSTOM_GROUP = "remove-custom-group",
 
-    SET_CUSTOM_STAGE_MEMBER = "set-custom-stage-member",            // upsert
-    SET_CUSTOM_STAGE_MEMBER_AUDIO = "set-custom-stage-member-audio",// upsert
-    SET_CUSTOM_STAGE_MEMBER_OV = "set-custom-stage-member-ov",      // upsert
+    ADD_CUSTOM_STAGE_MEMBER = "add-custom-stage-member",
+    UPDATE_CUSTOM_STAGE_MEMBER = "update-custom-stage-member",
+    SET_CUSTOM_STAGE_MEMBER = "set-custom-stage-member",
+    REMOVE_CUSTOM_STAGE_MEMBER = "remove-custom-stage-member",
+
+    ADD_CUSTOM_STAGE_MEMBER_AUDIO = "add-custom-stage-member-audio",
+    UPDATE_CUSTOM_STAGE_MEMBER_AUDIO = "update-custom-stage-member-audio",
+    SET_CUSTOM_STAGE_MEMBER_AUDIO = "set-custom-stage-member-audio",
+    REMOVE_CUSTOM_STAGE_MEMBER_AUDIO = "remove-custom-stage-member-audio",
+
+    ADD_CUSTOM_STAGE_MEMBER_OV = "add-custom-stage-member-ov",
+    UPDATE_CUSTOM_STAGE_MEMBER_OV = "update-custom-stage-member-ov",
+    SET_CUSTOM_STAGE_MEMBER_OV = "set-custom-stage-member-ov",
+    REMOVE_CUSTOM_STAGE_MEMBER_OV = "remove-custom-stage-member-ov",
 
     // Following shall be only possible if client is admin of stage
     CHANGE_STAGE = "change-stage",

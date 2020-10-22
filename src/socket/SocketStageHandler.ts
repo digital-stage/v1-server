@@ -5,16 +5,26 @@ import * as pino from "pino";
 import {ClientStageEvents, ServerStageEvents} from "../events";
 import {ObjectId} from "mongodb";
 import {
-    AddCustomGroupPayload,
+    AddCustomGroupPayload, AddCustomStageMemberAudioPayload, AddCustomStageMemberOvPayload, AddCustomStageMemberPayload,
     AddGroupPayload,
     AddStagePayload,
     ChangeGroupPayload,
     ChangeStageMemberPayload,
     ChangeStagePayload,
-    JoinStagePayload, RemoveCustomGroupPayload,
+    JoinStagePayload,
+    RemoveCustomGroupPayload,
+    RemoveCustomStageMemberAudioPayload,
+    RemoveCustomStageMemberOvPayload,
+    RemoveCustomStageMemberPayload,
     RemoveGroupPayload,
-    RemoveStagePayload, SetCustomGroupPayload, UpdateCustomGroupPayload
+    RemoveStagePayload,
+    SetCustomGroupPayload, SetCustomStageMemberAudioPayload, SetCustomStageMemberPayload,
+    UpdateCustomGroupPayload,
+    UpdateCustomStageMemberAudioPayload,
+    UpdateCustomStageMemberOvPayload,
+    UpdateCustomStageMemberPayload
 } from "../payloads";
+import {SetCustomStageMemberOvTrackPayload} from "../../../webclient/lib/digitalstage/common/payloads";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
@@ -122,22 +132,169 @@ export class SocketStageHandler {
             }
         );
 
+        this.socket.on(ClientStageEvents.UPDATE_CUSTOM_GROUP, (payload: UpdateCustomGroupPayload) => {// CHANGE GROUP
+            const id = new ObjectId(payload.id);
+            return this.database.readCustomGroup(id)
+                .then(item => {
+                    if (item.userId === this.user._id)
+                        return this.database.updateCustomGroup(id, {
+                            volume: payload.volume
+                        })
+                });
+        });
+
         this.socket.on(ClientStageEvents.SET_CUSTOM_GROUP, (payload: SetCustomGroupPayload) => {// CHANGE GROUP
                 const groupId = new ObjectId(payload.groupId);
                 return this.database.setCustomGroup(this.user._id, groupId, payload.volume);
             }
         );
 
-        this.socket.on(ClientStageEvents.UPDATE_CUSTOM_GROUP, (payload: UpdateCustomGroupPayload) => {// CHANGE GROUP
-                const customGroupId = new ObjectId(payload.customGroupId);
-                return this.database.updateCustomGroupByUser(this.user._id, customGroupId, payload.volume);
+        this.socket.on(ClientStageEvents.REMOVE_CUSTOM_GROUP, (payload: RemoveCustomGroupPayload) => {// CHANGE GROUP
+                const id = new ObjectId(payload.id);
+                return this.database.readCustomGroup(id)
+                    .then(group => {
+                        if (group && group.userId === this.user._id)
+                            return this.database.deleteCustomGroup(id);
+                    })
             }
         );
 
+        this.socket.on(ClientStageEvents.ADD_CUSTOM_STAGE_MEMBER, (payload: AddCustomStageMemberPayload) => {// CHANGE GROUP
+                const stageMemberId = new ObjectId(payload.stageMemberId);
+                return this.database.readStageMember(stageMemberId)
+                    .then(stageMember => {
+                        if (stageMember)
+                            return this.database.createCustomStageMember({
+                                volume: payload.volume,
+                                x: payload.x,
+                                y: payload.y,
+                                z: payload.z,
+                                rX: payload.rX,
+                                rY: payload.rY,
+                                rZ: payload.rY,
+                                userId: this.user._id,
+                                stageMemberId: stageMemberId,
+                                stageId: stageMember.stageId
+                            });
+                    })
+            }
+        );
 
-        this.socket.on(ClientStageEvents.REMOVE_CUSTOM_GROUP, (payload: RemoveCustomGroupPayload) => {// CHANGE GROUP
-                const customGroupId = new ObjectId(payload.customGroupId);
-                return this.database.deleteCustomGroupByUserAndGroup(this.user._id, customGroupId);
+        this.socket.on(ClientStageEvents.UPDATE_CUSTOM_STAGE_MEMBER, (payload: UpdateCustomStageMemberPayload) => {// CHANGE GROUP
+            const id = new ObjectId(payload.id);
+            return this.database.readCustomStageMember(id)
+                .then(item => {
+                    if (item.userId === this.user._id)
+                        return this.database.updateCustomStageMember(id, payload.update)
+                });
+        });
+
+        this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER, (payload: SetCustomStageMemberPayload) => {// CHANGE GROUP
+                const stageMemberId = new ObjectId(payload.stageMemberId);
+                return this.database.setCustomStageMember(this.user._id, stageMemberId, payload.update);
+            }
+        );
+
+        this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER, (payload: RemoveCustomStageMemberPayload) => {// CHANGE GROUP
+                const id = new ObjectId(payload.id);
+                return this.database.readCustomStageMember(id)
+                    .then(group => {
+                        if (group && group.userId === this.user._id)
+                            return this.database.deleteCustomStageMember(id);
+                    })
+            }
+        );
+
+        this.socket.on(ClientStageEvents.ADD_CUSTOM_STAGE_MEMBER_AUDIO, (payload: AddCustomStageMemberAudioPayload) => {// CHANGE GROUP
+                const stageMemberAudioId = new ObjectId(payload.stageMemberAudioId);
+                return this.database.readStageMemberAudioProducer(stageMemberAudioId)
+                    .then(stageMemberAudio => {
+                        if (stageMemberAudio)
+                            return this.database.createCustomStageMemberAudioProducer({
+                                volume: payload.volume,
+                                x: payload.x,
+                                y: payload.y,
+                                z: payload.z,
+                                rX: payload.rX,
+                                rY: payload.rY,
+                                rZ: payload.rY,
+                                userId: this.user._id,
+                                stageMemberAudioProducerId: stageMemberAudioId,
+                                stageId: stageMemberAudio.stageId
+                            });
+                    })
+            }
+        );
+
+        this.socket.on(ClientStageEvents.UPDATE_CUSTOM_STAGE_MEMBER_AUDIO, (payload: UpdateCustomStageMemberAudioPayload) => {// CHANGE GROUP
+            const id = new ObjectId(payload.id);
+            return this.database.readCustomStageMemberAudioProducer(id)
+                .then(item => {
+                    if (item.userId === this.user._id)
+                        return this.database.updateCustomStageMemberAudioProducer(id, payload.update)
+                });
+        });
+
+        this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_AUDIO, (payload: SetCustomStageMemberAudioPayload) => {// CHANGE GROUP
+                const stageMemberAudioId = new ObjectId(payload.stageMemberAudioId);
+                return this.database.setCustomStageMember(this.user._id, stageMemberAudioId, payload.update);
+            }
+        );
+
+        this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_AUDIO, (payload: RemoveCustomStageMemberAudioPayload) => {// CHANGE GROUP
+                const id = new ObjectId(payload.id);
+                return this.database.readCustomStageMemberAudioProducer(id)
+                    .then(group => {
+                        if (group && group.userId === this.user._id)
+                            return this.database.deleteCustomStageMemberAudioProducer(id);
+                    })
+            }
+        );
+
+        this.socket.on(ClientStageEvents.ADD_CUSTOM_STAGE_MEMBER_OV, (payload: AddCustomStageMemberOvPayload) => {// CHANGE GROUP
+                const stageMemberOvTrackId = new ObjectId(payload.stageMemberOvTrackId);
+                return this.database.readStageMemberOvTrack(stageMemberOvTrackId)
+                    .then(stageMemberOv => {
+                        if (stageMemberOv)
+                            return this.database.createCustomStageMemberOvTrack({
+                                volume: payload.volume,
+                                gain: payload.gain,
+                                directivity: payload.directivity,
+                                x: payload.x,
+                                y: payload.y,
+                                z: payload.z,
+                                rX: payload.rX,
+                                rY: payload.rY,
+                                rZ: payload.rY,
+                                userId: this.user._id,
+                                stageMemberOvTrackId: stageMemberOvTrackId,
+                                stageId: stageMemberOv.stageId
+                            });
+                    })
+            }
+        );
+        this.socket.on(ClientStageEvents.UPDATE_CUSTOM_STAGE_MEMBER_OV, (payload: UpdateCustomStageMemberOvPayload) => {// CHANGE GROUP
+            const id = new ObjectId(payload.id);
+            return this.database.readCustomStageMemberOvTrack(id)
+                .then(item => {
+                    if (item.userId === this.user._id)
+                        return this.database.updateCustomStageMemberOvTrack(id, payload.update)
+                });
+        });
+
+        this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV, (payload: SetCustomStageMemberOvTrackPayload) => {// CHANGE GROUP
+                const stageMemberOvTrackId = new ObjectId(payload.stageMemberOvTrackId);
+                return this.database.setCustomStageMemberOvTrack(this.user._id, stageMemberOvTrackId, payload.update);
+            }
+        );
+
+        this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV, (payload: RemoveCustomStageMemberOvPayload) => {// CHANGE GROUP
+                const id = new ObjectId(payload.id);
+                return this.database.readCustomStageMemberOvTrack(id)
+                    .then(group => {
+                        if (group && group.userId === this.user._id)
+                            return this.database.deleteCustomStageMemberOvTrack(id);
+                    })
             }
         );
 
