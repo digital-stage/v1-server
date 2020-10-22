@@ -2,7 +2,7 @@ import {MongoRealtimeDatabase} from "../database/MongoRealtimeDatabase";
 import * as socketIO from "socket.io";
 import {User} from "../model.server";
 import * as pino from "pino";
-import {ClientStageEvents, ServerStageEvents} from "../events";
+import {ClientStageEvents} from "../events";
 import {ObjectId} from "mongodb";
 import {
     AddCustomGroupPayload, AddCustomStageMemberAudioPayload, AddCustomStageMemberOvPayload, AddCustomStageMemberPayload,
@@ -18,7 +18,7 @@ import {
     RemoveCustomStageMemberPayload,
     RemoveGroupPayload,
     RemoveStagePayload,
-    SetCustomGroupPayload, SetCustomStageMemberAudioPayload, SetCustomStageMemberPayload,
+    SetCustomGroupPayload, SetCustomStageMemberAudioPayload, SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
     UpdateCustomGroupPayload,
     UpdateCustomStageMemberAudioPayload,
     UpdateCustomStageMemberOvPayload,
@@ -281,7 +281,7 @@ export class SocketStageHandler {
                 });
         });
 
-        this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV, (payload: SetCustomStageMemberOvTrackPayload) => {// CHANGE GROUP
+        this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV, (payload: SetCustomStageMemberOvPayload) => {// CHANGE GROUP
                 const stageMemberOvTrackId = new ObjectId(payload.stageMemberOvTrackId);
                 return this.database.setCustomStageMemberOvTrack(this.user._id, stageMemberOvTrackId, payload.update);
             }
