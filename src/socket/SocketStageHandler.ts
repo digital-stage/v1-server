@@ -150,7 +150,7 @@ export class SocketStageHandler {
         );
 
         this.socket.on(ClientStageEvents.REMOVE_CUSTOM_GROUP, (payload: RemoveCustomGroupPayload) => {// CHANGE GROUP
-                const id = new ObjectId(payload.id);
+                const id = new ObjectId(payload);
                 return this.database.readCustomGroup(id)
                     .then(group => {
                         if (group && group.userId === this.user._id)
@@ -196,7 +196,7 @@ export class SocketStageHandler {
         );
 
         this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER, (payload: RemoveCustomStageMemberPayload) => {// CHANGE GROUP
-                const id = new ObjectId(payload.id);
+                const id = new ObjectId(payload);
                 return this.database.readCustomStageMember(id)
                     .then(group => {
                         if (group && group.userId === this.user._id)
@@ -242,7 +242,7 @@ export class SocketStageHandler {
         );
 
         this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_AUDIO, (payload: RemoveCustomStageMemberAudioPayload) => {// CHANGE GROUP
-                const id = new ObjectId(payload.id);
+                const id = new ObjectId(payload);
                 return this.database.readCustomStageMemberAudioProducer(id)
                     .then(group => {
                         if (group && group.userId === this.user._id)
@@ -289,7 +289,7 @@ export class SocketStageHandler {
         );
 
         this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV, (payload: RemoveCustomStageMemberOvPayload) => {// CHANGE GROUP
-                const id = new ObjectId(payload.id);
+                const id = new ObjectId(payload);
                 return this.database.readCustomStageMemberOvTrack(id)
                     .then(group => {
                         if (group && group.userId === this.user._id)
