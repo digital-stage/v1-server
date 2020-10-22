@@ -24,7 +24,6 @@ import {
     UpdateCustomStageMemberOvPayload,
     UpdateCustomStageMemberPayload
 } from "../payloads";
-import {SetCustomStageMemberOvTrackPayload} from "../../../webclient/lib/digitalstage/common/payloads";
 
 const logger = pino({
     level: process.env.LOG_LEVEL || 'info'
