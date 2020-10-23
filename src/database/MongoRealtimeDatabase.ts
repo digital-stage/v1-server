@@ -698,6 +698,34 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
         console.log("leaveStage: " + (Date.now() - startTime) + "ms");
     }
 
+    leaveStageForGood(userId: UserId, stageId: StageId): Promise<any> {
+        //TODO: Log out user if he's joined
+
+        // Delete stage member
+        return this._db.collection<StageMember>(Collections.STAGE_MEMBERS).findOne({
+            userId: userId,
+            stageId: stageId
+        }, {
+            projection: {_id: 1}
+        }).then(
+            stageMember => {
+                if (stageMember) {
+                    return this.deleteStageMember(stageMember._id)
+                        .then(() => {
+                            return this._db.collection<Group>(Collections.GROUPS).find({
+                                stageId: stageId
+                            }, {
+                                projection: {_id: 1}
+                            })
+                                .toArray()
+                                .then(groups => groups.map(group => this.sendToUser(userId, ServerStageEvents.GROUP_REMOVED, group._id)))
+                                .then(() => this.sendToUser(userId, ServerStageEvents.STAGE_REMOVED, stageId))
+                        })
+                }
+            }
+        );
+    }
+
     readStage(id: StageId): Promise<Stage> {
         return this._db.collection<Stage>(Collections.STAGES).findOne({_id: id});
     }

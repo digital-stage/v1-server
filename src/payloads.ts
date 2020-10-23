@@ -245,3 +245,5 @@ export interface JoinStagePayload {
 
 export interface LeaveStagePayload {
 }
+
+export type LeaveStageForGoodPayload = string;

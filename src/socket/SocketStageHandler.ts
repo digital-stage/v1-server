@@ -11,7 +11,7 @@ import {
     ChangeGroupPayload,
     ChangeStageMemberPayload,
     ChangeStagePayload,
-    JoinStagePayload,
+    JoinStagePayload, LeaveStageForGoodPayload, LeaveStagePayload,
     RemoveCustomGroupPayload,
     RemoveCustomStageMemberAudioPayload,
     RemoveCustomStageMemberOvPayload,
@@ -335,27 +335,13 @@ export class SocketStageHandler {
             this.database.leaveStage(this.user._id)
                 .then(() => logger.info(this.user.name + " left stage"))
         );
-        /*
-        this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (id: StageId) => {
+
+        this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD, (payload: LeaveStageForGoodPayload) => {
             // LEAVE STAGE FOR GOOD
-            return Model.UserModel.findById(this.user._id).exec()
-                .then(user => Model.StageMemberModel.findOneAndRemove({userId: user._id, stageId: id})
-                    .lean()
-                    .then(stageMember => {
-                        if (stageMember) {
-                            if (user.stageId.toString() === stageMember.stageId.toString()) {
-                                // Also logout
-                                user.stageId = undefined;
-                                user.stageMemberId = undefined;
-                                user.save()
-                                    .then(() => {
-                                        this.server.sendToUser(this.user._id, ServerStageEvents.STAGE_LEFT);
-                                        this.server.sendToStage(stageMember.stageId, ServerStageEvents.GROUP_MEMBER_REMOVED, stageMember._id);
-                                    });
-                            }
-                        }
-                    }));
-        });*/
+            const stageId = new ObjectId(payload);
+            this.database.leaveStageForGood(this.user._id, stageId)
+                .then(() => logger.info(this.user.name + " left stage for good"))
+        });
 
         logger.debug("[SOCKET STAGE HANDLER] Registered handler for user " + this.user.name + " at socket " + this.socket.id);
     }
