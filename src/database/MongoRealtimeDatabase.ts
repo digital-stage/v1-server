@@ -615,7 +615,9 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                     stageMemberId: previousStageMemberId
                 })
                     .toArray()
-                    .then(producers => producers.map(producer => this.deleteStageMemberAudioProducer(producer._id)));
+                    .then(producers => producers.map(producer =>
+                        this.deleteStageMemberAudioProducer(producer._id))
+                    );
 
                 this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
                     stageMemberId: previousStageMemberId
@@ -645,6 +647,50 @@ export class MongoRealtimeDatabase implements IRealtimeDatabase {
                         userId: user._id,
                         stageId: user.stageId,
                         online: true
+                    })
+                }));
+
+            this._db.collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS)
+                .find({userId: userId}, {projection: {_id: 1}})
+                .toArray()
+                .then(producers => producers.map(producer => {
+                    return this.createStageMemberAudioProducer({
+                        stageMemberId: user.stageMemberId,
+                        globalProducerId: producer._id,
+                        userId: user._id,
+                        stageId: user.stageId,
+                        online: true,
+                        volume: 1,
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        rX: 0,
+                        rY: 0,
+                        rZ: 0
+                    })
+                }));
+
+            this._db.collection<Track>(Collections.TRACKS)
+                .find({userId: userId}, {projection: {_id: 1}})
+                .toArray()
+                .then(tracks => tracks.map(track => {
+                    return this.createStageMemberOvTrack({
+                        trackPresetId: track.trackPresetId,
+                        channel: track.channel,
+                        stageMemberId: user.stageMemberId,
+                        trackId: track._id,
+                        userId: user._id,
+                        stageId: user.stageId,
+                        online: true,
+                        gain: 1,
+                        volume: 1,
+                        directivity: "omni",
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        rX: 0,
+                        rY: 0,
+                        rZ: 0
                     })
                 }));
         }
