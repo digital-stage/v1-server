@@ -83,7 +83,8 @@ export class SocketStageHandler {
                             return this.database.createGroup({
                                 stageId: stageId,
                                 name: payload.name,
-                                volume: 1
+                                volume: 1,
+                                muted: false
                             })
                         }
                     })
@@ -126,7 +127,8 @@ export class SocketStageHandler {
                 return this.database.createCustomGroup({
                     userId: this.user._id,
                     groupId: groupId,
-                    volume: payload.volume
+                    volume: payload.volume,
+                    muted: false
                 });
             }
         );
@@ -165,6 +167,7 @@ export class SocketStageHandler {
                         if (stageMember)
                             return this.database.createCustomStageMember({
                                 volume: payload.volume,
+                                muted: payload.muted,
                                 x: payload.x,
                                 y: payload.y,
                                 z: payload.z,
@@ -211,6 +214,7 @@ export class SocketStageHandler {
                         if (stageMemberAudio)
                             return this.database.createCustomStageMemberAudioProducer({
                                 volume: payload.volume,
+                                muted: payload.muted,
                                 x: payload.x,
                                 y: payload.y,
                                 z: payload.z,
@@ -257,6 +261,7 @@ export class SocketStageHandler {
                         if (stageMemberOv)
                             return this.database.createCustomStageMemberOvTrack({
                                 volume: payload.volume,
+                                muted: payload.muted,
                                 gain: payload.gain,
                                 directivity: payload.directivity,
                                 x: payload.x,

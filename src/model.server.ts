@@ -189,6 +189,7 @@ export interface Group {
 
     // SETTINGS
     volume: number;
+    muted: boolean;
 }
 
 /**
@@ -201,6 +202,7 @@ export interface CustomGroup {
 
     // SETTINGS
     volume: number;
+    muted: boolean;
 
     // Optimizations for performance
     //stageId: StageId;

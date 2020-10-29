@@ -149,6 +149,7 @@ export interface ChangeStageMemberPayload {
         isDirector: boolean;
     } & ThreeDimensionAudioProperties>
 }
+
 export type RemoveStageMemberPayload = string;
 
 // STAGE MEMBER AUDIO PRODUCER
@@ -168,16 +169,19 @@ export interface ChangeStageMemberOvTrackPayload {
 export interface AddCustomGroupPayload {
     groupId: string;
     volume: number;
+    muted: boolean;
 }
 
 export interface SetCustomGroupPayload {
     groupId: string;
     volume: number;
+    muted: boolean;
 }
 
 export interface UpdateCustomGroupPayload {
     id: string;
     volume: number;
+    muted: boolean;
 }
 
 export type RemoveCustomGroupPayload = string;

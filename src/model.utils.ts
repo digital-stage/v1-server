@@ -2,6 +2,7 @@
 export interface ThreeDimensionAudioProperties {
     // SETTINGS
     volume: number;
+    muted: boolean;
     // Position relative to stage
     x: number;
     y: number;
