@@ -20,9 +20,46 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/trash/testDatabase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/server.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/server.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/reactor/EventReactor.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/reactor/EventReactorStorage.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/reactor/IEventReactor.d.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/socket/SocketDeviceEvent.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/socket/SocketServer.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/socket/SocketStageEvent.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/storage/mongoose/model.mongo.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/storage/mongoose/mongo.schema.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backup/storage/mongoose/mongo.types.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/IAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/IAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/IRealtimeDatabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/IRealtimeDatabase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/env.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/env.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/errors.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/errors.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/events.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model.server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/model.server.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model.utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/model.utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/payloads.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/payloads.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket/SocketDeviceHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/socket/SocketDeviceHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/socket/SocketHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket/SocketStageHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/socket/SocketStageHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/storage/ManagerTest.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/components/layouts/MixingPanelView/channels/GroupChannel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/components/layouts/MixingPanelView/channels/GroupChannel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/components/layouts/MixingPanelView/channels/StageMemberChannel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/components/layouts/MixingPanelView/channels/StageMemberChannel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/components/layouts/MixingPanelView/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/components/layouts/MixingPanelView/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/components/layouts/PageWrapper/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/components/layouts/PageWrapper/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageActions.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageActions.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageContext/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageContext/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageContext/redux/actions/stageActions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageContext/redux/actions/stageActions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageContext/redux/reducers/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useStageContext/redux/reducers/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/pages/mixer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/pages/mixer.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +72,14 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="JsFlowSettings">
+    <service-enabled>true</service-enabled>
+    <exe-path />
+    <other-services-enabled>true</other-services-enabled>
+    <auto-save>true</auto-save>
+  </component>
   <component name="ProjectId" id="1gs2aKxFNqN7mL4syjTKQN3j1FH" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -44,17 +88,64 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.standard" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.standard" value="project" />
     <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.standard" value="" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode" />
     <property name="ts.external.directory.path" value="$PROJECT_DIR$/node_modules/typescript/lib" />
+    <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/backup" />
     </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="lint" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="lint" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.build" />
+        <item itemvalue="npm.lint" />
+        <item itemvalue="npm.dev" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -66,6 +157,7 @@
       <updated>1598889041503</updated>
       <workItem from="1598889042602" duration="1714000" />
       <workItem from="1598948881669" duration="10913000" />
+      <workItem from="1604324463038" duration="4296000" />
     </task>
     <servers />
   </component>
@@ -89,5 +181,25 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1598962831846" />
+    <state width="1478" height="579" key="GridCell.Tab.0.bottom" timestamp="1604328767224">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="1478" height="579" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1604328767224" />
+    <state width="1478" height="579" key="GridCell.Tab.0.center" timestamp="1604328767223">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="1478" height="579" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1604328767223" />
+    <state width="1478" height="579" key="GridCell.Tab.0.left" timestamp="1604328767222">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="1478" height="579" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1604328767222" />
+    <state width="1478" height="579" key="GridCell.Tab.0.right" timestamp="1604328767223">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="1478" height="579" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1604328767223" />
+    <state x="261" y="359" key="SettingsEditor" timestamp="1604325371450">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="261" y="359" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1604325371450" />
   </component>
 </project>

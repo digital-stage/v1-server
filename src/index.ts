@@ -1,29 +1,28 @@
-import * as pino from "pino";
-import * as express from "express";
-import * as cors from "cors";
-import * as core from "express-serve-static-core";
-import * as ip from "ip";
-import HttpService from "./http/HttpService";
-import {parseEnv} from "./env";
-import SocketHandler from "./socket/SocketHandler";
-import * as socketIO from "socket.io";
-import {MongoRealtimeDatabase} from "./database/MongoRealtimeDatabase";
-import DefaultAuthentication from "./auth/DefaultAuthentication";
-import {IAuthentication} from "./auth/IAuthentication";
+import * as pino from 'pino';
+import * as express from 'express';
+import * as cors from 'cors';
+import * as core from 'express-serve-static-core';
+import * as ip from 'ip';
+import * as socketIO from 'socket.io';
+import HttpService from './http/HttpService';
+import parseEnv from './env';
+import SocketHandler from './socket/SocketHandler';
+import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
+import DefaultAuthentication from './auth/DefaultAuthentication';
+import { IAuthentication } from './auth/IAuthentication';
 
 parseEnv();
 
 const logger = pino({
-    level: process.env.LOG_LEVEL || 'info'
+  level: process.env.LOG_LEVEL || 'info',
 });
 
-export const serverAddress = ip.address() + ":" + process.env.PORT;
+const serverAddress = `${ip.address()}:${process.env.PORT}`;
 
 const app: core.Express = express();
-app.use(express.urlencoded({extended: true}));
-app.use(cors({origin: true}));
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: true }));
 app.options('*', cors());
-
 
 const server = app.listen(process.env.PORT);
 const io = socketIO(server);
@@ -33,20 +32,16 @@ const auth: IAuthentication = new DefaultAuthentication(database);
 const handler = new SocketHandler(serverAddress, database, auth, io);
 const httpService = new HttpService(database, auth);
 
-const resetDevices = () => {
-    return database.readDevicesByServer(serverAddress)
-        .then(devices => devices.map(device => database.deleteDevice(device._id)))
-        .then(() => logger.warn("Removed all devices of " + serverAddress + " first"));
-}
+const resetDevices = () => database.readDevicesByServer(serverAddress)
+  .then((devices) => devices.map((device) => database.deleteDevice(device._id)))
+  .then(() => logger.warn(`Removed all devices of ${serverAddress} first`));
 
-const init = async () => {
-    return database.connect(process.env.MONGO_DB)
-        .then(() => handler.init())
-        .then(() => httpService.init(app))
-        .then(() => resetDevices())
-}
+const init = async () => database.connect(process.env.MONGO_DB)
+  .then(() => handler.init())
+  .then(() => httpService.init(app))
+  .then(() => resetDevices());
 
-logger.info("[SERVER] Starting ...");
+logger.info('[SERVER] Starting ...');
 init()
-    .then(() => logger.info("[SERVER] DONE, running on port " + process.env.PORT))
-    .catch(error => logger.error("[SERVER] Could not start:\n" + error));
+  .then(() => logger.info(`[SERVER] DONE, running on port ${process.env.PORT}`))
+  .catch((error) => logger.error(`[SERVER] Could not start:\n${error}`));
