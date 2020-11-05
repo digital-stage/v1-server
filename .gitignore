@@ -3,4 +3,4 @@ package-lock.json
 firebase-adminsdk.json
 dist
 .env
-.idea
+/.idea
