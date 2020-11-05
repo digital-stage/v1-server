@@ -9,5 +9,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="webclient" />
+    <orderEntry type="module" module-name="auth-server" />
+    <orderEntry type="module" module-name="router-distributor" />
   </component>
 </module>

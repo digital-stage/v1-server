@@ -3,10 +3,10 @@ import * as express from 'express';
 import * as cors from 'cors';
 import * as core from 'express-serve-static-core';
 import * as ip from 'ip';
-import * as socketIO from 'socket.io';
+import * as uWebSocket from 'uWebSockets.js';
 import HttpService from './http/HttpService';
 import parseEnv from './env';
-import SocketHandler from './socket/SocketHandler';
+import SocketHandler from './uwebsocket/SocketHandler';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
 import { IAuthentication } from './auth/IAuthentication';
@@ -19,15 +19,11 @@ const logger = pino({
 
 const serverAddress = `${ip.address()}:${process.env.PORT}`;
 
-const app: core.Express = express();
-app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: true }));
-app.options('*', cors());
+const server: uWebSocket.TemplatedApp = uWebSocket.App();
 
-const server = app.listen(process.env.PORT);
-const io = socketIO(server);
+server.ws();
 
-const database = new MongoRealtimeDatabase(io, process.env.MONGO_URL);
+const database = new MongoRealtimeDatabase(server, process.env.MONGO_URL);
 const auth: IAuthentication = new DefaultAuthentication(database);
 const handler = new SocketHandler(serverAddress, database, auth, io);
 const httpService = new HttpService(database, auth);
@@ -38,8 +34,9 @@ const resetDevices = () => database.readDevicesByServer(serverAddress)
 
 const init = async () => database.connect(process.env.MONGO_DB)
   .then(() => handler.init())
-  .then(() => httpService.init(app))
-  .then(() => resetDevices());
+  .then(() => httpService.init(server))
+  .then(() => resetDevices())
+  .then(() => server.listen(process.env.PORT));
 
 logger.info('[SERVER] Starting ...');
 init()

@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../auth-server/.idea/auth-server.iml" filepath="$PROJECT_DIR$/../auth-server/.idea/auth-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../router-distributor/.idea/router-distributor.iml" filepath="$PROJECT_DIR$/../router-distributor/.idea/router-distributor.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/server.iml" filepath="$PROJECT_DIR$/.idea/server.iml" />
       <module fileurl="file://$PROJECT_DIR$/../webclient/.idea/webclient.iml" filepath="$PROJECT_DIR$/../webclient/.idea/webclient.iml" />
     </modules>

@@ -1,6 +1,7 @@
 import { Db, MongoClient, ObjectId } from 'mongodb';
 import * as socketIO from 'socket.io';
 import * as pino from 'pino';
+import { TemplatedApp } from 'uWebSockets.js';
 import {
   CustomGroup,
   CustomGroupId,
@@ -71,10 +72,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   private _db: Db;
 
-  private readonly _io: socketIO.Server;
+  private readonly _app: TemplatedApp;
 
-  constructor(io: socketIO.Server, url: string) {
-    this._io = io;
+  constructor(app: TemplatedApp, url: string) {
+    this._app = app;
     this._mongoClient = new MongoClient(url, {
       poolSize: 10,
       bufferMaxEntries: 0,
@@ -1656,6 +1657,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO USER '${userId}' ${event}`);
     }
+    this._app.publish(userId.toString());
     this._io.to(userId.toString()).emit(event, payload);
   }
 

@@ -1,7 +1,7 @@
 import * as socketIO from 'socket.io';
-import { Request } from 'express';
 import fetch from 'node-fetch';
 import * as pino from 'pino';
+import { HttpRequest } from 'uWebSockets.js';
 import { IRealtimeDatabase } from '../database/IRealtimeDatabase';
 import { User } from '../model.server';
 import { IAuthentication, IAuthenticationMiddleware } from './IAuthentication';
@@ -61,15 +61,16 @@ class DefaultAuthentication implements IAuthentication {
     });
   }
 
-  authorizeRequest(req: Request): Promise<User> {
+  authorizeRequest(req: HttpRequest): Promise<User> {
     return new Promise<User>((resolve, reject) => {
-      if (!req.headers.authorization) {
+      const authorization: string = req.getHeader('authorization');
+      if (!authorization) {
         reject(new Error('Missing authorization'));
       }
-      if (!req.headers.authorization.startsWith('Bearer ')) {
+      if (!authorization.startsWith('Bearer ')) {
         reject(new Error('Invalid authorization'));
       }
-      const token = req.headers.authorization.substr(7);
+      const token = authorization.substr(7);
       return this.verifyWithToken(resolve, reject, token);
     });
   }
