@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "LOG_LEVEL=trace nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
     "lint": "npx eslint ./src --ext .js,.ts",
-    "lint-fix": "npx eslint ./src --ext .js,.ts --fix",
     "build": "tsc",
     "start": "tsc && node ./dist/index.js",
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
@@ -35,7 +34,6 @@
     "@types/express-pino-logger": "^4.0.2",
     "@types/ip": "^1.1.0",
     "@types/lodash": "^4.14.164",
-    "@types/mocha": "^8.0.3",
     "@types/mongodb": "^3.5.32",
     "@types/node": "^14.14.6",
     "@types/socket.io": "^2.1.11",
