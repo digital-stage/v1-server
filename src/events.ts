@@ -43,6 +43,7 @@ export enum ServerDeviceEvents {
 }
 
 export enum ClientDeviceEvents {
+  ADD_DEVICE = 'add-device',
   UPDATE_DEVICE = 'update-device',
 
   ADD_AUDIO_PRODUCER = 'add-audio-producer',

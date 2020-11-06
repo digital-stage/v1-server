@@ -75,8 +75,8 @@ export interface Device {
   soundCardId?: SoundCardId; // active sound device
 
   // Optional for ov-based clients
-  senderJitter: number;
-  receiverJitter: number;
+  senderJitter?: number;
+  receiverJitter?: number;
 
   // Optimizations for performance
   server: string;

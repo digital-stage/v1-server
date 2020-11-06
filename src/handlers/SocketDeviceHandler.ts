@@ -1,5 +1,3 @@
-import * as socketIO from 'socket.io';
-
 import { ObjectId } from 'mongodb';
 import * as pino from 'pino';
 import { omit } from 'lodash';
@@ -20,6 +18,7 @@ import {
   RemoveAudioProducerPayload, RemoveSoundCardPayload, RemoveTrackPayload, RemoveTrackPresetPayload,
   RemoveVideoProducerPayload,
 } from '../payloads';
+import ISocket from '../socket/ISocket';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -32,7 +31,7 @@ class SocketDeviceHandler {
 
   private readonly user: User;
 
-  private readonly socket: socketIO.Socket;
+  private readonly socket: ISocket;
 
   private device: Device;
 
@@ -40,7 +39,7 @@ class SocketDeviceHandler {
     serverAddress: string,
     database: MongoRealtimeDatabase,
     user: User,
-    socket: socketIO.Socket,
+    socket: ISocket,
   ) {
     this.serverAddress = serverAddress;
     this.user = user;
@@ -232,32 +231,32 @@ class SocketDeviceHandler {
     logger.debug(`[SOCKET DEVICE HANDLER] Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
   }
 
-  async generateDevice(): Promise<Device> {
+  async generateDevice(initialDevice?: Partial<Device>): Promise<Device> {
     logger.debug(`Generating device for user ${this.user.name}...`);
-    let initialDevice: Device;
-    if (this.socket.handshake.query && this.socket.handshake.query.device) {
-      initialDevice = JSON.parse(this.socket.handshake.query.device);
-      if (initialDevice.mac) {
-        // Try to get device by mac
-        this.device = await this.database.readDeviceByUserAndMac(this.user._id, initialDevice.mac);
-        if (this.device) {
-          this.device.online = true;
-          return this.database.updateDevice(this.user._id, this.device._id, { online: true })
-            .then(() => this.device);
-        }
+    if (initialDevice.mac) {
+      // Try to get device by mac
+      this.device = await this.database.readDeviceByUserAndMac(this.user._id, initialDevice.mac);
+      if (this.device) {
+        this.device.online = true;
+        return this.database.updateDevice(this.user._id, this.device._id, { online: true })
+          .then(() => this.device);
       }
     }
     // We have to create the device
     const device: Omit<Device, '_id'> = {
       canVideo: false,
       canAudio: false,
+      canOv: false,
       sendAudio: false,
       sendVideo: false,
       receiveAudio: false,
       receiveVideo: false,
+      inputVideoDevices: [],
+      inputAudioDevices: [],
+      outputAudioDevices: [],
+      soundCardIds: [],
       name: '',
       ...initialDevice,
-      soundCardIds: [],
       server: this.serverAddress,
       userId: this.user._id,
       online: true,

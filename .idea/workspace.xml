@@ -20,23 +20,33 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/uwebsocket/SocketDeviceHandler.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/uwebsocket/SocketHandler.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/uwebsocket/SocketStageHandler.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/socket/IProvider.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/socket/ISocket.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/socket/socket.io/IOProvider.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/socket/socket.io/IOSocket.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/socket/uWS/UWSProvider.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/socket/uWS/UWSSocket.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/server.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/server.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/webResources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/webResources.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/webResources.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/auth/IAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/IAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/database/IRealtimeDatabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/IRealtimeDatabase.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/env.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/events.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/socket/SocketDeviceHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/socket.io/SocketDeviceHandler.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/socket/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/socket.io/SocketHandler.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/socket/SocketStageHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/socket.io/SocketStageHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/model.server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/model.server.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket.io/SocketDeviceHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketDeviceHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket.io/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/socket.io/SocketStageHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketStageHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/uwebsocket/SocketDeviceHandler.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/uwebsocket/SocketHandler.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/uwebsocket/SocketStageHandler.ts" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +74,9 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/src" />
+    <property name="javascript.nodejs.core.library.configured.version" value="14.13.0" />
+    <property name="javascript.nodejs.core.library.typings.version" value="14.14.6" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../test/client" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.standard" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
@@ -75,27 +87,37 @@
     <property name="node.js.selected.package.standard" value="" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="web-ide.project.structure" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.TypeScript" />
     <property name="ts.external.directory.path" value="$PROJECT_DIR$/../auth-server/node_modules/typescript/lib" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../test/server/src/socket/socket.io" />
+      <recent name="$PROJECT_DIR$/../test/server/src/socket/uWS" />
+      <recent name="$PROJECT_DIR$/../test/server/src/socket" />
+      <recent name="$PROJECT_DIR$/../test/client/src" />
+      <recent name="$PROJECT_DIR$/../webclient/components/new/elements" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../test/client" />
       <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/../test/server" />
       <recent name="$PROJECT_DIR$/../webclient/components/panes" />
       <recent name="$PROJECT_DIR$/../webclient/pages" />
-      <recent name="$PROJECT_DIR$/../router-distributor" />
-      <recent name="$PROJECT_DIR$/../auth-server" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/../webclient/components/new/elements" />
-      <recent name="$PROJECT_DIR$/../webclient/components/new" />
-      <recent name="$PROJECT_DIR$/../webclient/components/new/Menu" />
-      <recent name="$PROJECT_DIR$/../webclient/public/static/icons" />
-      <recent name="$PROJECT_DIR$/../webclient/pages/layout/Menu" />
     </key>
   </component>
   <component name="RunManager" selected="npm.build">
+    <configuration name="build (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <configuration name="build (2)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/../router-distributor/package.json" />
       <command value="run" />
@@ -126,16 +148,6 @@
       <envs />
       <method v="2" />
     </configuration>
-    <configuration name="lint (2)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../router-distributor/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="lint" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
     <configuration name="lint" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/../webclient/package.json" />
       <command value="run" />
@@ -148,11 +160,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.build (1)" />
         <item itemvalue="npm.build" />
         <item itemvalue="npm.dev" />
         <item itemvalue="npm.lint" />
         <item itemvalue="npm.build (2)" />
-        <item itemvalue="npm.lint (2)" />
       </list>
     </recent_temporary>
   </component>
@@ -171,7 +183,9 @@
       <workItem from="1604395832487" duration="12843000" />
       <workItem from="1604485141477" duration="17440000" />
       <workItem from="1604567687546" duration="2484000" />
-      <workItem from="1604576373461" duration="4325000" />
+      <workItem from="1604576373461" duration="4344000" />
+      <workItem from="1604652122320" duration="646000" />
+      <workItem from="1604654623723" duration="22084000" />
     </task>
     <servers />
   </component>
@@ -191,34 +205,34 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser" timestamp="1598962831846">
+    <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser" timestamp="1604690322179">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1598962831846" />
-    <state width="2518" height="579" key="GridCell.Tab.0.bottom" timestamp="1604572883814">
+    <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1604690322179" />
+    <state width="2518" height="579" key="GridCell.Tab.0.bottom" timestamp="1604690358918">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="579" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1604572883814" />
-    <state width="2518" height="579" key="GridCell.Tab.0.center" timestamp="1604572883812">
+    <state width="2518" height="579" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1604690358918" />
+    <state width="2518" height="579" key="GridCell.Tab.0.center" timestamp="1604690358917">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="579" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1604572883812" />
-    <state width="2518" height="579" key="GridCell.Tab.0.left" timestamp="1604572883812">
+    <state width="2518" height="579" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1604690358917" />
+    <state width="2518" height="579" key="GridCell.Tab.0.left" timestamp="1604690358916">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="579" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1604572883812" />
-    <state width="2518" height="579" key="GridCell.Tab.0.right" timestamp="1604572883813">
+    <state width="2518" height="579" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1604690358916" />
+    <state width="2518" height="579" key="GridCell.Tab.0.right" timestamp="1604690358918">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="579" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1604572883813" />
-    <state x="261" y="359" key="SettingsEditor" timestamp="1604586093091">
+    <state width="2518" height="579" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1604690358918" />
+    <state x="1165" y="266" key="SettingsEditor" timestamp="1604659564600">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="261" y="359" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1604586093091" />
-    <state x="100" y="100" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1604331862057">
+    <state x="1165" y="266" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1604659564600" />
+    <state x="100" y="100" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1604672697024">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="100" y="100" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1604331862057" />
+    <state x="100" y="100" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1604672697024" />
     <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1604485904312">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -227,9 +241,17 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="461" y="475" width="729" height="640" key="find.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1604409662163" />
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1604571375031">
+    <state width="600" height="428" key="javadoc.popup" timestamp="1604673472875">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1604571375031" />
+    <state width="600" height="428" key="javadoc.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1604673472875" />
+    <state x="945" y="345" key="run.anything.popup" timestamp="1604656546321">
+      <screen x="0" y="23" width="2560" height="1330" />
+    </state>
+    <state x="945" y="345" key="run.anything.popup/0.23.2560.1330@0.23.2560.1330" timestamp="1604656546321" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1604683860126">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1604683860126" />
   </component>
 </project>

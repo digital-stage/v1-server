@@ -1,10 +1,9 @@
-import * as socketIO from 'socket.io';
 import fetch from 'node-fetch';
 import * as pino from 'pino';
 import { HttpRequest } from 'uWebSockets.js';
 import { IRealtimeDatabase } from '../database/IRealtimeDatabase';
 import { User } from '../model.server';
-import { IAuthentication, IAuthenticationMiddleware } from './IAuthentication';
+import { IAuthentication } from './IAuthentication';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 
@@ -30,7 +29,7 @@ class DefaultAuthentication implements IAuthentication {
     this.database = database;
   }
 
-  verifyWithToken(resolve, reject, token: string): Promise<User> {
+  verifyWithToken(token: string): Promise<User> {
     return getUserByToken(token)
       .then((authUser) => this.database.readUserByUid(authUser._id)
         .then((user) => {
@@ -41,45 +40,28 @@ class DefaultAuthentication implements IAuthentication {
               name: authUser.name,
               avatarUrl: authUser.avatarUrl,
             })
-              .then((createdUser) => resolve(createdUser));
+              .then((createdUser) => createdUser);
           }
-          return resolve(user);
+          return user;
         }))
       .catch((error) => {
         logger.trace('[AUTH] Invalid token delivered');
         logger.error(error);
-        reject(new Error('Invalid credentials'));
+        throw new Error('Invalid credentials');
       });
   }
 
-  authorizeSocket(socket: socketIO.Socket): Promise<User> {
-    return new Promise<User>((resolve, reject) => {
-      if (!socket.handshake.query || !socket.handshake.query.token) {
-        reject(new Error('Missing authorization'));
-      }
-      return this.verifyWithToken(resolve, reject, socket.handshake.query.token);
-    });
-  }
-
   authorizeRequest(req: HttpRequest): Promise<User> {
-    return new Promise<User>((resolve, reject) => {
-      const authorization: string = req.getHeader('authorization');
-      if (!authorization) {
-        reject(new Error('Missing authorization'));
-      }
-      if (!authorization.startsWith('Bearer ')) {
-        reject(new Error('Invalid authorization'));
-      }
-      const token = authorization.substr(7);
-      return this.verifyWithToken(resolve, reject, token);
-    });
+    const authorization: string = req.getHeader('authorization');
+    if (!authorization) {
+      throw new Error('Missing authorization');
+    }
+    if (!authorization.startsWith('Bearer ')) {
+      throw new Error('Invalid authorization');
+    }
+    const token = authorization.substr(7);
+    return this.verifyWithToken(token);
   }
 }
-
-export const DefaultAuthenticationMiddleware: IAuthenticationMiddleware = ((socket, next) => {
-  const { token } = socket.handshake.query;
-  getUserByToken(token).then(() => next());
-  return next(new Error('authentication error'));
-});
 
 export default DefaultAuthentication;

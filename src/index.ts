@@ -1,29 +1,31 @@
 import * as pino from 'pino';
-import * as express from 'express';
-import * as cors from 'cors';
-import * as core from 'express-serve-static-core';
 import * as ip from 'ip';
-import * as uWebSocket from 'uWebSockets.js';
+import { config } from 'dotenv';
+import * as uWS from 'uWebSockets.js';
 import HttpService from './http/HttpService';
-import parseEnv from './env';
-import SocketHandler from './uwebsocket/SocketHandler';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
 import { IAuthentication } from './auth/IAuthentication';
+import UWSProvider from './socket/uWS/UWSProvider';
+import SocketHandler from './handlers/SocketHandler';
 
-parseEnv();
+config();
+
+const { MONGO_URL, REDIS_URL } = process.env;
+const PORT: number = parseInt(process.env.PORT, 10);
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
 });
 
-const serverAddress = `${ip.address()}:${process.env.PORT}`;
+const serverAddress = `${ip.address()}:${PORT}`;
 
-const server: uWebSocket.TemplatedApp = uWebSocket.App();
+const uws = uWS.App();
+const io = new UWSProvider(uws, {
+  redisUrl: REDIS_URL,
+});
 
-server.ws();
-
-const database = new MongoRealtimeDatabase(server, process.env.MONGO_URL);
+const database = new MongoRealtimeDatabase(io, MONGO_URL);
 const auth: IAuthentication = new DefaultAuthentication(database);
 const handler = new SocketHandler(serverAddress, database, auth, io);
 const httpService = new HttpService(database, auth);
@@ -32,13 +34,13 @@ const resetDevices = () => database.readDevicesByServer(serverAddress)
   .then((devices) => devices.map((device) => database.deleteDevice(device._id)))
   .then(() => logger.warn(`Removed all devices of ${serverAddress} first`));
 
-const init = async () => database.connect(process.env.MONGO_DB)
+const init = async () => database.connect(MONGO_URL)
   .then(() => handler.init())
-  .then(() => httpService.init(server))
+  .then(() => httpService.init(uws))
   .then(() => resetDevices())
-  .then(() => server.listen(process.env.PORT));
+  .then(() => io.listen(PORT));
 
 logger.info('[SERVER] Starting ...');
 init()
-  .then(() => logger.info(`[SERVER] DONE, running on port ${process.env.PORT}`))
+  .then(() => logger.info(`[SERVER] DONE, running on port ${PORT}`))
   .catch((error) => logger.error(`[SERVER] Could not start:\n${error}`));

@@ -1,4 +1,3 @@
-import * as socketIO from 'socket.io';
 import { Db } from 'mongodb';
 import {
   CustomGroup,
@@ -32,6 +31,7 @@ import {
   User,
   UserId,
 } from '../model.server';
+import ISocket from '../socket/ISocket';
 
 export interface IRealtimeDatabase {
   connect(database: string): Promise<void>;
@@ -202,7 +202,7 @@ export interface IRealtimeDatabase {
   deleteCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<void>;
 
   // MESSAGING
-  sendInitialToDevice(socket: socketIO.Socket, user: User): Promise<void>;
+  sendInitialToDevice(socket: ISocket, user: User): Promise<void>;
 
   /**
      * Send event with payload to all users,

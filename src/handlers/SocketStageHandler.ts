@@ -1,4 +1,3 @@
-import * as socketIO from 'socket.io';
 import * as pino from 'pino';
 import { ObjectId } from 'mongodb';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
@@ -20,6 +19,7 @@ import {
   SetCustomGroupPayload, SetCustomStageMemberAudioPayload,
   SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
 } from '../payloads';
+import ISocket from '../socket/ISocket';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -28,11 +28,11 @@ const logger = pino({
 class SocketStageHandler {
   private readonly user: User;
 
-  private readonly socket: socketIO.Socket;
+  private readonly socket: ISocket;
 
   private readonly database: MongoRealtimeDatabase;
 
-  constructor(database: MongoRealtimeDatabase, user: User, socket: socketIO.Socket) {
+  constructor(database: MongoRealtimeDatabase, user: User, socket: ISocket) {
     this.user = user;
     this.database = database;
     this.socket = socket;
