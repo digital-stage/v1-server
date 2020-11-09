@@ -1,5 +1,5 @@
 import { WebSocket } from 'uWebSockets.js';
-import ISocket from '../ISocket';
+import ISocket, { SocketEvent } from '../ISocket';
 
 class UWSSocket implements ISocket {
   readonly _id: string;
@@ -21,7 +21,7 @@ class UWSSocket implements ISocket {
     this._ws = ws;
   }
 
-  addListener(event: string, listener: (...args: any[]) => void): this {
+  addListener(event: SocketEvent, listener: (...args: any[]) => void): this {
     if (Object.keys(this._handlers).length === this._maxListeners) {
       throw new Error('Max listeners reached');
     }
@@ -30,7 +30,7 @@ class UWSSocket implements ISocket {
     return this;
   }
 
-  once(event: string, listener: (...args: any[]) => void): this {
+  once(event: SocketEvent, listener: (...args: any[]) => void): this {
     if (Object.keys(this._handlers).length === this._maxListeners) {
       throw new Error('Max listeners reached');
     }
@@ -43,14 +43,14 @@ class UWSSocket implements ISocket {
     return this;
   }
 
-  removeListener(event: string, listener: (...args: any[]) => void): this {
+  removeListener(event: SocketEvent, listener: (...args: any[]) => void): this {
     if (this._handlers[event]) {
       this._handlers[event] = this._handlers[event].filter((handler) => handler !== listener);
     }
     return this;
   }
 
-  off(event: string, listener: (...args: any[]) => void): this {
+  off(event: SocketEvent, listener: (...args: any[]) => void): this {
     return this.removeListener(event, listener);
   }
 
@@ -72,15 +72,15 @@ class UWSSocket implements ISocket {
     return this._maxListeners;
   }
 
-  listeners(event: string): Function[] {
+  listeners(event: SocketEvent): Function[] {
     return [...this._handlers[event]];
   }
 
-  rawListeners(event: string): Function[] {
+  rawListeners(event: SocketEvent): Function[] {
     return [...this._handlers[event]];
   }
 
-  listenerCount(event: string): number {
+  listenerCount(event: SocketEvent): number {
     if (this._handlers[event]) {
       return Object.keys(this._handlers[event]).length;
     }
@@ -96,7 +96,7 @@ class UWSSocket implements ISocket {
     return this;
   }
 
-  prependOnceListener(event: string, listener: (...args: any[]) => void): this {
+  prependOnceListener(event: SocketEvent, listener: (...args: any[]) => void): this {
     if (Object.keys(this._handlers).length === this._maxListeners) {
       throw new Error('Max listeners reached');
     }
@@ -113,7 +113,7 @@ class UWSSocket implements ISocket {
     return Object.keys(this._handlers);
   }
 
-  on(event: string, listener: (...args: any[]) => void): this {
+  on(event: SocketEvent, listener: (...args: any[]) => void): this {
     return this.addListener(event, listener);
   }
 
@@ -132,7 +132,7 @@ class UWSSocket implements ISocket {
     return this;
   }
 
-  emit(event: string, ...args: any[]): boolean {
+  emit(event: SocketEvent, ...args: any[]): boolean {
     return this._ws.send(JSON.stringify({
       event,
       payload: {
@@ -141,7 +141,7 @@ class UWSSocket implements ISocket {
     }));
   }
 
-  handle(event: string, payload?: any) {
+  handle(event: SocketEvent, payload?: any) {
     if (this._handlers[event]) {
       this._handlers[event].forEach((handler) => handler(payload));
     }

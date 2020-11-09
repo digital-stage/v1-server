@@ -65,7 +65,7 @@ class UWSProvider implements IProvider {
       idleTimeout: 10,
       maxBackpressure: 1024,
 
-      upgrade: (res, req, context) => {
+      upgrade: this._authentication ? (res, req, context) => {
         console.log(`An Http connection wants to become WebSocket, URL: ${req.getUrl()}!`);
         const upgradeAborted = { aborted: false };
         const url = req.getUrl();
@@ -73,38 +73,28 @@ class UWSProvider implements IProvider {
         const secWebSocketProtocol = req.getHeader('sec-websocket-protocol');
         const secWebSocketExtensions = req.getHeader('sec-websocket-extensions');
 
-        if (this._authentication) {
-          this._authentication(req)
-            .then((result) => {
-              if (upgradeAborted.aborted) {
-                console.log('Ouch! Client disconnected before we could upgrade it!');
-                return;
-              }
-              res.upgrade({
-                url,
-                ...result,
-              },
-              secWebSocketKey,
-              secWebSocketProtocol,
-              secWebSocketExtensions,
-              context);
-            })
-            .catch(() => {
-              res.close();
-            });
-          res.onAborted(() => {
-            upgradeAborted.aborted = true;
+        this._authentication(req)
+          .then((result) => {
+            if (upgradeAborted.aborted) {
+              console.log('Ouch! Client disconnected before we could upgrade it!');
+              return;
+            }
+            res.upgrade({
+              url,
+              ...result,
+            },
+            secWebSocketKey,
+            secWebSocketProtocol,
+            secWebSocketExtensions,
+            context);
+          })
+          .catch(() => {
+            res.close();
           });
-        } else {
-          res.upgrade({
-            url,
-          },
-          secWebSocketKey,
-          secWebSocketProtocol,
-          secWebSocketExtensions,
-          context);
-        }
-      },
+        res.onAborted(() => {
+          upgradeAborted.aborted = true;
+        });
+      } : undefined,
       open: (ws) => {
         const id: string = generateUUID();
         /* Let this client listen to all sensor topics */
@@ -118,17 +108,22 @@ class UWSProvider implements IProvider {
         this._connections[id] = new UWSSocket(id, ws);
         this._handlers.forEach((handler) => handler(this._connections[id]));
       },
-      message: (ws, message, isBinary) => {
+      message: (ws, message) => {
         if (this._connections[ws.id]) {
           const parsedMessage = JSON.parse(decoder.decode(message));
           const { event, payload } = parsedMessage;
-          this._connections[ws.id].handle(event, payload);
+          if (event) {
+            this._connections[ws.id].handle(event, payload);
+          } else {
+            console.error('Received malformed emit:');
+            console.error(parsedMessage);
+          }
         } else {
           console.error(`Unknown connection: ${ws.id}`);
         }
       },
       drain: (ws) => {
-
+        console.error(`Drain: ${ws.id}`);
       },
       close: (ws) => {
         if (this._connections[ws.id]) {
