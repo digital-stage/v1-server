@@ -11,7 +11,7 @@ import SocketHandler from './handlers/SocketHandler';
 
 config();
 
-const { MONGO_URL, REDIS_URL } = process.env;
+const { MONGO_URL, REDIS_URL, MONGO_DB } = process.env;
 const PORT: number = parseInt(process.env.PORT, 10);
 
 const logger = pino({
@@ -34,7 +34,7 @@ const resetDevices = () => database.readDevicesByServer(serverAddress)
   .then((devices) => devices.map((device) => database.deleteDevice(device._id)))
   .then(() => logger.warn(`Removed all devices of ${serverAddress} first`));
 
-const init = async () => database.connect(MONGO_URL)
+const init = async () => database.connect(MONGO_DB)
   .then(() => handler.init())
   .then(() => httpService.init(uws))
   .then(() => resetDevices())

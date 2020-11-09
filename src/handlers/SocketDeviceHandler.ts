@@ -233,7 +233,7 @@ class SocketDeviceHandler {
 
   async generateDevice(initialDevice?: Partial<Device>): Promise<Device> {
     logger.debug(`Generating device for user ${this.user.name}...`);
-    if (initialDevice.mac) {
+    if (initialDevice && initialDevice.mac) {
       // Try to get device by mac
       this.device = await this.database.readDeviceByUserAndMac(this.user._id, initialDevice.mac);
       if (this.device) {

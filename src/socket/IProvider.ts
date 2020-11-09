@@ -13,8 +13,6 @@ interface IProvider {
   toAll(event: string, payload: any);
 
   to(group: string, event: string, payload: any);
-
-  setAuthentication(authentication: Authentication)
 }
 
 export default IProvider;

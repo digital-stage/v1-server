@@ -79,7 +79,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     this._mongoClient = new MongoClient(url, {
       poolSize: 10,
       bufferMaxEntries: 0,
-      reconnectTries: 5000,
       useUnifiedTopology: true,
       useNewUrlParser: true,
     });

@@ -1,11 +1,7 @@
-interface ConnectionEvents {
-  connect: 'connect';
-  disconnect: 'disconnect';
-}
+import * as events from 'events';
+import SocketEvent from './SocketEvent';
 
-export type SocketEvent = ConnectionEvents[keyof ConnectionEvents] | string;
-
-interface ISocket extends NodeJS.EventEmitter {
+interface ISocket extends events.EventEmitter {
   id: string;
 
   on(event: SocketEvent, listener: (...args: any[]) => void): this;
@@ -20,7 +16,7 @@ interface ISocket extends NodeJS.EventEmitter {
 
   leaveAll(): this;
 
-  handle(event: SocketEvent, payload?: any);
+  handle(event: SocketEvent, args?: any[]);
 
   error(message?: string);
 

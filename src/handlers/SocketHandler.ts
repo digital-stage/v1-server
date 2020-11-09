@@ -36,58 +36,66 @@ class SocketHandler {
   async init(): Promise<void> {
     logger.info('[SOCKETSERVER] Initializing socket server...');
 
-    this._io.onConnection((socket: ISocket) => {
-      // Wait for token
-      socket.on('token', (payload: {
-        token: string;
-        device?: Partial<Device>
-      }) => {
-        const { token, device: initialDevice } = payload;
-        if (token) {
-          return this._authentication.verifyWithToken(token)
-            .then((user) => {
-              logger.trace(`[SOCKETSERVER] Incoming socket request ${socket.id}`);
+    try {
+      this._io.onConnection((socket: ISocket) => {
+        // Wait for token
 
-              logger.trace(`[SOCKETSERVER](${socket.id}) Authenticated user ${user.name}`);
-              const deviceHandler = new SocketDeviceHandler(
-                this._serverAddress,
-                this._database,
-                user,
-                socket,
-              );
-              const stageHandler = new SocketStageHandler(this._database, user, socket);
+        socket.on('token', (payload: {
+          token: string;
+          device?: Partial<Device>
+        }) => {
+          const { token, device: initialDevice } = payload;
+          if (token) {
+            return this._authentication.verifyWithToken(token)
+              .then((user) => {
+                logger.trace(`[SOCKETSERVER] Incoming socket request ${socket.id}`);
 
-              deviceHandler.init();
+                logger.trace(`[SOCKETSERVER](${socket.id}) Authenticated user ${user.name}`);
+                const deviceHandler = new SocketDeviceHandler(
+                  this._serverAddress,
+                  this._database,
+                  user,
+                  socket,
+                );
+                const stageHandler = new SocketStageHandler(this._database, user, socket);
 
-              stageHandler.init();
+                deviceHandler.init();
 
-              MongoRealtimeDatabase.sendToDevice(socket, ServerUserEvents.USER_READY, user);
+                stageHandler.init();
 
-              return Promise.all([
-                deviceHandler.generateDevice(initialDevice)
-                  .then(() => deviceHandler.sendRemoteDevices()),
-                stageHandler.sendStages(),
-              ])
-                .then(() => {
-                  socket.join(user._id.toString());
-                  MongoRealtimeDatabase.sendToDevice(socket, ServerGlobalEvents.READY);
-                })
-                .catch((error) => {
-                  socket.error(error.message);
-                  logger.error(`[SOCKETSERVER](${socket.id}) Internal error`);
-                  logger.error(error);
-                  socket.disconnect();
-                });
-            })
-            .catch((authError) => {
-              logger.error(authError);
-              socket.disconnect();
-            });
-        }
-        return socket.disconnect();
+                MongoRealtimeDatabase.sendToDevice(socket, ServerUserEvents.USER_READY, user);
+
+                return Promise.all([
+                  deviceHandler.generateDevice(initialDevice)
+                    .then(() => deviceHandler.sendRemoteDevices()),
+                  stageHandler.sendStages(),
+                ])
+                  .then(() => {
+                    socket.join(user._id.toString());
+                    MongoRealtimeDatabase.sendToDevice(socket, ServerGlobalEvents.READY);
+                  })
+                  .catch((error) => {
+                    socket.error(error.message);
+                    logger.error(`[SOCKETSERVER](${socket.id}) Internal error`);
+                    logger.error(error);
+                    socket.disconnect();
+                  });
+              })
+              .catch((authError) => {
+                logger.error(authError);
+                socket.disconnect();
+              });
+          }
+          logger.error('[SOCKETSERVER] Malformed token provided');
+          console.log(payload);
+          return socket.disconnect();
+        });
+        // TODO: Disconnect after timeout when no token is delivered
       });
-      // TODO: Disconnect after timeout when no token is delivered
-    });
+    } catch (error) {
+      console.error(error);
+    }
+
     logger.info('[SOCKETSERVER] DONE initializing socket server.');
   }
 }
