@@ -2,6 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../delude88/teckos" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../delude88/teckos-client" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../auth-server" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../router-distributor" vcs="Git" />
   </component>

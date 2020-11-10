@@ -1,4 +1,5 @@
 import { Db } from 'mongodb';
+import { ITeckosSocket } from 'teckos';
 import {
   CustomGroup,
   CustomGroupId,
@@ -31,7 +32,6 @@ import {
   User,
   UserId,
 } from '../model.server';
-import ISocket from '../socket/ISocket';
 
 export interface IRealtimeDatabase {
   connect(database: string): Promise<void>;
@@ -202,47 +202,48 @@ export interface IRealtimeDatabase {
   deleteCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<void>;
 
   // MESSAGING
-  sendInitialToDevice(socket: ISocket, user: User): Promise<void>;
+  sendInitialToDevice(socket: ITeckosSocket, user: User): Promise<void>;
 
   /**
-     * Send event with payload to all users,
-     * that are associated anyway to the stage (admins or stage members)
-     * @param stageId
-     * @param event
-     * @param payload
-     */
+   * Send event with payload to all users,
+   * that are associated anyway to the stage (admins or stage members)
+   * @param stageId
+   * @param event
+   * @param payload
+   */
   sendToStage(stageId: StageId, event: string, payload?: any): Promise<void>;
 
   /**
-     * Send event with payload to all users, that are manging this stage
-     * @param stageId
-     * @param event
-     * @param payload
-     */
+   * Send event with payload to all users, that are manging this stage
+   * @param stageId
+   * @param event
+   * @param payload
+   */
   sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void>;
 
   /**
-     * Send event with payload to the device
-     * @param socket socket of device
-     * @param event
-     * @param payload
-     */
+   * Send event with payload to the device
+   * @param socket socket of device
+   * @param event
+   * @param payload
+   */
+
   // sendToDevice(socket: socketIO.Socket, event: string, payload?: any): void;
 
   /**
-     * Send event with payload to all users, that are currently joined in the stage
-     * @param stageId
-     * @param event
-     * @param payload
-     */
+   * Send event with payload to all users, that are currently joined in the stage
+   * @param stageId
+   * @param event
+   * @param payload
+   */
   sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void>;
 
   /**
-     * Send event with payload to the given user (and all her/his devices)
-     * @param _id id of user
-     * @param event
-     * @param payload
-     */
+   * Send event with payload to the given user (and all her/his devices)
+   * @param _id id of user
+   * @param event
+   * @param payload
+   */
   sendToUser(_id: UserId, event: string, payload?: any): void;
 
   sendToAll(event: string, payload?: any): void;

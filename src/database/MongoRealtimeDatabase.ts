@@ -1,5 +1,6 @@
 import { Db, MongoClient, ObjectId } from 'mongodb';
 import * as pino from 'pino';
+import { ITeckosProvider, ITeckosSocket } from 'teckos';
 import {
   CustomGroup,
   CustomGroupId,
@@ -38,8 +39,6 @@ import {
 } from '../model.server';
 import { ServerDeviceEvents, ServerStageEvents, ServerUserEvents } from '../events';
 import { IRealtimeDatabase } from './IRealtimeDatabase';
-import ISocket from '../socket/ISocket';
-import IProvider from '../socket/IProvider';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -72,9 +71,9 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   private _db: Db;
 
-  private readonly _io: IProvider;
+  private readonly _io: ITeckosProvider;
 
-  constructor(io: IProvider, url: string) {
+  constructor(io: ITeckosProvider, url: string) {
     this._io = io;
     this._mongoClient = new MongoClient(url, {
       poolSize: 10,
@@ -1538,7 +1537,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   /* SENDING METHODS */
 
-  public async sendInitialToDevice(socket: ISocket, user: User): Promise<any> {
+  public async sendInitialToDevice(socket: ITeckosSocket, user: User): Promise<any> {
     if (user.stageMemberId) {
       // Switch current stage member online
       await this._db
@@ -1641,12 +1640,13 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       });
   }
 
-  static sendToDevice(socket: ISocket, event: string, payload?: any): void {
+  static sendToDevice(socket: ITeckosSocket, event: string, payload?: any): void {
     if (process.env.DEBUG_PAYLOAD) {
       logger.trace(`[SOCKETSERVER] SEND TO DEVICE '${socket.id}' ${event}: ${JSON.stringify(payload)}`);
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO DEVICE '${socket.id}' ${event}`);
     }
+    console.log(`sendToDevice(${event})`);
     socket.emit(event, payload);
   }
 
@@ -1656,6 +1656,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO USER '${userId}' ${event}`);
     }
+    console.log(`sendToUser(${userId}, ${event})`);
     this._io.to(userId.toString(), event, payload);
   }
 
@@ -1665,6 +1666,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO ALL ${event}`);
     }
+    console.log(`sendToAll(${event})`);
     this._io.toAll(event, payload);
   }
 }

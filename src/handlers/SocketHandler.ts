@@ -1,11 +1,10 @@
 import * as pino from 'pino';
+import { ITeckosProvider, ITeckosSocket } from 'teckos';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import SocketDeviceHandler from './SocketDeviceHandler';
 import SocketStageHandler from './SocketStageHandler';
 import { ServerGlobalEvents, ServerUserEvents } from '../events';
 import { IAuthentication } from '../auth/IAuthentication';
-import IProvider from '../socket/IProvider';
-import ISocket from '../socket/ISocket';
 import { Device } from '../model.server';
 
 const logger = pino({
@@ -19,13 +18,13 @@ class SocketHandler {
 
   private readonly _authentication: IAuthentication;
 
-  private readonly _io: IProvider;
+  private readonly _io: ITeckosProvider;
 
   constructor(
     serverAddress,
     database: MongoRealtimeDatabase,
     authentication: IAuthentication,
-    io: IProvider,
+    io: ITeckosProvider,
   ) {
     this._serverAddress = serverAddress;
     this._database = database;
@@ -37,7 +36,7 @@ class SocketHandler {
     logger.info('[SOCKETSERVER] Initializing socket server...');
 
     try {
-      this._io.onConnection((socket: ISocket) => {
+      this._io.onConnection((socket: ITeckosSocket) => {
         // Wait for token
 
         socket.on('token', (payload: {

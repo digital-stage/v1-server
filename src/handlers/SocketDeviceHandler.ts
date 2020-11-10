@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import * as pino from 'pino';
 import { omit } from 'lodash';
+import { ITeckosSocket } from 'teckos';
 import {
   Device,
   GlobalAudioProducer,
@@ -18,7 +19,6 @@ import {
   RemoveAudioProducerPayload, RemoveSoundCardPayload, RemoveTrackPayload, RemoveTrackPresetPayload,
   RemoveVideoProducerPayload,
 } from '../payloads';
-import ISocket from '../socket/ISocket';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -31,7 +31,7 @@ class SocketDeviceHandler {
 
   private readonly user: User;
 
-  private readonly socket: ISocket;
+  private readonly socket: ITeckosSocket;
 
   private device: Device;
 
@@ -39,7 +39,7 @@ class SocketDeviceHandler {
     serverAddress: string,
     database: MongoRealtimeDatabase,
     user: User,
-    socket: ISocket,
+    socket: ITeckosSocket,
   ) {
     this.serverAddress = serverAddress;
     this.user = user;

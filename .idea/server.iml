@@ -12,5 +12,7 @@
     <orderEntry type="module" module-name="auth-server" />
     <orderEntry type="module" module-name="router-distributor" />
     <orderEntry type="module" module-name="test" />
+    <orderEntry type="module" module-name="teckos" />
+    <orderEntry type="module" module-name="teckos-client" />
   </component>
 </module>

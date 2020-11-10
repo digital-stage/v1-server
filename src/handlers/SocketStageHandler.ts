@@ -1,5 +1,6 @@
 import * as pino from 'pino';
 import { ObjectId } from 'mongodb';
+import { ITeckosSocket } from 'teckos';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import { User } from '../model.server';
 import { ClientStageEvents } from '../events';
@@ -19,7 +20,6 @@ import {
   SetCustomGroupPayload, SetCustomStageMemberAudioPayload,
   SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
 } from '../payloads';
-import ISocket from '../socket/ISocket';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -28,11 +28,11 @@ const logger = pino({
 class SocketStageHandler {
   private readonly user: User;
 
-  private readonly socket: ISocket;
+  private readonly socket: ITeckosSocket;
 
   private readonly database: MongoRealtimeDatabase;
 
-  constructor(database: MongoRealtimeDatabase, user: User, socket: ISocket) {
+  constructor(database: MongoRealtimeDatabase, user: User, socket: ITeckosSocket) {
     this.user = user;
     this.database = database;
     this.socket = socket;

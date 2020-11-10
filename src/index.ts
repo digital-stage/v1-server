@@ -2,11 +2,11 @@ import * as pino from 'pino';
 import * as ip from 'ip';
 import { config } from 'dotenv';
 import * as uWS from 'uWebSockets.js';
+import { UWSProvider } from 'teckos';
 import HttpService from './http/HttpService';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
 import { IAuthentication } from './auth/IAuthentication';
-import UWSProvider from './socket/uWS/UWSProvider';
 import SocketHandler from './handlers/SocketHandler';
 
 config();
