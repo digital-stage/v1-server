@@ -30,7 +30,7 @@ module.exports = {
 								"REDIS_URL":  process.env.REDIS_URL,
 								"DEBUG_PAYLOAD":  process.env.DEBUG_PAYLOAD,
 						},
-						'post-deploy': 'npm install && npm run build && pm2 restart ecosystem.config.js --env production'
+						'post-deploy': 'npm install && npm run build && pm2 restart router'
 				}
 		}
 };
