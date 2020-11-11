@@ -5,3 +5,4 @@ dist
 .env
 /.idea
 .env.production
+ecosystem.config.js
