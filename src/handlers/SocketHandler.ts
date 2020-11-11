@@ -1,12 +1,12 @@
 import * as pino from 'pino';
 import { ITeckosProvider, ITeckosSocket } from 'teckos';
+import { config } from 'dotenv';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import SocketDeviceHandler from './SocketDeviceHandler';
 import SocketStageHandler from './SocketStageHandler';
 import { ServerGlobalEvents, ServerUserEvents } from '../events';
 import { IAuthentication } from '../auth/IAuthentication';
 import { Device } from '../model.server';
-import {config} from "dotenv";
 
 config();
 
@@ -89,14 +89,12 @@ class SocketHandler {
                 socket.disconnect();
               });
           }
-          logger.error('[SOCKETSERVER] Malformed token provided');
-          console.log(payload);
           return socket.disconnect();
         });
         // TODO: Disconnect after timeout when no token is delivered
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
 
     logger.info('[SOCKETSERVER] DONE initializing socket server.');

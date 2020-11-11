@@ -1645,7 +1645,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO DEVICE '${socket.id}' ${event}`);
     }
-    console.log(`sendToDevice(${event})`);
     socket.emit(event, payload);
   }
 
@@ -1655,7 +1654,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO USER '${userId}' ${event}`);
     }
-    console.log(`sendToUser(${userId}, ${event})`);
     this._io.to(userId.toString(), event, payload);
   }
 
@@ -1665,7 +1663,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     } else {
       logger.trace(`[SOCKETSERVER] SEND TO ALL ${event}`);
     }
-    console.log(`sendToAll(${event})`);
     this._io.toAll(event, payload);
   }
 }

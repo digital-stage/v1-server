@@ -1,12 +1,7 @@
-import * as pino from 'pino';
 import { ObjectId } from 'mongodb';
 import * as uWebSocket from 'uWebSockets.js';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import { IAuthentication } from '../auth/IAuthentication';
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-});
 
 class HttpService {
   private authentication: IAuthentication;

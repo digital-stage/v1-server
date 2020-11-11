@@ -23,27 +23,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../router/.eslintrc.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../router/src/ProducerAPI.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../router/src/RouterList.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../router-distributor/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router-distributor/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../router/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/src/config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router/src/config.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/src/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router/src/events.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router/src/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/src/mediasoup.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router/src/mediasoup.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/src/model/model.server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router/src/model/model.server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router/src/util.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router/src/util.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/server.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/server.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" afterDir="false" />
     </list>
@@ -56,7 +44,7 @@
     <execution />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../router" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
@@ -188,7 +176,7 @@
       <workItem from="1604912014296" duration="36538000" />
       <workItem from="1605010269399" duration="21805000" />
       <workItem from="1605088941233" duration="16822000" />
-      <workItem from="1605113872441" duration="4086000" />
+      <workItem from="1605113872441" duration="4332000" />
     </task>
     <servers />
   </component>
@@ -216,22 +204,22 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1604943485625" />
-    <state width="780" height="568" key="GridCell.Tab.0.bottom" timestamp="1605117743211">
+    <state width="779" height="568" key="GridCell.Tab.0.bottom" timestamp="1605121193698">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="780" height="568" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1605117743211" />
-    <state width="780" height="568" key="GridCell.Tab.0.center" timestamp="1605117743211">
+    <state width="779" height="568" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193698" />
+    <state width="779" height="568" key="GridCell.Tab.0.center" timestamp="1605121193697">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="780" height="568" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1605117743211" />
-    <state width="780" height="568" key="GridCell.Tab.0.left" timestamp="1605117743210">
+    <state width="779" height="568" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193697" />
+    <state width="779" height="568" key="GridCell.Tab.0.left" timestamp="1605121193696">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="780" height="568" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1605117743210" />
-    <state width="780" height="568" key="GridCell.Tab.0.right" timestamp="1605117743211">
+    <state width="779" height="568" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193696" />
+    <state width="779" height="568" key="GridCell.Tab.0.right" timestamp="1605121193697">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="780" height="568" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605117743211" />
+    <state width="779" height="568" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193697" />
     <state x="1165" y="266" key="SettingsEditor" timestamp="1605113829320">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -248,10 +236,10 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1604924625643" />
-    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1605040031645">
+    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1605121170270">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1440@0.0.2560.1440" timestamp="1605040031645" />
+    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1440@0.0.2560.1440" timestamp="1605121170270" />
     <state x="461" y="475" width="741" height="640" key="find.popup" timestamp="1605113255423">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -265,9 +253,9 @@
     </state>
     <state x="945" y="349" key="run.anything.popup/0.23.2560.1328@0.23.2560.1328" timestamp="1604942903955" />
     <state x="945" y="345" key="run.anything.popup/0.23.2560.1330@0.23.2560.1330" timestamp="1604656546321" />
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605106706022">
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605121166213">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605106706022" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605121166213" />
   </component>
 </project>

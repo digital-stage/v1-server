@@ -1,17 +1,17 @@
 import * as pino from 'pino';
 import * as ip from 'ip';
-import {config} from 'dotenv';
+import { config } from 'dotenv';
 import * as uWS from 'uWebSockets.js';
-import {UWSProvider} from 'teckos';
+import { UWSProvider } from 'teckos';
 import HttpService from './http/HttpService';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
-import {IAuthentication} from './auth/IAuthentication';
+import { IAuthentication } from './auth/IAuthentication';
 import SocketHandler from './handlers/SocketHandler';
 
 config();
 
-const {MONGO_URL, REDIS_URL, MONGO_DB} = process.env;
+const { MONGO_URL, REDIS_URL, MONGO_DB } = process.env;
 const PORT: number = parseInt(process.env.PORT, 10);
 
 const logger = pino({
