@@ -28,11 +28,6 @@
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../router-distributor/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router-distributor/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/database/MongoRealtimeDatabase.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
