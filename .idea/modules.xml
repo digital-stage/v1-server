@@ -3,10 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../auth-server/.idea/auth-server.iml" filepath="$PROJECT_DIR$/../auth-server/.idea/auth-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../router/.idea/router.iml" filepath="$PROJECT_DIR$/../router/.idea/router.iml" />
       <module fileurl="file://$PROJECT_DIR$/../router-distributor/.idea/router-distributor.iml" filepath="$PROJECT_DIR$/../router-distributor/.idea/router-distributor.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/server.iml" filepath="$PROJECT_DIR$/.idea/server.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../delude88/teckos/.idea/teckos.iml" filepath="$PROJECT_DIR$/../../delude88/teckos/.idea/teckos.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../delude88/teckos-client/.idea/teckos-client.iml" filepath="$PROJECT_DIR$/../../delude88/teckos-client/.idea/teckos-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../delude88/teckos-node-client/.idea/teckos-node-client.iml" filepath="$PROJECT_DIR$/../../delude88/teckos-node-client/.idea/teckos-node-client.iml" />
       <module fileurl="file://$PROJECT_DIR$/../test/.idea/test.iml" filepath="$PROJECT_DIR$/../test/.idea/test.iml" />
       <module fileurl="file://$PROJECT_DIR$/../webclient/.idea/webclient.iml" filepath="$PROJECT_DIR$/../webclient/.idea/webclient.iml" />
     </modules>

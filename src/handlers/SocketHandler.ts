@@ -6,6 +6,9 @@ import SocketStageHandler from './SocketStageHandler';
 import { ServerGlobalEvents, ServerUserEvents } from '../events';
 import { IAuthentication } from '../auth/IAuthentication';
 import { Device } from '../model.server';
+import {config} from "dotenv";
+
+config();
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -37,6 +40,7 @@ class SocketHandler {
 
     try {
       this._io.onConnection((socket: ITeckosSocket) => {
+        logger.info('[SOCKETSERVER] Got new Connection');
         // Wait for token
 
         socket.on('token', (payload: {

@@ -14,5 +14,7 @@
     <orderEntry type="module" module-name="test" />
     <orderEntry type="module" module-name="teckos" />
     <orderEntry type="module" module-name="teckos-client" />
+    <orderEntry type="module" module-name="teckos-node-client" />
+    <orderEntry type="module" module-name="router" />
   </component>
 </module>
