@@ -26,9 +26,12 @@
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../router-distributor/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../router-distributor/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/.env.development" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../webclient/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,10 +238,10 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1440@0.0.2560.1440" timestamp="1605121170270" />
-    <state x="461" y="475" width="741" height="640" key="find.popup" timestamp="1605113255423">
+    <state x="461" y="475" width="741" height="640" key="find.popup" timestamp="1605125698009">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="461" y="475" width="741" height="640" key="find.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605113255423" />
+    <state x="461" y="475" width="741" height="640" key="find.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605125698009" />
     <state width="600" height="428" key="javadoc.popup" timestamp="1604673472875">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
