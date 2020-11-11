@@ -11,8 +11,9 @@ import SocketHandler from './handlers/SocketHandler';
 
 config();
 
-const { MONGO_URL, REDIS_URL, MONGO_DB } = process.env;
-const PORT: number = parseInt(process.env.PORT, 10);
+const {
+  MONGO_URL, REDIS_URL, MONGO_DB, PORT,
+} = process.env;
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -38,7 +39,7 @@ const init = async () => database.connect(MONGO_DB)
   .then(() => handler.init())
   .then(() => httpService.init(uws))
   .then(() => resetDevices())
-  .then(() => io.listen(PORT));
+  .then(() => io.listen(parseInt(PORT, 10)));
 
 logger.info('[SERVER] Starting ...');
 init()

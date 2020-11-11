@@ -26,8 +26,8 @@
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/.env.development" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/package-lock.json" afterDir="false" />
@@ -42,7 +42,7 @@
     <execution />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../router-distributor" />
   </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
@@ -226,14 +226,14 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="500" height="445" key="SwitcherDM/0.0.2560.1440@0.0.2560.1440" timestamp="1604937699493" />
-    <state x="918" y="12" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1605041449181">
+    <state x="918" y="12" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1605126994029">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="918" y="12" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605041449181" />
-    <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1604924625643">
+    <state x="918" y="12" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605126994029" />
+    <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1605126994029">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1604924625643" />
+    <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605126994029" />
     <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1605121170270">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
