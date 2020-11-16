@@ -9,21 +9,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../../delude88/teckos/src/types/TeckosOptions.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/example/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-client/example/node/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-client/tsconfig.example.node.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/example/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/example/web/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/example/web/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/src/TeckosClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/src/TeckosClient.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/src/util/Converter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/src/util/Converter.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/tsconfig.example.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/tsconfig.example.web.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/webpack.config.example.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/webpack.config.example.web.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos-node-client/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-node-client/example/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos-node-client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-node-client/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-node-client/src/TeckosClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-node-client/src/TeckosClient.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/src/UWSProvider.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/src/UWSProvider.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../delude88/teckos/src/UWSSocket.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/src/UWSSocket.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/handlers/SocketDeviceHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketDeviceHandler.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/.env.development" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,7 +56,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="javascript.nodejs.core.library.configured.version" value="14.13.0" />
     <property name="javascript.nodejs.core.library.typings.version" value="14.14.6" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../delude88/teckos-node-client/src" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../delude88/teckos-client/example/node" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.standard" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
@@ -70,67 +72,67 @@
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/../../delude88/teckos-node-client/src" />
-      <recent name="$PROJECT_DIR$/../router" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src" />
-      <recent name="$PROJECT_DIR$/../router-distributor" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos-node-client" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/example/web" />
       <recent name="$PROJECT_DIR$/../../delude88/teckos/external /uWebSocket.js" />
       <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src/types" />
       <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src/util" />
       <recent name="$PROJECT_DIR$/../../delude88/teckos-client/example" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos/src/types" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/example/node" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-node-client/src" />
+      <recent name="$PROJECT_DIR$/../router" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.dev">
-    <configuration name="build:example" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+  <component name="RunManager">
+    <configuration name="build:lib (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
       <command value="run" />
       <scripts>
-        <script value="build:example" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="dev (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../../delude88/teckos-node-client/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="dev (2)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="dev (4)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../../delude88/teckos/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
+        <script value="build:lib" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
     </configuration>
     <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/package.json" />
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
       <command value="run" />
       <scripts>
         <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:node" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:node" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:web" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:web" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="lint (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="lint" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
@@ -138,11 +140,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="npm.dev (1)" />
-        <item itemvalue="npm.dev (4)" />
-        <item itemvalue="npm.build:example" />
-        <item itemvalue="npm.dev (2)" />
+        <item itemvalue="npm.dev:node" />
+        <item itemvalue="npm.dev:web" />
         <item itemvalue="npm.dev" />
+        <item itemvalue="npm.build:lib (1)" />
+        <item itemvalue="npm.lint (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -171,7 +173,7 @@
       <workItem from="1605172063163" duration="21823000" />
       <workItem from="1605257558639" duration="101000" />
       <workItem from="1605257823264" duration="27380000" />
-      <workItem from="1605518609091" duration="3396000" />
+      <workItem from="1605518609091" duration="6971000" />
     </task>
     <servers />
   </component>
@@ -233,22 +235,22 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605277520492" />
-    <state width="2518" height="420" key="GridCell.Tab.0.bottom" timestamp="1605523949341">
+    <state width="1232" height="468" key="GridCell.Tab.0.bottom" timestamp="1605528551850">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="420" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949341" />
-    <state width="2518" height="420" key="GridCell.Tab.0.center" timestamp="1605523949340">
+    <state width="1232" height="468" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1605528551850" />
+    <state width="1232" height="468" key="GridCell.Tab.0.center" timestamp="1605528551849">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="420" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949340" />
-    <state width="2518" height="420" key="GridCell.Tab.0.left" timestamp="1605523949340">
+    <state width="1232" height="468" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1605528551849" />
+    <state width="1232" height="468" key="GridCell.Tab.0.left" timestamp="1605528551849">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="420" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949340" />
-    <state width="2518" height="420" key="GridCell.Tab.0.right" timestamp="1605523949341">
+    <state width="1232" height="468" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1605528551849" />
+    <state width="1232" height="468" key="GridCell.Tab.0.right" timestamp="1605528551850">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2518" height="420" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949341" />
+    <state width="1232" height="468" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605528551850" />
     <state x="1165" y="266" key="SettingsEditor" timestamp="1605283147026">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -283,9 +285,9 @@
     <state x="945" y="349" key="run.anything.popup/0.23.2560.1328@0.23.2560.1328" timestamp="1604942903955" />
     <state x="945" y="345" key="run.anything.popup/0.23.2560.1330@0.23.2560.1330" timestamp="1604656546321" />
     <state x="945" y="353" key="run.anything.popup/0.25.2560.1317@0.25.2560.1317" timestamp="1605522925045" />
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605523245429">
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605524082150">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605523245429" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605524082150" />
   </component>
 </project>

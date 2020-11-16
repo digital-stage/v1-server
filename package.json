@@ -53,7 +53,7 @@
     "node": "^15.2.0",
     "node-fetch": "^2.6.1",
     "pino": "^6.7.0",
-    "teckos": "0.0.7",
+    "teckos": "0.0.8",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.10.0"
   }
 }
