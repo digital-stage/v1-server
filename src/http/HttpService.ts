@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import * as uWebSocket from 'uWebSockets.js';
+import * as uWebSocket from 'teckos/uWebSockets';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import { IAuthentication } from '../auth/IAuthentication';
 

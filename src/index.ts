@@ -1,7 +1,7 @@
 import * as pino from 'pino';
 import * as ip from 'ip';
 import { config } from 'dotenv';
-import * as uWS from 'uWebSockets.js';
+import * as uWS from 'teckos/uWebSockets';
 import { UWSProvider } from 'teckos';
 import HttpService from './http/HttpService';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
