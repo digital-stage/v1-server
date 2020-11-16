@@ -4,7 +4,6 @@
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../delude88/teckos" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../../delude88/teckos-client" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../../delude88/teckos-node-client" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../auth-server" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../router" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../router-distributor" vcs="Git" />
