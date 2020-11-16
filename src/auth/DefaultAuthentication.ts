@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import * as pino from 'pino';
-import { HttpRequest } from 'teckos/uWebSockets';
+import { HttpRequest } from 'uWebSockets.js';
 import { IRealtimeDatabase } from '../database/IRealtimeDatabase';
 import { User } from '../model.server';
 import { IAuthentication } from './IAuthentication';

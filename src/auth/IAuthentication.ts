@@ -1,4 +1,4 @@
-import { HttpRequest } from 'teckos/uWebSockets';
+import { HttpRequest } from 'uWebSockets.js';
 import { User } from '../model.server';
 
 export interface IAuthentication {

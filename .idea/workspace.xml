@@ -9,7 +9,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../router/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../router/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" afterDir="false" />
@@ -18,6 +18,7 @@
       <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/.env.development" afterDir="false" />
     </list>
+    <list id="c151f81d-d58e-40ba-9ed1-de6174dbf470" name="Revert &quot;fix: updated teckos dep&quot;" comment="Revert &quot;fix: updated teckos dep&quot;&#10;&#10;This reverts commit 28381de9" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -28,6 +29,7 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
@@ -77,7 +79,7 @@
       <recent name="$PROJECT_DIR$/../router" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="npm.build:example">
     <configuration name="build:example" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/../../delude88/teckos/package.json" />
       <command value="run" />
@@ -165,6 +167,21 @@
       <workItem from="1605257823264" duration="27380000" />
       <workItem from="1605518609091" duration="26914000" />
     </task>
+    <task id="LOCAL-00001" summary="Revert &quot;fix: updated teckos dep&quot;&#10;&#10;This reverts commit 28381de9">
+      <created>1605560124263</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1605560124263</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Revert &quot;fix: ping being aborted without initialized&quot;&#10;&#10;This reverts commit 6d6729b7">
+      <created>1605560322381</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1605560322381</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -198,6 +215,106 @@
             </State>
           </value>
         </entry>
+        <entry key="2">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$/../router" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+        <entry key="3">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$/../router-distributor" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+        <entry key="4">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$/../../delude88/teckos" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+        <entry key="5">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="structure">
+                    <value>
+                      <list>
+                        <option value="dir:/Users/tobias/Developer/delude88/teckos/src" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State />
@@ -208,9 +325,18 @@
     <option name="OPEN_GENERIC_TABS">
       <map>
         <entry key="1" value="TOOL_WINDOW" />
+        <entry key="2" value="TOOL_WINDOW" />
+        <entry key="3" value="TOOL_WINDOW" />
+        <entry key="4" value="TOOL_WINDOW" />
+        <entry key="5" value="TOOL_WINDOW" />
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Revert &quot;fix: updated teckos dep&quot;&#10;&#10;This reverts commit 28381de9" />
+    <MESSAGE value="Revert &quot;fix: ping being aborted without initialized&quot;&#10;&#10;This reverts commit 6d6729b7" />
+    <option name="LAST_COMMIT_MESSAGE" value="Revert &quot;fix: ping being aborted without initialized&quot;&#10;&#10;This reverts commit 6d6729b7" />
   </component>
   <component name="WindowStateProjectService">
     <state x="583" y="619" key="#ESLint" timestamp="1605113694728">
@@ -221,10 +347,15 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1604943485625" />
-    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog" timestamp="1605277520492">
+    <state x="824" y="290" key="CommitChangelistDialog2" timestamp="1605560322261">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605277520492" />
+    <state x="824" y="290" key="CommitChangelistDialog2/0.0.2560.1440@0.0.2560.1440" timestamp="1605560322261" />
+    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog" timestamp="1605560708943">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605560708943" />
+    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog/0.25.2560.1334@0.25.2560.1334" timestamp="1605560236154" />
     <state width="2518" height="468" key="GridCell.Tab.0.bottom" timestamp="1605546315645">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -241,22 +372,28 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="2518" height="468" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605546315645" />
-    <state x="1165" y="266" key="SettingsEditor" timestamp="1605283147026">
+    <state x="918" y="485" key="MultipleFileMergeDialog" timestamp="1605560303577">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="1165" y="266" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1605283147026" />
+    <state x="918" y="485" key="MultipleFileMergeDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605560303577" />
+    <state x="1165" y="266" key="SettingsEditor" timestamp="1605560436587">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="1165" y="266" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1605560436587" />
     <state width="500" height="445" key="SwitcherDM" timestamp="1604937699493">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="500" height="445" key="SwitcherDM/0.0.2560.1440@0.0.2560.1440" timestamp="1604937699493" />
-    <state x="100" y="100" width="2360" height="1240" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog" timestamp="1605546397963">
+    <state x="200" y="28" width="2360" height="1240" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog" timestamp="1605560470933">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="100" y="100" width="2360" height="1240" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605546397963" />
-    <state x="707" y="0" width="1558" height="1412" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1605541186386">
-      <screen x="0" y="0" width="2560" height="1440" />
+    <state x="200" y="28" width="2360" height="1240" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605560470933" />
+    <state x="200" y="28" width="2360" height="1240" key="com.intellij.history.integration.ui.views.DirectoryHistoryDialog/0.25.2560.1334@0.25.2560.1334" timestamp="1605560236155" />
+    <state x="707" y="0" width="1558" height="1412" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1605560236155">
+      <screen x="0" y="25" width="2560" height="1334" />
     </state>
     <state x="707" y="0" width="1558" height="1412" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605541186386" />
+    <state x="707" y="0" width="1558" height="1412" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.25.2560.1334@0.25.2560.1334" timestamp="1605560236155" />
     <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1605126994029">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
