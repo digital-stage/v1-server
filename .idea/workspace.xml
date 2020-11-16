@@ -4,34 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BranchesTreeState">
-    <expand>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-      <path>
-        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
-        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
-      </path>
-    </expand>
+    <expand />
     <select />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos/src/types/TeckosOptions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/example/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-client/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-node-client/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-node-client/example/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos-node-client/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos-node-client/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/example/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../delude88/teckos/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos/src/UWSProvider.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/src/UWSProvider.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../delude88/teckos/src/UWSSocket.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../delude88/teckos/src/UWSSocket.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/SocketDeviceHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketDeviceHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/SocketHandler.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/.env.development" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/lib/digitalstage/useMediasoup/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../webclient/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../webclient/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +35,7 @@
     <execution />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../router-distributor" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../delude88/teckos" />
   </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
@@ -77,13 +70,6 @@
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src/types" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src/util" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/example" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos/src/types" />
-      <recent name="$PROJECT_DIR$/../../delude88/teckos/src" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/../../delude88/teckos-node-client/src" />
       <recent name="$PROJECT_DIR$/../router" />
@@ -91,39 +77,26 @@
       <recent name="$PROJECT_DIR$/../router-distributor" />
       <recent name="$PROJECT_DIR$/../../delude88/teckos-node-client" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/../../delude88/teckos/external /uWebSocket.js" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src/types" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/src/util" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos-client/example" />
+      <recent name="$PROJECT_DIR$/../../delude88/teckos/src/types" />
+    </key>
   </component>
-  <component name="RunManager" selected="npm.build">
-    <configuration name="build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../webclient/package.json" />
+  <component name="RunManager" selected="npm.dev">
+    <configuration name="build:example" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
       <command value="run" />
       <scripts>
-        <script value="build" />
+        <script value="build:example" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
       <method v="2" />
     </configuration>
-    <configuration name="dev (2)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../router-distributor/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="dev (3)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../router/package.json" />
-      <command value="run" />
-      <scripts>
-        <script value="dev" />
-      </scripts>
-      <node-interpreter value="project" />
-      <envs />
-      <method v="2" />
-    </configuration>
-    <configuration name="dev (4)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+    <configuration name="dev (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/../../delude88/teckos-node-client/package.json" />
       <command value="run" />
       <scripts>
@@ -133,8 +106,28 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="dev (2)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos-client/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev (4)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/../../delude88/teckos/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
-      <package-json value="$PROJECT_DIR$/../webclient/package.json" />
+      <package-json value="$PROJECT_DIR$/package.json" />
       <command value="run" />
       <scripts>
         <script value="dev" />
@@ -145,11 +138,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.dev (1)" />
         <item itemvalue="npm.dev (4)" />
-        <item itemvalue="npm.dev (3)" />
+        <item itemvalue="npm.build:example" />
         <item itemvalue="npm.dev (2)" />
         <item itemvalue="npm.dev" />
-        <item itemvalue="npm.build" />
       </list>
     </recent_temporary>
   </component>
@@ -175,6 +168,10 @@
       <workItem from="1605010269399" duration="21805000" />
       <workItem from="1605088941233" duration="16822000" />
       <workItem from="1605113872441" duration="4332000" />
+      <workItem from="1605172063163" duration="21823000" />
+      <workItem from="1605257558639" duration="101000" />
+      <workItem from="1605257823264" duration="27380000" />
+      <workItem from="1605518609091" duration="3396000" />
     </task>
     <servers />
   </component>
@@ -184,11 +181,41 @@
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
+        <entry key="1">
+          <value>
+            <State>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="structure">
+                    <value>
+                      <list>
+                        <option value="dir:/Users/tobias/Developer/digitalstage/router/src" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State />
           </value>
         </entry>
+      </map>
+    </option>
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="1" value="TOOL_WINDOW" />
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
@@ -202,58 +229,63 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1604943485625" />
-    <state width="779" height="568" key="GridCell.Tab.0.bottom" timestamp="1605121193698">
+    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog" timestamp="1605277520492">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="779" height="568" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193698" />
-    <state width="779" height="568" key="GridCell.Tab.0.center" timestamp="1605121193697">
+    <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605277520492" />
+    <state width="2518" height="420" key="GridCell.Tab.0.bottom" timestamp="1605523949341">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="779" height="568" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193697" />
-    <state width="779" height="568" key="GridCell.Tab.0.left" timestamp="1605121193696">
+    <state width="2518" height="420" key="GridCell.Tab.0.bottom/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949341" />
+    <state width="2518" height="420" key="GridCell.Tab.0.center" timestamp="1605523949340">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="779" height="568" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193696" />
-    <state width="779" height="568" key="GridCell.Tab.0.right" timestamp="1605121193697">
+    <state width="2518" height="420" key="GridCell.Tab.0.center/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949340" />
+    <state width="2518" height="420" key="GridCell.Tab.0.left" timestamp="1605523949340">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="779" height="568" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605121193697" />
-    <state x="1165" y="266" key="SettingsEditor" timestamp="1605113829320">
+    <state width="2518" height="420" key="GridCell.Tab.0.left/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949340" />
+    <state width="2518" height="420" key="GridCell.Tab.0.right" timestamp="1605523949341">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="1165" y="266" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1605113829320" />
+    <state width="2518" height="420" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605523949341" />
+    <state x="1165" y="266" key="SettingsEditor" timestamp="1605283147026">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="1165" y="266" key="SettingsEditor/0.0.2560.1440@0.0.2560.1440" timestamp="1605283147026" />
     <state width="500" height="445" key="SwitcherDM" timestamp="1604937699493">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="500" height="445" key="SwitcherDM/0.0.2560.1440@0.0.2560.1440" timestamp="1604937699493" />
-    <state x="918" y="12" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1605126994029">
+    <state x="0" y="28" width="1558" height="1412" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1605276447610">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="918" y="12" width="1642" height="1240" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605126994029" />
+    <state x="0" y="28" width="1558" height="1412" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605276447610" />
     <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1605126994029">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1282" y="81" width="1169" height="1240" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605126994029" />
-    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1605121170270">
+    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1605284272521">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1440@0.0.2560.1440" timestamp="1605121170270" />
-    <state x="461" y="475" width="741" height="640" key="find.popup" timestamp="1605125698009">
+    <state x="1078" y="641" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.2560.1440@0.0.2560.1440" timestamp="1605284272521" />
+    <state x="461" y="475" width="866" height="640" key="find.popup" timestamp="1605292536417">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="461" y="475" width="741" height="640" key="find.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605125698009" />
+    <state x="461" y="475" width="866" height="640" key="find.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605292536417" />
     <state width="600" height="428" key="javadoc.popup" timestamp="1604673472875">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="600" height="428" key="javadoc.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1604673472875" />
-    <state x="945" y="349" key="run.anything.popup" timestamp="1604942903955">
-      <screen x="0" y="23" width="2560" height="1328" />
+    <state x="945" y="353" key="run.anything.popup" timestamp="1605522925045">
+      <screen x="0" y="25" width="2560" height="1317" />
     </state>
     <state x="945" y="349" key="run.anything.popup/0.23.2560.1328@0.23.2560.1328" timestamp="1604942903955" />
     <state x="945" y="345" key="run.anything.popup/0.23.2560.1330@0.23.2560.1330" timestamp="1604656546321" />
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605121166213">
+    <state x="945" y="353" key="run.anything.popup/0.25.2560.1317@0.25.2560.1317" timestamp="1605522925045" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605523245429">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605121166213" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605523245429" />
   </component>
 </project>

@@ -1,6 +1,5 @@
-import * as pino from 'pino';
 import { ITeckosProvider, ITeckosSocket } from 'teckos';
-import { config } from 'dotenv';
+import debug from 'debug';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import SocketDeviceHandler from './SocketDeviceHandler';
 import SocketStageHandler from './SocketStageHandler';
@@ -8,11 +7,10 @@ import { ServerGlobalEvents, ServerUserEvents } from '../events';
 import { IAuthentication } from '../auth/IAuthentication';
 import { Device } from '../model.server';
 
-config();
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-});
+const d = debug('server:socket');
+const info = d.extend('info');
+const trace = d.extend('trace');
+const error = d.extend('error');
 
 class SocketHandler {
   private readonly _serverAddress: string;
@@ -36,68 +34,63 @@ class SocketHandler {
   }
 
   async init(): Promise<void> {
-    logger.info('[SOCKETSERVER] Initializing socket server...');
+    info('Initializing socket server...');
 
-    try {
-      this._io.onConnection((socket: ITeckosSocket) => {
-        logger.info('[SOCKETSERVER] Got new Connection');
-        // Wait for token
+    this._io.onConnection((socket: ITeckosSocket) => {
+      info('Got new Connection');
+      // Wait for token
 
-        socket.on('token', (payload: {
-          token: string;
-          device?: Partial<Device>
-        }) => {
-          const { token, device: initialDevice } = payload;
-          if (token) {
-            return this._authentication.verifyWithToken(token)
-              .then((user) => {
-                logger.trace(`[SOCKETSERVER] Incoming socket request ${socket.id}`);
+      socket.on('token', (payload: {
+        token: string;
+        device?: Partial<Device>
+      }) => {
+        const { token, device: initialDevice } = payload;
+        if (token) {
+          return this._authentication.verifyWithToken(token)
+            .then((user) => {
+              trace(`Incoming socket request ${socket.id}`);
 
-                logger.trace(`[SOCKETSERVER](${socket.id}) Authenticated user ${user.name}`);
-                const deviceHandler = new SocketDeviceHandler(
-                  this._serverAddress,
-                  this._database,
-                  user,
-                  socket,
-                );
-                const stageHandler = new SocketStageHandler(this._database, user, socket);
+              trace(`(${socket.id}) Authenticated user ${user.name}`);
+              const deviceHandler = new SocketDeviceHandler(
+                this._serverAddress,
+                this._database,
+                user,
+                socket,
+              );
+              const stageHandler = new SocketStageHandler(this._database, user, socket);
 
-                deviceHandler.init();
+              deviceHandler.init();
 
-                stageHandler.init();
+              stageHandler.init();
 
-                MongoRealtimeDatabase.sendToDevice(socket, ServerUserEvents.USER_READY, user);
+              MongoRealtimeDatabase.sendToDevice(socket, ServerUserEvents.USER_READY, user);
 
-                return Promise.all([
-                  deviceHandler.generateDevice(initialDevice)
-                    .then(() => deviceHandler.sendRemoteDevices()),
-                  stageHandler.sendStages(),
-                ])
-                  .then(() => {
-                    socket.join(user._id.toString());
-                    MongoRealtimeDatabase.sendToDevice(socket, ServerGlobalEvents.READY);
-                  })
-                  .catch((error) => {
-                    socket.error(error.message);
-                    logger.error(`[SOCKETSERVER](${socket.id}) Internal error`);
-                    logger.error(error);
-                    socket.disconnect();
-                  });
-              })
-              .catch((authError) => {
-                logger.error(authError);
-                socket.disconnect();
-              });
-          }
-          return socket.disconnect();
-        });
-        // TODO: Disconnect after timeout when no token is delivered
+              return Promise.all([
+                deviceHandler.generateDevice(initialDevice)
+                  .then(() => deviceHandler.sendRemoteDevices()),
+                stageHandler.sendStages(),
+              ])
+                .then(() => {
+                  socket.join(user._id.toString());
+                  MongoRealtimeDatabase.sendToDevice(socket, ServerGlobalEvents.READY);
+                })
+                .catch((initializationError) => {
+                  socket.error(initializationError.message);
+                  error(`(${socket.id}) Internal error: ${error}`);
+                  socket.disconnect();
+                });
+            })
+            .catch((authError) => {
+              error(`Could not authenticate token: ${authError}`);
+              socket.disconnect();
+            });
+        }
+        return socket.disconnect();
       });
-    } catch (error) {
-      logger.error(error);
-    }
+      // TODO: Disconnect after timeout when no token is delivered
+    });
 
-    logger.info('[SOCKETSERVER] DONE initializing socket server.');
+    info('[SOCKETSERVER] DONE initializing socket server.');
   }
 }
 

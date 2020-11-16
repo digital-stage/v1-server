@@ -20,7 +20,12 @@ const getUserByToken = (token: string): Promise<DefaultAuthUser> => fetch(`${pro
     Authorization: `Bearer ${token}`,
   },
 })
-  .then((result) => result.json());
+  .then((result) => {
+    if (result.ok) {
+      return result.json();
+    }
+    throw new Error(result.statusText);
+  });
 
 class DefaultAuthentication implements IAuthentication {
   private readonly database;
@@ -29,7 +34,11 @@ class DefaultAuthentication implements IAuthentication {
     this.database = database;
   }
 
-  verifyWithToken(token: string): Promise<User> {
+  verifyWithToken(reqToken: string): Promise<User> {
+    let token = reqToken;
+    if (reqToken.length > 7 && reqToken.substring(0, 7) === 'Bearer ') {
+      token = reqToken.substring(7);
+    }
     return getUserByToken(token)
       .then((authUser) => this.database.readUserByUid(authUser._id)
         .then((user) => {

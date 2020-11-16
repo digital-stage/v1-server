@@ -266,7 +266,7 @@ class SocketDeviceHandler {
     MongoRealtimeDatabase.sendToDevice(
       this.socket,
       ServerDeviceEvents.LOCAL_DEVICE_READY,
-      this.device,
+      JSON.stringify(this.device),
     );
     logger.debug(`Finished generating device for user ${this.user.name} by creating new.`);
     return this.device;

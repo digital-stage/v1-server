@@ -4,7 +4,7 @@
   "description": "Stage and device orchestration server for digital-stage.org",
   "main": "index.js",
   "scripts": {
-    "dev": "LOG_LEVEL=trace nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
+    "dev": "LOG_LEVEL=trace DEBUG=teckos.*,server.* nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts | pino-colada",
     "lint": "npx eslint ./src --ext .js,.ts --fix",
     "build": "tsc",
     "start": "tsc && node ./dist/index.js"
@@ -26,11 +26,13 @@
   },
   "homepage": "https://github.com/digital-stage/server#readme",
   "devDependencies": {
-    "@types/ioredis": "^4.17.7",
+    "@types/debug": "^4.1.5",
+    "@types/ioredis": "^4.17.8",
     "@types/ip": "^1.1.0",
     "@types/lodash": "^4.14.165",
     "@types/mongodb": "^3.5.33",
     "@types/node": "^14.14.7",
+    "@types/node-fetch": "^2.5.7",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
     "eslint": "^7.13.0",
@@ -42,15 +44,16 @@
     "typescript": "^4.0.5"
   },
   "dependencies": {
+    "debug": "^4.2.0",
     "dotenv": "^8.2.0",
     "ioredis": "^4.19.2",
     "ip": "^1.1.5",
     "lodash": "^4.17.20",
     "mongodb": "^3.6.3",
-    "node": "^15.0.1",
+    "node": "^15.2.0",
     "node-fetch": "^2.6.1",
     "pino": "^6.7.0",
-    "teckos": "0.0.3",
+    "teckos": "0.0.7",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.10.0"
   }
 }

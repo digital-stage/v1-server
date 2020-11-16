@@ -31,31 +31,35 @@ class HttpService {
       res.onAborted(() => {
         res.aborted = true;
       });
-
-      const params = JSON.parse(req.getParameter(0));
-      const token = JSON.parse(req.getHeader('authorization'));
-
-      if (
-        !params.token
-          || !params.id
-            || typeof params.id !== 'string'
-      ) {
-        res.sendStatus(400).end();
+      const id = req.getParameter(0);
+      if (!id
+      || typeof id !== 'string') {
+        return res.writeStatus('400 Bad Request ').end();
+      }
+      const token = req.getHeader('authorization');
+      if (!token
+        || typeof token !== 'string') {
+        return res.writeStatus('400 Bad Request ').end();
       }
 
-      const user = await this.authentication.verifyWithToken(token);
-
-      if (user) {
-        const producer = await this.getProducer(params.id);
-
-        if (!res.aborted) {
-          if (producer) {
-            res.end(JSON.stringify(producer));
-          } else {
-            res.sendStatus('404 Not Found');
+      return this.authentication.verifyWithToken(token)
+        .then(() => this.getProducer(id))
+        .then((producer) => {
+          if (!res.onAborted) {
+            if (producer) {
+              res.end(JSON.stringify(producer));
+            } else {
+              res.writeStatus('404 Not Found').end();
+            }
           }
-        }
-      }
+        })
+        .catch((err) => {
+          console.error(err);
+          if (!res.onAborted) {
+            return res.writeStatus('500 Internal Server Error').end();
+          }
+          return null;
+        });
     });
   }
 }
