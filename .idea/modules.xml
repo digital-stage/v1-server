@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/server.iml" filepath="$PROJECT_DIR$/.idea/server.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../delude88/teckos/.idea/teckos.iml" filepath="$PROJECT_DIR$/../../delude88/teckos/.idea/teckos.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../delude88/teckos-client/.idea/teckos-client.iml" filepath="$PROJECT_DIR$/../../delude88/teckos-client/.idea/teckos-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../delude88/teckos-native/.idea/teckos-native.iml" filepath="$PROJECT_DIR$/../../delude88/teckos-native/.idea/teckos-native.iml" />
       <module fileurl="file://$PROJECT_DIR$/../test/.idea/test.iml" filepath="$PROJECT_DIR$/../test/.idea/test.iml" />
       <module fileurl="file://$PROJECT_DIR$/../webclient/.idea/webclient.iml" filepath="$PROJECT_DIR$/../webclient/.idea/webclient.iml" />
     </modules>

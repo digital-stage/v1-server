@@ -9,15 +9,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7fc6453b-7f02-4887-a35e-196629041ca3" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../router/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../router/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-native/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-native/.gitmodules" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-native/Makefile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-native/binding.gyp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-native/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../delude88/teckos-native/uWebSockets.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/server.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/server.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/DefaultAuthentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/auth/IAuthentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/IAuthentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/http/HttpService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/http/HttpService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../webclient/.env.development" beforeDir="false" afterPath="$PROJECT_DIR$/../webclient/.env.development" afterDir="false" />
     </list>
+    <list id="158c2f92-fb37-4327-b117-7088e0adbaca" name="Revert &quot;Added dep&quot;" comment="Revert &quot;Added dep&quot;&#10;&#10;This reverts commit 321316a7" />
     <list id="c151f81d-d58e-40ba-9ed1-de6174dbf470" name="Revert &quot;fix: updated teckos dep&quot;" comment="Revert &quot;fix: updated teckos dep&quot;&#10;&#10;This reverts commit 28381de9" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,7 +32,7 @@
     <execution />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../delude88/teckos-native" />
     <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="JsFlowSettings">
@@ -166,6 +170,7 @@
       <workItem from="1605257558639" duration="101000" />
       <workItem from="1605257823264" duration="27380000" />
       <workItem from="1605518609091" duration="26914000" />
+      <workItem from="1605601429532" duration="2742000" />
     </task>
     <task id="LOCAL-00001" summary="Revert &quot;fix: updated teckos dep&quot;&#10;&#10;This reverts commit 28381de9">
       <created>1605560124263</created>
@@ -181,7 +186,14 @@
       <option name="project" value="LOCAL" />
       <updated>1605560322381</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Revert &quot;Added dep&quot;&#10;&#10;This reverts commit 321316a7">
+      <created>1605561779050</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1605561779050</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -336,21 +348,26 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Revert &quot;fix: updated teckos dep&quot;&#10;&#10;This reverts commit 28381de9" />
     <MESSAGE value="Revert &quot;fix: ping being aborted without initialized&quot;&#10;&#10;This reverts commit 6d6729b7" />
-    <option name="LAST_COMMIT_MESSAGE" value="Revert &quot;fix: ping being aborted without initialized&quot;&#10;&#10;This reverts commit 6d6729b7" />
+    <MESSAGE value="Revert &quot;Added dep&quot;&#10;&#10;This reverts commit 321316a7" />
+    <option name="LAST_COMMIT_MESSAGE" value="Revert &quot;Added dep&quot;&#10;&#10;This reverts commit 321316a7" />
   </component>
   <component name="WindowStateProjectService">
     <state x="583" y="619" key="#ESLint" timestamp="1605113694728">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="583" y="619" key="#ESLint/0.0.2560.1440@0.0.2560.1440" timestamp="1605113694728" />
+    <state x="1007" y="526" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1605603902003">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="1007" y="526" key="#com.intellij.fileTypes.FileTypeChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1605603902003" />
     <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser" timestamp="1604943485625">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="1093" y="443" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1440@0.0.2560.1440" timestamp="1604943485625" />
-    <state x="824" y="290" key="CommitChangelistDialog2" timestamp="1605560322261">
+    <state x="824" y="290" key="CommitChangelistDialog2" timestamp="1605561778970">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="824" y="290" key="CommitChangelistDialog2/0.0.2560.1440@0.0.2560.1440" timestamp="1605560322261" />
+    <state x="824" y="290" key="CommitChangelistDialog2/0.0.2560.1440@0.0.2560.1440" timestamp="1605561778970" />
     <state x="0" y="28" width="2448" height="1412" key="DiffContextDialog" timestamp="1605560708943">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -372,10 +389,14 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="2518" height="468" key="GridCell.Tab.0.right/0.0.2560.1440@0.0.2560.1440" timestamp="1605546315645" />
-    <state x="918" y="485" key="MultipleFileMergeDialog" timestamp="1605560303577">
+    <state x="918" y="485" key="MultipleFileMergeDialog" timestamp="1605561760868">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="918" y="485" key="MultipleFileMergeDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605560303577" />
+    <state x="918" y="485" key="MultipleFileMergeDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605561760868" />
+    <state x="1090" y="444" key="RollbackChangesDialog" timestamp="1605561825456">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="1090" y="444" key="RollbackChangesDialog/0.0.2560.1440@0.0.2560.1440" timestamp="1605561825456" />
     <state x="1165" y="266" key="SettingsEditor" timestamp="1605560436587">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
@@ -410,17 +431,17 @@
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state width="600" height="428" key="javadoc.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1604673472875" />
-    <state x="945" y="361" width="670" height="675" key="run.anything.popup" timestamp="1605551689213">
-      <screen x="0" y="0" width="2560" height="1440" />
+    <state x="945" y="361" width="670" height="675" key="run.anything.popup" timestamp="1605602252848">
+      <screen x="0" y="25" width="2560" height="1334" />
     </state>
     <state x="945" y="361" width="670" height="675" key="run.anything.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605551689213" />
     <state x="945" y="349" key="run.anything.popup/0.23.2560.1328@0.23.2560.1328" timestamp="1604942903955" />
     <state x="945" y="345" key="run.anything.popup/0.23.2560.1330@0.23.2560.1330" timestamp="1604656546321" />
     <state x="945" y="353" key="run.anything.popup/0.25.2560.1317@0.25.2560.1317" timestamp="1605522925045" />
-    <state x="945" y="359" key="run.anything.popup/0.25.2560.1334@0.25.2560.1334" timestamp="1605542958096" />
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605547279182">
+    <state x="945" y="361" width="670" height="675" key="run.anything.popup/0.25.2560.1334@0.25.2560.1334" timestamp="1605602252848" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup" timestamp="1605604142935">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605547279182" />
+    <state x="586" y="331" width="670" height="676" key="search.everywhere.popup/0.0.2560.1440@0.0.2560.1440" timestamp="1605604142935" />
   </component>
 </project>
