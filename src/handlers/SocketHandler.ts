@@ -42,7 +42,7 @@ class SocketHandler {
 
       socket.on('token', (payload: {
         token: string;
-        device?: Partial<Device>
+        device?: Partial<Device>;
       }) => {
         const { token, device: initialDevice } = payload;
         if (token) {
