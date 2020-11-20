@@ -248,3 +248,9 @@ export interface LeaveStagePayload {
 }
 
 export type LeaveStageForGoodPayload = string;
+
+// User
+export interface ChangeUserPayload {
+  name: string;
+  avatarUrl?: string;
+}

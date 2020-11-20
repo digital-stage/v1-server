@@ -61,7 +61,6 @@ class SocketStageHandler {
     });
     this.socket.on(ClientStageEvents.REMOVE_STAGE,
       (payload: RemoveStagePayload) => {
-        // REMOVE STAGE
         const id = new ObjectId(payload);
         this.database.readManagedStage(this.user._id, id)
           .then((stage) => {
@@ -166,6 +165,9 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER,
       (payload: SetCustomStageMemberPayload) => {
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
         const stageMemberId = new ObjectId(payload.stageMemberId);
         this.database.setCustomStageMember(this.user._id, stageMemberId, payload.update);
       });
@@ -183,6 +185,9 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_AUDIO,
       (payload: SetCustomStageMemberAudioPayload) => {
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
         const stageMemberAudioId = new ObjectId(payload.stageMemberAudioId);
         this.database.setCustomStageMemberAudioProducer(
           this.user._id,
@@ -204,6 +209,9 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV,
       (payload: SetCustomStageMemberOvPayload) => {
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
         const stageMemberOvTrackId = new ObjectId(payload.stageMemberOvTrackId);
         this.database.setCustomStageMemberOvTrack(
           this.user._id,
@@ -215,7 +223,7 @@ class SocketStageHandler {
     this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV,
       (payload: RemoveCustomStageMemberOvPayload) => {
         const id = new ObjectId(payload);
-        return this.database.readCustomStageMemberOvTrack(id)
+        this.database.readCustomStageMemberOvTrack(id)
           .then((item) => {
             if (item && item.userId.equals(this.user._id)) {
               this.database.deleteCustomStageMemberOvTrack(id);
@@ -226,9 +234,12 @@ class SocketStageHandler {
     // STAGE MEMBER MANAGEMENT
     this.socket.on(ClientStageEvents.CHANGE_STAGE_MEMBER,
       (payload: ChangeStageMemberPayload) => {
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
         // REMOVE GROUPS
         const id = new ObjectId(payload.id);
-        return this.database.readStageMember(id)
+        this.database.readStageMember(id)
           .then((stageMember) => {
             if (stageMember) {
               this.database.readManagedStage(this.user._id, stageMember.stageId)

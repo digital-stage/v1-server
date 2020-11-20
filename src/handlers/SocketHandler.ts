@@ -6,6 +6,7 @@ import SocketStageHandler from './SocketStageHandler';
 import { ServerGlobalEvents, ServerUserEvents } from '../events';
 import { IAuthentication } from '../auth/IAuthentication';
 import { Device } from '../model.server';
+import SocketUserHandler from './SocketUserHandler';
 
 const d = debug('server:socket');
 const info = d.extend('info');
@@ -58,10 +59,13 @@ class SocketHandler {
                 socket,
               );
               const stageHandler = new SocketStageHandler(this._database, user, socket);
+              const userHandler = new SocketUserHandler(this._database, user, socket);
 
               deviceHandler.init();
 
               stageHandler.init();
+
+              userHandler.init();
 
               MongoRealtimeDatabase.sendToDevice(socket, ServerUserEvents.USER_READY, user);
 

@@ -1329,6 +1329,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
   }
 
   setCustomStageMember(userId: UserId, stageMemberId: StageMemberId, update: Partial<Omit<CustomStageMember, '_id'>>): Promise<void> {
+    if (Object.keys(update).length === 0) return Promise.reject(new Error('No payload'));
     return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
       .findOneAndUpdate(
         {
