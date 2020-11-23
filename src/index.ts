@@ -1,8 +1,8 @@
-import * as pino from 'pino';
 import * as ip from 'ip';
 import { config } from 'dotenv';
 import * as uWS from 'teckos/uws';
 import { UWSProvider } from 'teckos';
+import debug from 'debug';
 import HttpService from './http/HttpService';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
@@ -15,9 +15,8 @@ const {
   MONGO_URL, REDIS_URL, MONGO_DB, PORT,
 } = process.env;
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-});
+const d = debug('Server');
+const warn = d.extend('warn');
 
 const serverAddress = `${ip.address()}:${PORT}`;
 
@@ -33,7 +32,7 @@ const httpService = new HttpService(database, auth);
 
 const resetDevices = () => database.readDevicesByServer(serverAddress)
   .then((devices) => devices.map((device) => database.deleteDevice(device._id)))
-  .then(() => logger.warn(`Removed all devices of ${serverAddress} first`));
+  .then(() => warn(`Removed all devices of ${serverAddress} first`));
 
 const init = async () => database.connect(MONGO_DB)
   .then(() => handler.init())
@@ -41,7 +40,7 @@ const init = async () => database.connect(MONGO_DB)
   .then(() => resetDevices())
   .then(() => io.listen(parseInt(PORT, 10)));
 
-logger.info('[SERVER] Starting ...');
+d('[SERVER] Starting ...');
 init()
-  .then(() => logger.info(`[SERVER] DONE, running on port ${PORT}`))
-  .catch((error) => logger.error(`[SERVER] Could not start:\n${error}`));
+  .then(() => d(`[SERVER] DONE, running on port ${PORT}`))
+  .catch((error) => d(`[SERVER] Could not start:\n${error}`));

@@ -8,7 +8,7 @@ import { IAuthentication } from '../auth/IAuthentication';
 import { Device } from '../model.server';
 import SocketUserHandler from './SocketUserHandler';
 
-const d = debug('server:socket');
+const d = debug('server').extend('socket').extend('main');
 const info = d.extend('info');
 const trace = d.extend('trace');
 const error = d.extend('error');

@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
-import * as pino from 'pino';
 import { omit } from 'lodash';
 import { ITeckosSocket } from 'teckos';
+import debug from 'debug';
 import {
   Device,
   GlobalAudioProducer,
@@ -20,9 +20,8 @@ import {
   RemoveVideoProducerPayload,
 } from '../payloads';
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-});
+const d = debug('server').extend('socket').extend('device');
+const err = d.extend('err');
 
 class SocketDeviceHandler {
   private readonly serverAddress: string;
@@ -78,7 +77,7 @@ class SocketDeviceHandler {
           fn();
         })
         .catch((error) => {
-          logger.error(error);
+          err(error);
           fn(error.message);
         });
     });
@@ -88,7 +87,7 @@ class SocketDeviceHandler {
       fn: (error: string | null, producer?: GlobalVideoProducer) => void,
     ) => {
       // Get current stage id
-      logger.debug(`[SOCKET DEVICE HANDLER] ADD VIDEO PRODUCER ${payload.routerId}`);
+      d(`[SOCKET DEVICE HANDLER] ADD VIDEO PRODUCER ${payload.routerId}`);
       const routerId = new ObjectId(payload.routerId);
       return this.database.createVideoProducer({
         routerId,
@@ -102,13 +101,13 @@ class SocketDeviceHandler {
     this.socket.on(ClientDeviceEvents.REMOVE_VIDEO_PRODUCER, (payload: RemoveVideoProducerPayload,
       fn: (error?: string) => void) => {
       const id = new ObjectId(payload);
-      logger.debug(`[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER ${payload}`);
+      d(`[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER ${payload}`);
       return this.database.deleteVideoProducer(this.user._id, id)
         .then(() => {
           fn();
         })
         .catch((error) => {
-          logger.error(error);
+          err(error);
           fn(error.message);
         });
     });
@@ -220,19 +219,19 @@ class SocketDeviceHandler {
 
     this.socket.on('disconnect', async () => {
       if (this.device && !this.device.mac) {
-        logger.debug(`Removed device '${this.device.name}' of ${this.user.name}`);
+        d(`Removed device '${this.device.name}' of ${this.user.name}`);
         return this.database.deleteDevice(this.device._id)
           .then(() => this.database.renewOnlineStatus(this.user._id));
       }
-      logger.debug(`Switched device '${this.device.name}' of ${this.user.name} to offline`);
+      d(`Switched device '${this.device.name}' of ${this.user.name} to offline`);
       return this.database.updateDevice(this.user._id, this.device._id, { online: false })
         .then(() => this.database.renewOnlineStatus(this.user._id));
     });
-    logger.debug(`[SOCKET DEVICE HANDLER] Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
+    d(`[SOCKET DEVICE HANDLER] Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
   }
 
   async generateDevice(initialDevice?: Partial<Device>): Promise<Device> {
-    logger.debug(`Generating device for user ${this.user.name}...`);
+    d(`Generating device for user ${this.user.name}...`);
     if (initialDevice && initialDevice.mac) {
       // Try to get device by mac
       this.device = await this.database.readDeviceByUserAndMac(this.user._id, initialDevice.mac);
@@ -268,7 +267,7 @@ class SocketDeviceHandler {
       ServerDeviceEvents.LOCAL_DEVICE_READY,
       this.device,
     );
-    logger.debug(`Finished generating device for user ${this.user.name} by creating new.`);
+    d(`Finished generating device for user ${this.user.name} by creating new.`);
     return this.device;
   }
 
@@ -277,7 +276,7 @@ class SocketDeviceHandler {
     return this.database.readDevicesByUser(this.user._id)
       .then((remoteDevices) => remoteDevices.forEach((remoteDevice) => {
         if (remoteDevice._id.toString() !== this.device._id.toString()) {
-          logger.debug(`Sent remote device ${remoteDevice._id} to device ${this.device.name} of ${this.user.name}!`);
+          d(`Sent remote device ${remoteDevice._id} to device ${this.device.name} of ${this.user.name}!`);
           MongoRealtimeDatabase.sendToDevice(
             this.socket,
             ServerDeviceEvents.DEVICE_ADDED,

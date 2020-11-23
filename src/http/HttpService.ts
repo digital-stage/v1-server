@@ -1,7 +1,12 @@
 import { ObjectId } from 'mongodb';
 import * as uWebSocket from 'teckos/uws';
+import debug from 'debug';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import { IAuthentication } from '../auth/IAuthentication';
+
+const d = debug('server').extend('http');
+const warn = d.extend('warn');
+const err = d.extend('err');
 
 class HttpService {
   private authentication: IAuthentication;
@@ -32,6 +37,7 @@ class HttpService {
         res.aborted = true;
       });
       const id = req.getParameter(0);
+      d(`Producer with id ${id}requested`);
       if (!id
       || typeof id !== 'string') {
         return res.writeStatus('400 Bad Request ').end();
@@ -47,14 +53,16 @@ class HttpService {
         .then((producer) => {
           if (!res.onAborted) {
             if (producer) {
+              d(`Found producer with id ${id}`);
               res.end(JSON.stringify(producer));
             } else {
+              warn(`Producer with id ${id} not found`);
               res.writeStatus('404 Not Found').end();
             }
           }
         })
-        .catch((err) => {
-          console.error(err);
+        .catch((error) => {
+          err(error);
           if (!res.onAborted) {
             return res.writeStatus('500 Internal Server Error').end();
           }
