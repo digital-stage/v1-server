@@ -1,11 +1,12 @@
 import fetch from 'node-fetch';
-import * as pino from 'pino';
 import { HttpRequest } from 'teckos/uws';
+import debug from 'debug';
 import { IRealtimeDatabase } from '../database/IRealtimeDatabase';
 import { User } from '../model.server';
 import { IAuthentication } from './IAuthentication';
 
-const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+const d = debug('server').extend('auth');
+const err = d.extend('err');
 
 export interface DefaultAuthUser {
   _id: string;
@@ -43,7 +44,7 @@ class DefaultAuthentication implements IAuthentication {
       .then((authUser) => this.database.readUserByUid(authUser._id)
         .then((user) => {
           if (!user) {
-            logger.trace(`[AUTH] Creating new user ${authUser.name}`);
+            d(`[AUTH] Creating new user ${authUser.name}`);
             return this.database.createUser({
               uid: authUser._id,
               name: authUser.name,
@@ -54,8 +55,8 @@ class DefaultAuthentication implements IAuthentication {
           return user;
         }))
       .catch((error) => {
-        logger.trace('[AUTH] Invalid token delivered');
-        logger.error(error);
+        err('[AUTH] Invalid token delivered');
+        err(error);
         throw new Error('Invalid credentials');
       });
   }
