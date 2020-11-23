@@ -53,7 +53,7 @@ class HttpService {
       return this.authentication.verifyWithToken(token)
         .then(() => this.getProducer(id))
         .then((producer) => {
-          if (!res.onAborted) {
+          if (!res.aborted) {
             if (producer) {
               d(`[/producers/:id] Found producer with id ${id}`);
               res.end(JSON.stringify(producer));
@@ -67,7 +67,7 @@ class HttpService {
         })
         .catch((error) => {
           err(error);
-          if (!res.onAborted) {
+          if (!res.aborted) {
             return res.writeStatus('500 Internal Server Error').end();
           }
           return null;
