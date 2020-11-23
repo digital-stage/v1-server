@@ -61,6 +61,8 @@ class HttpService {
               warn(`[/producers/:id] Producer with id ${id} not found`);
               res.writeStatus('404 Not Found').end();
             }
+          } else {
+            d('[/producers/:id] Request aborted');
           }
         })
         .catch((error) => {
