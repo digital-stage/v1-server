@@ -37,15 +37,17 @@ class HttpService {
         res.aborted = true;
       });
       const id = req.getParameter(0);
-      d(`Producer with id ${id}requested`);
+      d(`[/producers/:id] Producer with id ${id} requested`);
       if (!id
       || typeof id !== 'string') {
-        return res.writeStatus('400 Bad Request ').end();
+        warn('[/producers/:id] Bad request');
+        return res.writeStatus('400 Bad Request').end();
       }
       const token = req.getHeader('authorization');
       if (!token
         || typeof token !== 'string') {
-        return res.writeStatus('400 Bad Request ').end();
+        warn('[/producers/:id] Missing authorization');
+        return res.writeStatus('400 Bad Request').end();
       }
 
       return this.authentication.verifyWithToken(token)
@@ -53,10 +55,10 @@ class HttpService {
         .then((producer) => {
           if (!res.onAborted) {
             if (producer) {
-              d(`Found producer with id ${id}`);
+              d(`[/producers/:id] Found producer with id ${id}`);
               res.end(JSON.stringify(producer));
             } else {
-              warn(`Producer with id ${id} not found`);
+              warn(`[/producers/:id] Producer with id ${id} not found`);
               res.writeStatus('404 Not Found').end();
             }
           }
