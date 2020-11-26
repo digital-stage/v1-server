@@ -48,6 +48,7 @@ class SocketStageHandler {
         .then(() => trace(`[SOCKET STAGE EVENT] User ${this.user.name} created stage ${payload.name}`))
         .catch((error) => err(error)));
     this.socket.on(ClientStageEvents.CHANGE_STAGE, (payload: ChangeStagePayload) => {
+      trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE}`);
       // CHANGE STAGE
       const id = new ObjectId(payload.id);
       this.database.readManagedStage(this.user._id, id)
@@ -61,6 +62,7 @@ class SocketStageHandler {
     });
     this.socket.on(ClientStageEvents.REMOVE_STAGE,
       (payload: RemoveStagePayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.REMOVE_STAGE}(${payload})`);
         const id = new ObjectId(payload);
         this.database.readManagedStage(this.user._id, id)
           .then((stage) => {
@@ -72,6 +74,7 @@ class SocketStageHandler {
     // GROUP MANAGEMENT
     this.socket.on(ClientStageEvents.ADD_GROUP,
       (payload: AddGroupPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.ADD_GROUP}`);
         const stageId = new ObjectId(payload.stageId);
         this.database.readManagedStage(this.user._id, stageId)
           .then((stage) => {
@@ -87,6 +90,7 @@ class SocketStageHandler {
       });
     this.socket.on(ClientStageEvents.CHANGE_GROUP,
       (payload: ChangeGroupPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.CHANGE_GROUP}`);
         const id = new ObjectId(payload.id);
         return this.database.readGroup(id)
           .then((group) => {
@@ -105,6 +109,7 @@ class SocketStageHandler {
       });
     this.socket.on(ClientStageEvents.REMOVE_GROUP,
       (payload: RemoveGroupPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.REMOVE_GROUP}(${payload})`);
         // REMOVE GROUP
         const id = new ObjectId(payload);
         this.database.readGroup(id)
@@ -122,6 +127,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.CHANGE_STAGE_MEMBER_AUDIO,
       (payload: ChangeStageMemberAudioProducerPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE_MEMBER_AUDIO}`);
         const id = new ObjectId(payload.id);
         this.database.readStageMemberAudioProducer(id)
           .then((audioProducer) => {
@@ -139,6 +145,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.CHANGE_STAGE_MEMBER_OV,
       (payload: ChangeStageMemberOvTrackPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE_MEMBER_OV}`);
         const id = new ObjectId(payload.id);
         this.database.readStageMemberOvTrack(id)
           .then((audioProducer) => {
@@ -155,12 +162,14 @@ class SocketStageHandler {
       });
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_GROUP, (payload: SetCustomGroupPayload) => {
+      trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_GROUP}`);
       const groupId = new ObjectId(payload.groupId);
       return this.database.setCustomGroup(this.user._id, groupId, payload.volume, payload.muted)
         .catch((error) => err(error));
     });
 
     this.socket.on(ClientStageEvents.REMOVE_CUSTOM_GROUP, (payload: RemoveCustomGroupPayload) => {
+      trace(`${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_GROUP}`);
       const id = new ObjectId(payload);
       this.database.readCustomGroup(id)
         .then((group) => {
@@ -173,6 +182,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER,
       (payload: SetCustomStageMemberPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER}`);
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
@@ -183,6 +193,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER,
       (payload: RemoveCustomStageMemberPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER}`);
         const id = new ObjectId(payload);
         this.database.readCustomStageMember(id)
           .then((item) => {
@@ -195,6 +206,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_AUDIO,
       (payload: SetCustomStageMemberAudioPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_AUDIO}`);
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
@@ -209,6 +221,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_AUDIO,
       (payload: RemoveCustomStageMemberAudioPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_AUDIO}`);
         const id = new ObjectId(payload);
         return this.database.readCustomStageMemberAudioProducer(id)
           .then((group) => {
@@ -221,6 +234,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV,
       (payload: SetCustomStageMemberOvPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV}`);
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
@@ -234,6 +248,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV,
       (payload: RemoveCustomStageMemberOvPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV}`);
         const id = new ObjectId(payload);
         return this.database.readCustomStageMemberOvTrack(id)
           .then((item) => {
@@ -247,6 +262,7 @@ class SocketStageHandler {
     // STAGE MEMBER MANAGEMENT
     this.socket.on(ClientStageEvents.CHANGE_STAGE_MEMBER,
       (payload: ChangeStageMemberPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE_MEMBER}`);
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
@@ -267,6 +283,7 @@ class SocketStageHandler {
     // STAGE MEMBERSHIP MANAGEMENT
     this.socket.on(ClientStageEvents.JOIN_STAGE,
       (payload: JoinStagePayload, fn: (error?: string) => void) => {
+        trace(`${this.user.name}: ${ClientStageEvents.JOIN_STAGE}`);
         // JOIN STAGE
         const stageId = new ObjectId(payload.stageId);
         const groupId = new ObjectId(payload.groupId);
@@ -284,6 +301,7 @@ class SocketStageHandler {
 
     this.socket.on(ClientStageEvents.LEAVE_STAGE_FOR_GOOD,
       (payload: LeaveStageForGoodPayload) => {
+        trace(`${this.user.name}: ${ClientStageEvents.LEAVE_STAGE_FOR_GOOD}`);
         // LEAVE STAGE FOR GOOD
         const stageId = new ObjectId(payload);
         return this.database.leaveStageForGood(this.user._id, stageId)

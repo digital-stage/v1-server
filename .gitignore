@@ -3,6 +3,6 @@ package-lock.json
 firebase-adminsdk.json
 dist
 .env
-/.idea
 .env.production
 ecosystem.config.js
+.idea
