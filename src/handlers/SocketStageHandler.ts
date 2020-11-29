@@ -82,6 +82,12 @@ class SocketStageHandler {
               this.database.createGroup({
                 stageId,
                 name: payload.name,
+                x: 0,
+                y: 0,
+                z: 0,
+                rX: 0,
+                rY: 0,
+                rZ: 0,
                 volume: 1,
                 muted: false,
               }).catch((error) => err(error));
@@ -164,7 +170,7 @@ class SocketStageHandler {
     this.socket.on(ClientStageEvents.SET_CUSTOM_GROUP, (payload: SetCustomGroupPayload) => {
       trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_GROUP}`);
       const groupId = new ObjectId(payload.groupId);
-      return this.database.setCustomGroup(this.user._id, groupId, payload.volume, payload.muted)
+      return this.database.setCustomGroup(this.user._id, groupId, payload.update)
         .catch((error) => err(error));
     });
 

@@ -1,5 +1,4 @@
 import { ThreeDimensionAudioProperties } from './model.utils';
-import { RouterId } from './model.server';
 
 // DEVICE
 export interface AddAudioProducerPayload {
@@ -17,7 +16,7 @@ export interface AddVideoProducerPayload {
 export interface ChangeVideoProducerPayload {
   id: string,
   producer: Partial<{
-    routerId: RouterId;
+    routerId: string;
     routerProducerId: string;
   }>
 }
@@ -125,18 +124,14 @@ export interface ChangeStagePayload {
 export type RemoveStagePayload = string;
 
 // GROUP
-export interface AddGroupPayload {
+export interface AddGroupPayload extends Partial<ThreeDimensionAudioProperties> {
   stageId: string;
   name: string;
-  volume?: number;
 }
 
 export interface ChangeGroupPayload {
   id: string;
-  update: Partial<{
-    name: string;
-    volume: number;
-  }>
+  update: Partial<ThreeDimensionAudioProperties>
 }
 
 export type RemoveGroupPayload = string;
@@ -164,16 +159,13 @@ export interface ChangeStageMemberOvTrackPayload {
 }
 
 // CUSTOM GROUP
-export interface AddCustomGroupPayload {
+export interface AddCustomGroupPayload extends Partial<ThreeDimensionAudioProperties> {
   groupId: string;
-  volume: number;
-  muted: boolean;
 }
 
 export interface SetCustomGroupPayload {
   groupId: string;
-  volume: number;
-  muted: boolean;
+  update: Partial<ThreeDimensionAudioProperties>
 }
 
 export interface UpdateCustomGroupPayload {
@@ -244,8 +236,8 @@ export interface JoinStagePayload {
   password?: string
 }
 
-export interface LeaveStagePayload {
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface LeaveStagePayload {}
 
 export type LeaveStageForGoodPayload = string;
 

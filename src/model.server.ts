@@ -180,27 +180,19 @@ export interface Stage {
 /**
  * A group can be only modified by admins
  */
-export interface Group {
+export interface Group extends ThreeDimensionAudioProperties {
   _id: GroupId;
   name: string;
   stageId: StageId; // <--- RELATION
-
-  // SETTINGS
-  volume: number;
-  muted: boolean;
 }
 
 /**
  * Each user can overwrite the global group settings with personal preferences
  */
-export interface CustomGroup {
+export interface CustomGroup extends ThreeDimensionAudioProperties {
   _id: CustomGroupId;
   userId: UserId; // <--- RELATION
   groupId: GroupId; // <--- RELATION
-
-  // SETTINGS
-  volume: number;
-  muted: boolean;
 
   // Optimizations for performance
   // stageId: StageId;

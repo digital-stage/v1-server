@@ -39,6 +39,7 @@ import {
 } from '../model.server';
 import { ServerDeviceEvents, ServerStageEvents, ServerUserEvents } from '../events';
 import { IRealtimeDatabase } from './IRealtimeDatabase';
+import { ThreeDimensionAudioProperties } from '../model.utils';
 
 const d = debug('MongoRealtimeDatabase');
 
@@ -1266,18 +1267,23 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       });
   }
 
-  setCustomGroup(userId: UserId, groupId: GroupId, volume: number, muted: boolean): Promise<void> {
+  setCustomGroup(
+    userId: UserId,
+    groupId: GroupId,
+    update: Partial<ThreeDimensionAudioProperties>,
+  ): Promise<void> {
     return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOneAndUpdate(
       { userId, groupId },
-      { $set: { volume, muted } },
+      {
+        $set: update,
+      },
       { upsert: true, projection: { _id: 1 } },
     )
       .then((result) => {
         if (result.value) {
           // Return updated document
           this.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
-            volume,
-            muted,
+            ...update,
             _id: result.value._id,
           });
         } else if (result.ok) {

@@ -32,6 +32,7 @@ import {
   User,
   UserId,
 } from '../model.server';
+import { ThreeDimensionAudioProperties } from '../model.utils';
 
 export interface IRealtimeDatabase {
   connect(database: string): Promise<void>;
@@ -164,7 +165,11 @@ export interface IRealtimeDatabase {
 
   readCustomGroup(id: CustomGroupId): Promise<CustomGroup>;
 
-  setCustomGroup(userId: UserId, groupId: GroupId, volume: number, muted: boolean): Promise<void>;
+  setCustomGroup(
+    userId: UserId,
+    groupId: GroupId,
+    update: Partial<ThreeDimensionAudioProperties>
+  ): Promise<void>;
 
   updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, '_id'>>): Promise<void>;
 
