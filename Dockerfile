@@ -1,4 +1,4 @@
-FROM node:12.19.0-alpine AS build
+FROM node:14.15.0-buster AS build
 
 ENV PORT=4000
 ENV USE_SSL=false
@@ -8,12 +8,12 @@ ENV AUTH_URL=http://digital-auth:5000
 
 COPY package.json ./
 COPY tsconfig.json ./
-COPY ecosystem.config.js ./
+RUN echo
 RUN npm install
 COPY src ./src
 RUN npm run build
 
-FROM node:12.19.0-alpine
+FROM node:14.15.0-buster
 ENV NODE_ENV=production
 COPY package.json ./
 RUN npm install
