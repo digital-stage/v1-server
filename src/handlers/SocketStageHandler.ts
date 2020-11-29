@@ -170,6 +170,7 @@ class SocketStageHandler {
     this.socket.on(ClientStageEvents.SET_CUSTOM_GROUP, (payload: SetCustomGroupPayload) => {
       trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_GROUP}`);
       const groupId = new ObjectId(payload.groupId);
+      console.log(payload);
       return this.database.setCustomGroup(this.user._id, groupId, payload.update)
         .catch((error) => err(error));
     });
