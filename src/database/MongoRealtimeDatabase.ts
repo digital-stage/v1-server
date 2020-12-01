@@ -625,6 +625,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         rY: 0,
         rZ: 0,
       });
+      // Also create a custom stage member for the same user and mute it per default
+      await this.setCustomStageMember(userId, stageMember._id, {
+        muted: true,
+      });
     } else if (!stageMember.groupId.equals(groupId) || !stageMember.online) {
       // Update stage member
       stageMember.online = true;
@@ -632,6 +636,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       await this.updateStageMember(stageMember._id, {
         groupId,
         online: true,
+      });
+      // Always mute the custom stage member
+      await this.setCustomStageMember(userId, stageMember._id, {
+        muted: true,
       });
     }
 
