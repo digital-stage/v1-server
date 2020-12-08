@@ -5,9 +5,11 @@ import {
   CustomGroup,
   CustomGroupId,
   CustomStageMember,
-  CustomStageMemberAudioProducer, CustomStageMemberAudioProducerId,
+  CustomStageMemberAudioProducer,
+  CustomStageMemberAudioProducerId,
   CustomStageMemberId,
-  CustomStageMemberOvTrack, CustomStageMemberOvTrackId,
+  CustomStageMemberOvTrack,
+  CustomStageMemberOvTrackId,
   Device,
   DeviceId,
   GlobalAudioProducer,
@@ -36,12 +38,12 @@ import {
   TrackPresetId,
   User,
   UserId,
-} from '../model.server';
+  ThreeDimensionAudioProperties,
+} from '../types';
 import { ServerDeviceEvents, ServerStageEvents, ServerUserEvents } from '../events';
 import { IRealtimeDatabase } from './IRealtimeDatabase';
-import { ThreeDimensionAudioProperties } from '../model.utils';
 
-const d = debug('MongoRealtimeDatabase');
+const d = debug('server:MongoRealtimeDatabase');
 
 const trace = d.extend('trace');
 const warn = d.extend('warn');
@@ -628,6 +630,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       // Also create a custom stage member for the same user and mute it per default
       await this.setCustomStageMember(userId, stageMember._id, {
         muted: true,
+        volume: 0,
       });
     } else if (!stageMember.groupId.equals(groupId) || !stageMember.online) {
       // Update stage member
@@ -640,6 +643,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       // Always mute the custom stage member
       await this.setCustomStageMember(userId, stageMember._id, {
         muted: true,
+        volume: 0,
       });
     }
 
@@ -651,8 +655,8 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         stageId: stage._id,
         stageMemberId: stageMember._id,
       });
+      this.sendToUser(user._id, ServerStageEvents.STAGE_LEFT);
     }
-    this.sendToUser(user._id, ServerStageEvents.STAGE_LEFT);
 
     // Send whole stage
     await this.getWholeStage(user._id, stage._id, isAdmin || wasUserAlreadyInStage)
@@ -852,6 +856,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   private async getWholeStage(userId: UserId, stageId: StageId, skipStageAndGroups: boolean = false)
     : Promise<StagePackage> {
+    trace('getWholeStage');
     const stage = await this._db.collection<Stage>(Collections.STAGES).findOne({ _id: stageId });
     const groups = await this._db.collection<Group>(Collections.GROUPS).find({ stageId }).toArray();
     const stageMembers = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS)
@@ -901,6 +906,8 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         userId,
         stageMemberOvTrackId: { $in: ovTracks.map((ovTrack) => ovTrack._id) },
       }).toArray();
+
+    trace(users);
 
     if (skipStageAndGroups) {
       return {
@@ -1555,7 +1562,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
   }
 
   /* SENDING METHODS */
-
   public async sendInitialToDevice(socket: ITeckosSocket, user: User): Promise<any> {
     if (user.stageMemberId) {
       // Switch current stage member online

@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { ThreeDimensionAudioProperties } from './model.utils';
+import ThreeDimensionAudioProperties from './ThreeDimensionAudioProperties';
 
 export type StageId = ObjectId;
 export type GroupId = ObjectId;
@@ -69,6 +69,11 @@ export interface Device {
   inputAudioDeviceId?: WebRTCDeviceId;
   outputAudioDevices: WebRTCDevice[];
   outputAudioDeviceId?: WebRTCDeviceId;
+
+  // WebRTC options
+  echoCancellation?: boolean;
+  autoGainControl?: boolean;
+  noiseSuppression?: boolean;
 
   // OV SoundCards
   soundCardIds: SoundCardId[]; // refers to all available sound devices
@@ -327,3 +332,7 @@ export interface InitialStagePackage extends StagePackage {
   stageId: StageId;
   groupId: GroupId;
 }
+
+export {
+  ThreeDimensionAudioProperties,
+};

@@ -1,4 +1,4 @@
-export interface ThreeDimensionAudioProperties {
+interface ThreeDimensionAudioProperties {
   // SETTINGS
   volume: number;
   muted: boolean;
@@ -11,3 +11,4 @@ export interface ThreeDimensionAudioProperties {
   rY: number;
   rZ: number;
 }
+export default ThreeDimensionAudioProperties;

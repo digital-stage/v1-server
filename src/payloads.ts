@@ -1,4 +1,4 @@
-import { ThreeDimensionAudioProperties } from './model.utils';
+import { ThreeDimensionAudioProperties } from './types';
 
 // DEVICE
 export interface AddAudioProducerPayload {

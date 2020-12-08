@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { ITeckosSocket } from 'teckos';
 import debug from 'debug';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
-import { User } from '../model.server';
+import { User } from '../types';
 import { ClientStageEvents } from '../events';
 import {
   AddGroupPayload,

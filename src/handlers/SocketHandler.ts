@@ -5,7 +5,7 @@ import SocketDeviceHandler from './SocketDeviceHandler';
 import SocketStageHandler from './SocketStageHandler';
 import { ServerGlobalEvents, ServerUserEvents } from '../events';
 import { IAuthentication } from '../auth/IAuthentication';
-import { Device } from '../model.server';
+import { Device } from '../types';
 import SocketUserHandler from './SocketUserHandler';
 
 const d = debug('server').extend('socket').extend('main');

@@ -10,7 +10,7 @@ import {
   Track,
   TrackPreset,
   User,
-} from '../model.server';
+} from '../types';
 import { ClientDeviceEvents, ServerDeviceEvents } from '../events';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import {

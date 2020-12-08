@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import { HttpRequest } from 'teckos/uws';
 import debug from 'debug';
 import { IRealtimeDatabase } from '../database/IRealtimeDatabase';
-import { User } from '../model.server';
+import { User } from '../types';
 import { IAuthentication } from './IAuthentication';
 
 const d = debug('server').extend('auth');

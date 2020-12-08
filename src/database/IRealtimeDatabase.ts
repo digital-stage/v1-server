@@ -31,8 +31,8 @@ import {
   TrackPresetId,
   User,
   UserId,
-} from '../model.server';
-import { ThreeDimensionAudioProperties } from '../model.utils';
+  ThreeDimensionAudioProperties,
+} from '../types';
 
 export interface IRealtimeDatabase {
   connect(database: string): Promise<void>;
