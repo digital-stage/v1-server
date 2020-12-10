@@ -79,8 +79,8 @@ class SocketHandler {
                   socket.disconnect();
                 });
             })
-            .catch((authError) => {
-              error(`Could not authenticate token: ${authError}`);
+            .catch(() => {
+              // error(`Could not authenticate token: ${authError}`);
               socket.disconnect();
             });
         }
