@@ -38,9 +38,6 @@ class SocketHandler {
     info('Initializing socket server...');
 
     this._io.onConnection((socket: ITeckosSocket) => {
-      info('Got new Connection');
-      // Wait for token
-
       socket.on('token', (payload: {
         token: string;
         device?: Partial<Device>;
@@ -49,8 +46,6 @@ class SocketHandler {
         if (token) {
           return this._authentication.verifyWithToken(token)
             .then((user) => {
-              trace(`Incoming socket request ${socket.id}`);
-
               trace(`(${socket.id}) Authenticated user ${user.name}`);
               const deviceHandler = new SocketDeviceHandler(
                 this._serverAddress,
