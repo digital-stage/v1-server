@@ -631,6 +631,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       await this.setCustomStageMember(userId, stageMember._id, {
         muted: true,
         volume: 0,
+        x: 0,
+        y: -1,
+        rX: 0,
+        rZ: -180,
       });
     } else if (!stageMember.groupId.equals(groupId) || !stageMember.online) {
       // Update stage member
@@ -644,6 +648,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       await this.setCustomStageMember(userId, stageMember._id, {
         muted: true,
         volume: 0,
+        x: 0,
+        y: -1,
+        rX: 0,
+        rZ: -180,
       });
     }
 
