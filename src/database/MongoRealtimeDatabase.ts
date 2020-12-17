@@ -621,11 +621,11 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         volume: 1,
         muted: false,
         x: 0,
-        y: 0,
+        y: -1,
         z: 0,
         rX: 0,
         rY: 0,
-        rZ: 0,
+        rZ: -180,
       });
       // Also create a custom stage member for the same user and mute it per default
       await this.setCustomStageMember(userId, stageMember._id, {
@@ -633,7 +633,9 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         volume: 0,
         x: 0,
         y: -1,
+        z: 0,
         rX: 0,
+        rY: 0,
         rZ: -180,
       });
     } else if (!stageMember.groupId.equals(groupId) || !stageMember.online) {
@@ -650,7 +652,9 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         volume: 0,
         x: 0,
         y: -1,
+        z: 0,
         rX: 0,
+        rY: 0,
         rZ: -180,
       });
     }
