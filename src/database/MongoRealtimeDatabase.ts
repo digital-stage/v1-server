@@ -627,6 +627,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         rY: 0,
         rZ: -180,
       });
+      console.log(stageMember);
       // Also create a custom stage member for the same user and mute it per default
       await this.setCustomStageMember(userId, stageMember._id, {
         muted: true,
