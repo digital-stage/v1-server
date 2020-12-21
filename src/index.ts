@@ -1,5 +1,4 @@
 import * as ip from 'ip';
-import { config } from 'dotenv';
 import * as uWS from 'teckos/uws';
 import { UWSProvider } from 'teckos';
 import debug from 'debug';
@@ -8,15 +7,15 @@ import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
 import { IAuthentication } from './auth/IAuthentication';
 import SocketHandler from './handlers/SocketHandler';
-
-config();
-
-const {
-  MONGO_URL, REDIS_URL, MONGO_DB, PORT,
-} = process.env;
+import {
+  DEBUG_PAYLOAD,
+  MONGO_DB, MONGO_URL, PORT, REDIS_URL,
+} from './env';
 
 const d = debug('Server');
 const warn = d.extend('warn');
+
+if (DEBUG_PAYLOAD) warn('[WARN] Debugging payloads');
 
 const serverAddress = `${ip.address()}:${PORT}`;
 

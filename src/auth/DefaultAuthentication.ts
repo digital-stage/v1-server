@@ -4,6 +4,7 @@ import debug from 'debug';
 import { IRealtimeDatabase } from '../database/IRealtimeDatabase';
 import { User } from '../types';
 import { IAuthentication } from './IAuthentication';
+import { AUTH_URL } from '../env';
 
 const d = debug('server').extend('auth');
 const err = d.extend('err');
@@ -15,7 +16,7 @@ export interface DefaultAuthUser {
   avatarUrl?: string;
 }
 
-const getUserByToken = (token: string): Promise<DefaultAuthUser> => fetch(`${process.env.AUTH_URL}/profile`, {
+const getUserByToken = (token: string): Promise<DefaultAuthUser> => fetch(`${AUTH_URL}/profile`, {
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,

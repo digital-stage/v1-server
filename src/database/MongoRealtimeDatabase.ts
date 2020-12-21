@@ -42,6 +42,7 @@ import {
 } from '../types';
 import { ServerDeviceEvents, ServerStageEvents, ServerUserEvents } from '../events';
 import { IRealtimeDatabase } from './IRealtimeDatabase';
+import { DEBUG_EVENTS, DEBUG_PAYLOAD } from '../env';
 
 const d = debug('server:MongoRealtimeDatabase');
 
@@ -84,6 +85,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       poolSize: 10,
       bufferMaxEntries: 0,
       useNewUrlParser: true,
+      // useUnifiedTopology: true,
     });
   }
 
@@ -424,13 +426,13 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   async connect(database: string): Promise<void> {
     if (this._mongoClient.isConnected()) {
-      warn('[MONGO REALTIME DATABASE] Reconnecting');
+      warn('Reconnecting');
       await this.disconnect();
     }
     this._mongoClient = await this._mongoClient.connect();
     this._db = this._mongoClient.db(database);
     if (this._mongoClient.isConnected()) {
-      d(`[MONGO REALTIME DATABASE] Connected to ${database}`);
+      d(`Connected to ${database}`);
     }
     // TODO: Clean up old devices etc.
   }
@@ -539,7 +541,9 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         if (result.modifiedCount > 0) {
           return this.renewOnlineStatus(userId);
         }
-        return null;
+        return this.readDevice(id)
+          .then((device) => console.log(device));
+        // return null;
       });
   }
 
@@ -868,7 +872,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   private async getWholeStage(userId: UserId, stageId: StageId, skipStageAndGroups: boolean = false)
     : Promise<StagePackage> {
-    trace('getWholeStage');
     const stage = await this._db.collection<Stage>(Collections.STAGES).findOne({ _id: stageId });
     const groups = await this._db.collection<Group>(Collections.GROUPS).find({ stageId }).toArray();
     const stageMembers = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS)
@@ -918,8 +921,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         userId,
         stageMemberOvTrackId: { $in: ovTracks.map((ovTrack) => ovTrack._id) },
       }).toArray();
-
-    trace(users);
 
     if (skipStageAndGroups) {
       return {
@@ -983,6 +984,14 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .then((result) => result.ops[0] as SoundCard)
       .then((soundCard) => {
         this.sendToUser(soundCard.userId, ServerDeviceEvents.SOUND_CARD_ADDED, soundCard);
+        // Also create default preset
+        this.createTrackPreset({
+          userId: soundCard.userId,
+          soundCardId: soundCard._id,
+          name: 'Default',
+          inputChannels: soundCard.numInputChannels >= 2 ? [0, 1] : [],
+          outputChannels: soundCard.numOutputChannels >= 2 ? [0, 1] : [],
+        });
         return soundCard;
       });
   }
@@ -1081,13 +1090,24 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       });
   }
 
-  deleteSoundCard(userId: DeviceId, id: SoundCardId): Promise<void> {
+  deleteSoundCard(userId: UserId, id: SoundCardId): Promise<void> {
     return this._db.collection<SoundCard>(Collections.SOUND_CARDS).findOneAndDelete({
       _id: id,
       userId,
     }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
+          this._db.collection<Device>(Collections.DEVICES)
+            .find({ soundCardIds: id })
+            .toArray()
+            .then((devices) => {
+              devices.map((device) => {
+                const soundCardIds = device.soundCardIds.filter((i) => !i.equals(id));
+                return this.updateDevice(device.userId, device._id, {
+                  soundCardIds,
+                });
+              });
+            });
           this._db.collection<TrackPreset>(Collections.TRACK_PRESETS)
             .find({ soundCardId: id }, { projection: { _id: 1 } })
             .toArray()
@@ -1254,10 +1274,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       });
   }
 
-  updateTrackPreset(deviceId: DeviceId, id: TrackPresetId, update: Partial<Omit<TrackPreset, '_id'>>): Promise<void> {
+  updateTrackPreset(userId: UserId, id: TrackPresetId, update: Partial<Omit<TrackPreset, '_id'>>): Promise<void> {
     return this._db.collection<TrackPreset>(Collections.TRACK_PRESETS).findOneAndUpdate({
       _id: id,
-      deviceId,
+      userId,
     }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
@@ -1574,7 +1594,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
   }
 
   /* SENDING METHODS */
-  public async sendInitialToDevice(socket: ITeckosSocket, user: User): Promise<any> {
+  public async sendStageDataToDevice(socket: ITeckosSocket, user: User): Promise<any> {
     if (user.stageMemberId) {
       // Switch current stage member online
       await this._db
@@ -1631,10 +1651,29 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }
   }
 
+  public async sendDeviceConfigurationToDevice(socket: ITeckosSocket, user: User): Promise<any> {
+    // Send all sound cards
+    const soundCards = await this._db.collection(Collections.SOUND_CARDS)
+      .find({ userId: user._id })
+      .toArray();
+    await Promise.all(soundCards
+      .map((soundCard) => MongoRealtimeDatabase.sendToDevice(
+        socket,
+        ServerDeviceEvents.SOUND_CARD_ADDED,
+        soundCard,
+      )));
+    const trackPresets = await this._db.collection(Collections.TRACK_PRESETS)
+      .find({ userId: user._id })
+      .toArray();
+    await Promise.all(trackPresets
+      .map((trackPreset) => MongoRealtimeDatabase.sendToDevice(
+        socket,
+        ServerDeviceEvents.TRACK_PRESET_ADDED,
+        trackPreset,
+      )));
+  }
+
   async sendToStage(stageId: StageId, event: string, payload?: any): Promise<void> {
-    if (process.env.DEBUG_PAYLOAD) {
-      trace(`[SOCKETSERVER] SEND TO STAGE '${stageId}' ${event}: `);
-    }
     const adminIds: UserId[] = await this._db
       .collection<Stage>(Collections.STAGES)
       .findOne({ _id: stageId }, { projection: { admins: 1 } })
@@ -1657,9 +1696,6 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
   }
 
   sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void> {
-    if (process.env.DEBUG_PAYLOAD) {
-      trace(`[SOCKETSERVER] SEND TO STAGE MEMBERS '${stageId}' ${event}: `);
-    }
     return this._db
       .collection(Collections.STAGES)
       .findOne({ _id: new ObjectId(stageId) }, { projection: { admins: 1 } })
@@ -1678,28 +1714,34 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
   }
 
   static sendToDevice(socket: ITeckosSocket, event: string, payload?: any): void {
-    if (process.env.DEBUG_PAYLOAD) {
-      trace(`[SOCKETSERVER] SEND TO DEVICE '${socket.id}' ${event}: ${JSON.stringify(payload)}`);
-    } else {
-      trace(`[SOCKETSERVER] SEND TO DEVICE '${socket.id}' ${event}`);
+    if (DEBUG_EVENTS) {
+      if (DEBUG_PAYLOAD) {
+        trace(`SEND TO DEVICE '${socket.id}' ${event}: ${JSON.stringify(payload)}`);
+      } else {
+        trace(`SEND TO DEVICE '${socket.id}' ${event}`);
+      }
     }
     socket.emit(event, payload);
   }
 
   sendToUser(userId: UserId, event: string, payload?: any): void {
-    if (process.env.DEBUG_PAYLOAD) {
-      trace(`[SOCKETSERVER] SEND TO USER '${userId}' ${event}: ${JSON.stringify(payload)}`);
-    } else {
-      trace(`[SOCKETSERVER] SEND TO USER '${userId}' ${event}`);
+    if (DEBUG_EVENTS) {
+      if (DEBUG_PAYLOAD) {
+        trace(`SEND TO USER '${userId}' ${event}: ${JSON.stringify(payload)}`);
+      } else {
+        trace(`SEND TO USER '${userId}' ${event}`);
+      }
     }
     this._io.to(userId.toString(), event, payload);
   }
 
   sendToAll(event: string, payload?: any): void {
-    if (process.env.DEBUG_PAYLOAD) {
-      trace(`[SOCKETSERVER] SEND TO ALL ${event}: ${JSON.stringify(payload)}`);
-    } else {
-      trace(`[SOCKETSERVER] SEND TO ALL ${event}`);
+    if (DEBUG_EVENTS) {
+      if (DEBUG_PAYLOAD) {
+        trace(`SEND TO ALL ${event}: ${JSON.stringify(payload)}`);
+      } else {
+        trace(`SEND TO ALL ${event}`);
+      }
     }
     this._io.toAll(event, payload);
   }

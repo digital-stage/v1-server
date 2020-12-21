@@ -66,7 +66,8 @@ class SocketHandler {
 
               return Promise.all([
                 deviceHandler.generateDevice(initialDevice)
-                  .then(() => deviceHandler.sendRemoteDevices()),
+                  .then(() => deviceHandler.sendRemoteDevices())
+                  .then(() => deviceHandler.sendSoundCards()),
                 stageHandler.sendStages(),
               ])
                 .then(() => {
@@ -89,7 +90,7 @@ class SocketHandler {
       // TODO: Disconnect after timeout when no token is delivered
     });
 
-    info('[SOCKETSERVER] DONE initializing socket server.');
+    info('DONE initializing socket server.');
   }
 }
 

@@ -121,6 +121,7 @@ export interface TrackPreset {
   userId: UserId; // <--- RELATION
   soundCardId: SoundCardId; // <--- RELATION
   name: string;
+  inputChannels: number[];
   outputChannels: number[]; // For the output use simple numbers TODO: @Giso, is this enough?
 
   // Optimization

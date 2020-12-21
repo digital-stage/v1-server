@@ -51,7 +51,13 @@ class SocketDeviceHandler {
     this.socket.on(ClientDeviceEvents.UPDATE_DEVICE, (payload: Partial<Device>) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.UPDATE_DEVICE}`);
       if (!payload._id) return Promise.resolve();
-      return this.database.updateDevice(this.user._id, payload._id, omit(payload, '_id'));
+      const deviceId = new ObjectId(payload._id);
+      const update = omit(payload, '_id');
+      if (payload.soundCardIds) {
+        // Transform soundCardIds
+        update.soundCardIds = payload.soundCardIds.map((id: any) => new ObjectId(id));
+      }
+      return this.database.updateDevice(this.user._id, deviceId, update);
     });
 
     this.socket.on(ClientDeviceEvents.ADD_AUDIO_PRODUCER, (
@@ -92,7 +98,7 @@ class SocketDeviceHandler {
     ) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.ADD_VIDEO_PRODUCER}`);
       // Get current stage id
-      d(`[SOCKET DEVICE HANDLER] ADD VIDEO PRODUCER FOR MS PRODUCER ${payload.routerProducerId} AND ROUTER ${payload.routerId}`);
+      d(`ADD VIDEO PRODUCER FOR MS PRODUCER ${payload.routerProducerId} AND ROUTER ${payload.routerId}`);
       const routerId = new ObjectId(payload.routerId);
       return this.database.createVideoProducer({
         routerId,
@@ -107,7 +113,7 @@ class SocketDeviceHandler {
       fn: (error?: string) => void) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_VIDEO_PRODUCER}`);
       const id = new ObjectId(payload);
-      d(`[SOCKET DEVICE HANDLER] REMOVE VIDEO PRODUCER ${payload}`);
+      d(`REMOVE VIDEO PRODUCER ${payload}`);
       return this.database.deleteVideoProducer(this.user._id, id)
         .then(() => {
           fn();
@@ -119,7 +125,7 @@ class SocketDeviceHandler {
     });
 
     this.socket.on(ClientDeviceEvents.ADD_SOUND_CARD, (payload: AddSoundCardPayload,
-      fn: (soundCard: SoundCard) => void) => {
+      fn?: (soundCard: SoundCard) => void) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.ADD_SOUND_CARD}`);
       return this.database.createSoundCard({
         name: '',
@@ -134,12 +140,14 @@ class SocketDeviceHandler {
           ? new ObjectId(payload.initial.trackPresetId) : undefined,
         userId: this.user._id,
       })
-        .then((soundCard) => fn(soundCard));
+        .then((soundCard) => {
+          if (fn) fn(soundCard);
+        });
     });
 
     this.socket.on(ClientDeviceEvents.CHANGE_SOUND_CARD, (
       payload: ChangeSoundCardPayload,
-      fn: (soundCard: Partial<SoundCard>) => void,
+      fn?: (soundCard: Partial<SoundCard>) => void,
     ) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_SOUND_CARD}`);
       const id = new ObjectId(payload.id);
@@ -149,20 +157,26 @@ class SocketDeviceHandler {
         ...payload.update,
         trackPresetId,
       })
-        .then(() => fn({
-          ...payload.update,
-          trackPresetId,
-          _id: id,
-        }));
+        .then(() => {
+          if (fn) {
+            fn({
+              ...payload.update,
+              trackPresetId,
+              _id: id,
+            });
+          }
+        });
     });
 
     this.socket.on(ClientDeviceEvents.REMOVE_SOUND_CARD, (
       id: RemoveSoundCardPayload,
-      fn: () => void,
+      fn?: () => void,
     ) => {
-      trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_SOUND_CARD}`);
-      return this.database.deleteSoundCard(this.device._id, new ObjectId(id))
-        .then(() => fn());
+      trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_SOUND_CARD} with id ${id}`);
+      return this.database.deleteSoundCard(this.user._id, new ObjectId(id))
+        .then(() => {
+          if (fn) fn();
+        });
     });
 
     this.socket.on(ClientDeviceEvents.ADD_TRACK_PRESET, (
@@ -170,15 +184,18 @@ class SocketDeviceHandler {
       fn: (trackPreset: TrackPreset) => void,
     ) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.ADD_TRACK_PRESET}`);
-      const soundCardId = new ObjectId(payload.initial.soundCardId);
+      const soundCardId = new ObjectId(payload.soundCardId);
       return this.database.createTrackPreset({
         name: '',
+        inputChannels: [],
         outputChannels: [],
-        ...payload.initial,
+        ...payload,
         soundCardId,
         userId: this.user._id,
       })
-        .then((trackPreset) => fn(trackPreset));
+        .then((trackPreset) => {
+          if (fn) fn(trackPreset);
+        });
     });
     this.socket.on(ClientDeviceEvents.CHANGE_TRACK_PRESET, (
       payload: ChangeTrackPresetPayload,
@@ -186,19 +203,25 @@ class SocketDeviceHandler {
     ) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_TRACK_PRESET}`);
       const id = new ObjectId(payload.id);
-      return this.database.updateTrackPreset(this.device._id, id, payload.update)
-        .then(() => fn({
-          ...payload.update,
-          _id: id,
-        }));
+      return this.database.updateTrackPreset(this.user._id, id, payload.update)
+        .then(() => {
+          if (fn) {
+            fn({
+              ...payload.update,
+              _id: id,
+            });
+          }
+        });
     });
     this.socket.on(ClientDeviceEvents.REMOVE_TRACK_PRESET, (
       id: RemoveTrackPresetPayload,
       fn: () => void,
     ) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_TRACK_PRESET}`);
-      return this.database.deleteTrackPreset(this.device._id, new ObjectId(id))
-        .then(() => fn());
+      return this.database.deleteTrackPreset(this.user._id, new ObjectId(id))
+        .then(() => {
+          if (fn) fn();
+        });
     });
 
     this.socket.on(ClientDeviceEvents.ADD_TRACK, (
@@ -252,7 +275,7 @@ class SocketDeviceHandler {
       return this.database.updateDevice(this.user._id, this.device._id, { online: false })
         .then(() => this.database.renewOnlineStatus(this.user._id));
     });
-    d(`[SOCKET DEVICE HANDLER] Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
+    d(`Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
   }
 
   async generateDevice(initialDevice?: Partial<Device>): Promise<Device> {
@@ -263,7 +286,14 @@ class SocketDeviceHandler {
       if (this.device) {
         this.device.online = true;
         return this.database.updateDevice(this.user._id, this.device._id, { online: true })
-          .then(() => this.device);
+          .then(() => {
+            MongoRealtimeDatabase.sendToDevice(
+              this.socket,
+              ServerDeviceEvents.LOCAL_DEVICE_READY,
+              this.device,
+            );
+            return this.device;
+          });
       }
     }
     // We have to create the device
@@ -309,6 +339,11 @@ class SocketDeviceHandler {
           );
         }
       }));
+  }
+
+  public sendSoundCards(): Promise<void> {
+    trace('Sending device configurations');
+    return this.database.sendDeviceConfigurationToDevice(this.socket, this.user);
   }
 }
 

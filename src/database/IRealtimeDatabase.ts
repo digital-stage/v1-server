@@ -207,7 +207,9 @@ export interface IRealtimeDatabase {
   deleteCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<void>;
 
   // MESSAGING
-  sendInitialToDevice(socket: ITeckosSocket, user: User): Promise<void>;
+  sendStageDataToDevice(socket: ITeckosSocket, user: User): Promise<void>;
+
+  sendDeviceConfigurationToDevice(socket: ITeckosSocket, user: User): Promise<void>;
 
   /**
    * Send event with payload to all users,

@@ -45,7 +45,7 @@ class SocketStageHandler {
         ...payload,
         admins: [this.user._id],
       })
-        .then(() => trace(`[SOCKET STAGE EVENT] User ${this.user.name} created stage ${payload.name}`))
+        .then(() => trace(`User ${this.user.name} created stage ${payload.name}`))
         .catch((error) => err(error)));
     this.socket.on(ClientStageEvents.CHANGE_STAGE, (payload: ChangeStagePayload) => {
       trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE}`);
@@ -55,7 +55,7 @@ class SocketStageHandler {
         .then((stage) => {
           if (stage) {
             this.database.updateStage(id, payload.update)
-              .then(() => trace(`[SOCKET STAGE EVENT] User ${this.user.name} changed stage ${payload.id}`))
+              .then(() => trace(`User ${this.user.name} changed stage ${payload.id}`))
               .catch((error) => err(error));
           }
         });
@@ -315,12 +315,12 @@ class SocketStageHandler {
           .catch((error) => err(error));
       });
 
-    trace(`[SOCKET STAGE HANDLER] Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
+    trace(`Registered handler for user ${this.user.name} at socket ${this.socket.id}`);
   }
 
   sendStages(): Promise<void> {
-    trace('[SOCKET STAGE HANDLER] Sending stages');
-    return this.database.sendInitialToDevice(this.socket, this.user);
+    trace('Sending stages');
+    return this.database.sendStageDataToDevice(this.socket, this.user);
   }
 }
 
