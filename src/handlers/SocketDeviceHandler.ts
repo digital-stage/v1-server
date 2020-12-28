@@ -65,7 +65,7 @@ class SocketDeviceHandler {
       fn: (error: string | null, producer?: GlobalAudioProducer) => void,
     ) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.ADD_AUDIO_PRODUCER}`);
-      const routerId = new ObjectId(payload.routerId);
+      const routerId = payload.routerId ? new ObjectId(payload.routerId) : 'STANDALONE';
       // Get current stage id
       return this.database.createAudioProducer({
         routerId,
@@ -99,7 +99,7 @@ class SocketDeviceHandler {
       trace(`${this.user.name}: ${ClientDeviceEvents.ADD_VIDEO_PRODUCER}`);
       // Get current stage id
       d(`ADD VIDEO PRODUCER FOR MS PRODUCER ${payload.routerProducerId} AND ROUTER ${payload.routerId}`);
-      const routerId = new ObjectId(payload.routerId);
+      const routerId = payload.routerId ? new ObjectId(payload.routerId) : 'STANDALONE';
       return this.database.createVideoProducer({
         routerId,
         routerProducerId: payload.routerProducerId,

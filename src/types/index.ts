@@ -153,7 +153,7 @@ export interface Track {
 interface GlobalProducer {
   deviceId: DeviceId; // <-- RELATION
 
-  routerId: RouterId;
+  routerId: RouterId | 'STANDALONE';
   routerProducerId: string;
 
   // Optimizations for performance
