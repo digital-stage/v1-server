@@ -8,7 +8,7 @@ import DefaultAuthentication from './auth/DefaultAuthentication';
 import { IAuthentication } from './auth/IAuthentication';
 import SocketHandler from './socket/SocketHandler';
 import {
-  DEBUG_PAYLOAD,
+  DEBUG_PAYLOAD, MONGO_CA,
   MONGO_DB, MONGO_URL, PORT, REDIS_URL,
 } from './env';
 
@@ -24,7 +24,7 @@ const io = new UWSProvider(uws, {
   redisUrl: REDIS_URL,
 });
 
-const database = new MongoRealtimeDatabase(io, MONGO_URL);
+const database = new MongoRealtimeDatabase(io, MONGO_URL, MONGO_CA);
 const auth: IAuthentication = new DefaultAuthentication(database);
 
 const init = async () => database.connect(MONGO_DB)

@@ -85,7 +85,7 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
 
   private readonly _io: ITeckosProvider;
 
-  constructor(io: ITeckosProvider, url: string) {
+  constructor(io: ITeckosProvider, url: string, certificate?: ReadonlyArray<Buffer | string>) {
     super();
     this._io = io;
     this._mongoClient = new MongoClient(url, {
@@ -93,6 +93,8 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
       bufferMaxEntries: 0,
       useNewUrlParser: true,
       // useUnifiedTopology: true,
+      sslValidate: !!certificate,
+      sslCA: certificate,
     });
   }
 
