@@ -6,7 +6,7 @@ import HttpService from './http/HttpService';
 import MongoRealtimeDatabase from './database/MongoRealtimeDatabase';
 import DefaultAuthentication from './auth/DefaultAuthentication';
 import { IAuthentication } from './auth/IAuthentication';
-import SocketHandler from './handlers/SocketHandler';
+import SocketHandler from './socket/SocketHandler';
 import {
   DEBUG_PAYLOAD,
   MONGO_DB, MONGO_URL, PORT, REDIS_URL,
@@ -26,17 +26,14 @@ const io = new UWSProvider(uws, {
 
 const database = new MongoRealtimeDatabase(io, MONGO_URL);
 const auth: IAuthentication = new DefaultAuthentication(database);
-const handler = new SocketHandler(serverAddress, database, auth, io);
-const httpService = new HttpService(database, auth);
-
-const resetDevices = () => database.readDevicesByServer(serverAddress)
-  .then((devices) => devices.map((device) => database.deleteDevice(device._id)))
-  .then(() => warn(`Removed all devices of ${serverAddress} first`));
 
 const init = async () => database.connect(MONGO_DB)
-  .then(() => handler.init())
-  .then(() => httpService.init(uws))
-  .then(() => resetDevices())
+  .then(() => {
+    // Clean up
+    database.cleanUp(serverAddress);
+  })
+  .then(() => new SocketHandler(serverAddress, database, auth, io))
+  .then(() => new HttpService(database, auth).init(uws))
   .then(() => io.listen(parseInt(PORT, 10)));
 
 d('[SERVER] Starting ...');

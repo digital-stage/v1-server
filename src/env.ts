@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 config();
 
 const {
-  MONGO_URL, REDIS_URL, MONGO_DB, PORT, AUTH_URL,
+  MONGO_URL, REDIS_URL, MONGO_DB, PORT, AUTH_URL, API_KEY,
 } = process.env;
 
 const USE_REDIS = process.env.USE_REDIS && process.env.USE_REDIS === 'true';
@@ -11,6 +11,7 @@ const DEBUG_EVENTS = process.env.DEBUG_EVENTS && process.env.DEBUG_EVENTS === 't
 const DEBUG_PAYLOAD = process.env.DEBUG_PAYLOAD && process.env.DEBUG_PAYLOAD === 'true';
 
 export {
+  API_KEY,
   MONGO_URL,
   REDIS_URL,
   MONGO_DB,

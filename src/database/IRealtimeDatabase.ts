@@ -1,5 +1,6 @@
 import { Db } from 'mongodb';
 import { ITeckosSocket } from 'teckos';
+import * as EventEmitter from 'events';
 import {
   CustomGroup,
   CustomGroupId,
@@ -31,13 +32,28 @@ import {
   TrackPresetId,
   User,
   UserId,
-  ThreeDimensionAudioProperties,
+  ThreeDimensionAudioProperties, Router, RouterId,
 } from '../types';
 
-export interface IRealtimeDatabase {
+export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
   connect(database: string): Promise<void>;
 
   db(): Db;
+
+  cleanUp(serverAddress: string): Promise<void>;
+
+  // ROUTER HANDLING
+  createRouter(initial: Omit<Router, '_id'>): Promise<Router>;
+
+  readRouter(id: RouterId): Promise<Router | null>;
+
+  readRouters(): Promise<Router[]>;
+
+  readRoutersByServer(serverAddress: string): Promise<Router[]>;
+
+  updateRouter(id: RouterId, update: Partial<Omit<Router, '_id'>>): Promise<void>;
+
+  deleteRouter(id: RouterId): Promise<void>;
 
   // USER HANDLING
   createUser(initial: Omit<User, '_id' | 'stageId' | 'stageMemberId'>): Promise<User>;
@@ -55,7 +71,7 @@ export interface IRealtimeDatabase {
 
   readDevice(id: DeviceId): Promise<Device | null>;
 
-  readDevicesByServer(server: string): Promise<Device[]>;
+  readDevicesByServer(serverAddress: string): Promise<Device[]>;
 
   readDevicesByUser(userId: UserId): Promise<Device[]>;
 
@@ -109,6 +125,8 @@ export interface IRealtimeDatabase {
   createStage(initial: Omit<Stage, '_id'>): Promise<Stage>;
 
   readStage(id: StageId): Promise<Stage>;
+
+  readStagesWithoutRouter(limit?: number): Promise<Stage[]>;
 
   readManagedStage(userId: UserId, id: StageId): Promise<Stage>;
 

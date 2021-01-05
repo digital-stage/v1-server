@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
 import { ITeckosSocket } from 'teckos';
 import debug from 'debug';
-import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
-import { User } from '../types';
-import { ClientStageEvents } from '../events';
+import MongoRealtimeDatabase from '../../../database/MongoRealtimeDatabase';
+import { User } from '../../../types';
+import { ClientStageEvents } from '../../../events';
 import {
   AddGroupPayload,
   AddStagePayload,
@@ -19,13 +19,13 @@ import {
   RemoveStagePayload,
   SetCustomGroupPayload, SetCustomStageMemberAudioPayload,
   SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
-} from '../payloads';
+} from '../../../payloads';
 
 const d = debug('server').extend('socket').extend('stage');
 const trace = d.extend('trace');
 const err = d.extend('err');
 
-class SocketStageHandler {
+class SocketStageContext {
   private readonly user: User;
 
   private readonly socket: ITeckosSocket;
@@ -324,4 +324,4 @@ class SocketStageHandler {
   }
 }
 
-export default SocketStageHandler;
+export default SocketStageContext;

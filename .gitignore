@@ -6,3 +6,4 @@ dist
 .env.production
 ecosystem.config.js
 .idea
+initdb.sh

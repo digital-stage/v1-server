@@ -26,12 +26,18 @@ export type CustomStageMemberOvTrackId = ObjectId;
 
 export interface Router {
   _id: RouterId;
+  wsPrefix: string;
+  restPrefix: string;
   url: string;
+  path: string;
   ipv4: string;
   ipv6: string;
   port: number;
-  availableSlots: number;
-  userId: UserId;
+  availableRTCSlots: number;
+  availableOVSlots: number;
+
+  // Optimizations for performance and redundancy
+  server?: string;
 }
 
 export interface User {
@@ -181,6 +187,13 @@ export interface Stage {
   height: number;
   absorption: number;
   damping: number;
+
+  ovServer?: {
+    router: RouterId;
+    ipv4: string;
+    ipv6?: string;
+    port: number;
+  }
 }
 
 /**

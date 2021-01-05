@@ -2,9 +2,25 @@ export enum ServerGlobalEvents {
   READY = 'ready',
 }
 
+export enum ServerRouterEvents {
+  ROUTER_ADDED = 'router-added',
+  ROUTER_CHANGED = 'router-changed',
+  ROUTER_REMOVED = 'router-removed',
+
+  MANAGE_STAGE = 'manage-stage',
+  UN_MANAGE_STAGE = 'un-manage-stage',
+}
+export enum ClientRouterEvents {
+  RESOLVE_PRODUCER = 'resolve-producer',
+  STAGE_MANAGED = 'stage-managed',
+  STAGE_UN_MANAGED = 'stage-unmanaged',
+}
+
 export enum ServerUserEvents {
   USER_READY = 'user-ready',
+  USER_ADDED = 'user-added',
   USER_CHANGED = 'user-changed',
+  USER_REMOVED = 'user-removed',
 }
 
 export enum ClientUserEvents {

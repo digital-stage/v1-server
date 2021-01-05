@@ -1,6 +1,7 @@
 import { Db, MongoClient, ObjectId } from 'mongodb';
 import { ITeckosProvider, ITeckosSocket } from 'teckos';
 import debug from 'debug';
+import * as EventEmitter from 'events';
 import {
   CustomGroup,
   CustomGroupId,
@@ -39,8 +40,11 @@ import {
   User,
   UserId,
   ThreeDimensionAudioProperties,
+  Router, RouterId,
 } from '../types';
-import { ServerDeviceEvents, ServerStageEvents, ServerUserEvents } from '../events';
+import {
+  ServerDeviceEvents, ServerRouterEvents, ServerStageEvents, ServerUserEvents,
+} from '../events';
 import { IRealtimeDatabase } from './IRealtimeDatabase';
 import { DEBUG_EVENTS, DEBUG_PAYLOAD } from '../env';
 
@@ -51,6 +55,8 @@ const warn = d.extend('warn');
 const err = d.extend('err');
 
 enum Collections {
+  ROUTERS = 'routers',
+
   USERS = 'users',
 
   DEVICES = 'devices',
@@ -72,7 +78,7 @@ enum Collections {
   CUSTOM_STAGE_MEMBER_OVS = 'customstagememberovs',
 }
 
-class MongoRealtimeDatabase implements IRealtimeDatabase {
+class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealtimeDatabase {
   private _mongoClient: MongoClient;
 
   private _db: Db;
@@ -80,6 +86,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
   private readonly _io: ITeckosProvider;
 
   constructor(io: ITeckosProvider, url: string) {
+    super();
     this._io = io;
     this._mongoClient = new MongoClient(url, {
       poolSize: 10,
@@ -87,6 +94,80 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       useNewUrlParser: true,
       // useUnifiedTopology: true,
     });
+  }
+
+  async cleanUp(serverAddress: string): Promise<void> {
+    await Promise.all([
+      this.readDevicesByServer(serverAddress)
+        .then((devices) => devices.map((device) => this.deleteDevice(device._id).then(() => trace(`Clean up: Removed device ${device._id}`)))),
+      this.readRoutersByServer(serverAddress)
+        .then((routers) => routers.map((router) => this.deleteRouter(router._id).then(() => trace(`Clean up: Removed router ${router._id}`)))),
+      this.cleanUpStages(),
+    ]);
+  }
+
+  async cleanUpStages(): Promise<void> {
+    this._db.collection<Stage>(Collections.STAGES).find({ ovServer: { $exists: true, $ne: null } })
+      .toArray()
+      .then((stages) => stages.map((stage) => this._db.collection<Router>(Collections.ROUTERS)
+        .findOne({ _id: stage.ovServer.router })
+        .then((result) => {
+          if (!result) {
+            trace(`Clean up: Removing abandoned ov server from stage ${stage._id}`);
+            this.updateStage(stage._id, { ovServer: null });
+          }
+        })));
+  }
+
+  createRouter(initial: Omit<Router, '_id'>): Promise<Router> {
+    return this._db.collection<Router>(Collections.ROUTERS).insertOne(initial)
+      .then((result) => result.ops[0])
+      .then((router: Router) => {
+        this.emit(ServerRouterEvents.ROUTER_ADDED, router);
+        return router;
+      });
+  }
+
+  readRouter(id: ObjectId): Promise<Router | null> {
+    return this._db.collection<Router>(Collections.ROUTERS).findOne({
+      _id: id,
+    });
+  }
+
+  readRouters(): Promise<Router[]> {
+    return this._db.collection<Router>(Collections.ROUTERS).find().toArray();
+  }
+
+  readRoutersByServer(serverAddress: string): Promise<Router[]> {
+    return this._db.collection<Router>(Collections.ROUTERS).find({
+      server: serverAddress,
+    }).toArray();
+  }
+
+  updateRouter(id: RouterId, update: Partial<Omit<Router, '_id'>>): Promise<void> {
+    return this._db.collection<Router>(Collections.ROUTERS).findOneAndUpdate(
+      { _id: id },
+      { $set: update },
+    )
+      .then(() => {
+        this.emit(ServerRouterEvents.ROUTER_CHANGED, {
+          ...update,
+          _id: id,
+        });
+      });
+  }
+
+  deleteRouter(id: ObjectId): Promise<void> {
+    return this._db.collection<Router>(Collections.ROUTERS).deleteOne({ _id: id })
+      .then((result) => {
+        if (result.deletedCount > 0) {
+          this.emit(ServerRouterEvents.ROUTER_REMOVED, id);
+          this.readStagesByRouter(id)
+            .then((stages) => stages.map(
+              (stage) => this.updateStage(stage._id, { ovServer: null }),
+            ));
+        }
+      });
   }
 
   db() {
@@ -123,6 +204,8 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS).insertOne(initial)
       .then((result) => result.ops[0])
       .then((producer) => {
+        this.emit(ServerDeviceEvents.AUDIO_PRODUCER_ADDED, producer);
+
         this.sendToUser(initial.userId, ServerDeviceEvents.AUDIO_PRODUCER_ADDED, producer);
         // Publish producer?
         this.readUser(initial.userId)
@@ -165,10 +248,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerDeviceEvents.AUDIO_PRODUCER_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerDeviceEvents.AUDIO_PRODUCER_CHANGED, payload);
+          this.sendToUser(result.value.userId, ServerDeviceEvents.AUDIO_PRODUCER_CHANGED, payload);
         }
       });
   }
@@ -180,6 +265,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
+          this.emit(ServerDeviceEvents.AUDIO_PRODUCER_REMOVED, id);
           this.sendToUser(result.value.userId, ServerDeviceEvents.AUDIO_PRODUCER_REMOVED, id);
           // Also delete all published producers
           this._db.collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS).find({
@@ -196,6 +282,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS).insertOne(initial)
       .then((result) => result.ops[0])
       .then((producer) => {
+        this.emit(ServerDeviceEvents.VIDEO_PRODUCER_ADDED, producer);
         this.sendToUser(initial.userId, ServerDeviceEvents.VIDEO_PRODUCER_ADDED, producer);
         // Publish producer?
         this.readUser(initial.userId)
@@ -230,10 +317,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerDeviceEvents.VIDEO_PRODUCER_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerDeviceEvents.VIDEO_PRODUCER_CHANGED, payload);
+          this.sendToUser(result.value.userId, ServerDeviceEvents.VIDEO_PRODUCER_CHANGED, payload);
         }
       });
   }
@@ -245,6 +334,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
+          this.emit(ServerDeviceEvents.VIDEO_PRODUCER_REMOVED, id);
           this.sendToUser(result.value.userId, ServerDeviceEvents.VIDEO_PRODUCER_REMOVED, id);
           // Also delete all published producers
           this._db.collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS).find({
@@ -261,6 +351,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS).insertOne(initial)
       .then((result) => result.ops[0])
       .then(async (track) => {
+        this.emit(ServerStageEvents.STAGE_MEMBER_OV_ADDED, track);
         await this.sendToJoinedStageMembers(
           initial.stageId,
           ServerStageEvents.STAGE_MEMBER_OV_ADDED, track,
@@ -283,13 +374,15 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { projection: { stageId: 1 } })
       .then(async (result) => {
         if (result.value) {
+          const payload = {
+            ...update,
+            _id: id,
+          };
+          this.emit(ServerStageEvents.STAGE_MEMBER_OV_CHANGED, payload);
           await this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_OV_CHANGED,
-            {
-              ...update,
-              _id: id,
-            },
+            payload,
           );
         }
       });
@@ -301,6 +394,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     })
       .then(async (result) => {
         if (result.value) {
+          this.emit(ServerStageEvents.STAGE_MEMBER_OV_REMOVED, result.value._id);
           await this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_OV_REMOVED,
@@ -315,6 +409,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .insertOne(initial)
       .then((result) => result.ops[0])
       .then(async (producer) => {
+        this.emit(ServerStageEvents.STAGE_MEMBER_AUDIO_ADDED, producer);
         await this.sendToJoinedStageMembers(
           initial.stageId,
           ServerStageEvents.STAGE_MEMBER_AUDIO_ADDED,
@@ -339,13 +434,15 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       }, { projection: { stageId: 1 } })
       .then(async (result) => {
         if (result.value) {
+          const payload = {
+            ...update,
+            _id: id,
+          };
+          this.emit(ServerStageEvents.STAGE_MEMBER_AUDIO_CHANGED, payload);
           await this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_AUDIO_CHANGED,
-            {
-              ...update,
-              _id: id,
-            },
+            payload,
           );
         }
       });
@@ -358,6 +455,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       }, { projection: { stageId: 1 } })
       .then(async (result) => {
         if (result.value) {
+          this.emit(ServerStageEvents.STAGE_MEMBER_AUDIO_REMOVED, id);
           await this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_AUDIO_REMOVED, id,
@@ -371,6 +469,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .insertOne(initial)
       .then((result) => result.ops[0])
       .then(async (producer) => {
+        this.emit(ServerStageEvents.STAGE_MEMBER_VIDEO_ADDED, producer);
         await this.sendToJoinedStageMembers(
           initial.stageId,
           ServerStageEvents.STAGE_MEMBER_VIDEO_ADDED,
@@ -396,13 +495,15 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       }, { projection: { stageId: 1 } })
       .then(async (result) => {
         if (result.value) {
+          const payload = {
+            ...update,
+            _id: id,
+          };
+          this.emit(ServerStageEvents.STAGE_MEMBER_VIDEO_CHANGED, payload);
           await this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_VIDEO_CHANGED,
-            {
-              ...update,
-              _id: id,
-            },
+            payload,
           );
         }
       });
@@ -415,6 +516,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       }, { projection: { stageId: 1 } })
       .then(async (result) => {
         if (result.value) {
+          this.emit(ServerStageEvents.STAGE_MEMBER_VIDEO_REMOVED, id);
           await this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_VIDEO_REMOVED,
@@ -443,7 +545,11 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   createUser(initial: Omit<User, '_id' | 'stageId' | 'stageMemberId'>): Promise<User> {
     return this._db.collection<User>(Collections.USERS).insertOne(initial)
-      .then((result) => result.ops[0]);
+      .then((result) => result.ops[0])
+      .then((user) => {
+        this.emit(ServerUserEvents.USER_ADDED, user);
+        return user;
+      });
   }
 
   readUser(id: UserId): Promise<User | null> {
@@ -458,11 +564,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<User>(Collections.USERS).updateOne({ _id: id }, { $set: update })
       .then(() => {
         // TODO: Update all associated (Stage Members), too
-
-        this.sendToUser(id, ServerUserEvents.USER_CHANGED, {
+        const payload = {
           ...update,
           _id: id,
-        });
+        };
+        this.emit(ServerUserEvents.USER_CHANGED, payload);
+        this.sendToUser(id, ServerUserEvents.USER_CHANGED, payload);
       });
   }
 
@@ -470,6 +577,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<User>(Collections.USERS).deleteOne({ _id: id })
       .then((result) => {
         if (result.deletedCount > 0) {
+          this.emit(ServerUserEvents.USER_REMOVED, id);
           this._db.collection<Stage>(Collections.STAGES)
             .find({ admins: [id] }, { projection: { _id: 1 } })
             .toArray()
@@ -507,6 +615,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection(Collections.DEVICES).insertOne(init)
       .then((result) => result.ops[0])
       .then(async (device) => {
+        this.emit(ServerDeviceEvents.DEVICE_ADDED, device);
         this.sendToUser(init.userId, ServerDeviceEvents.DEVICE_ADDED, device);
         await this.renewOnlineStatus(init.userId);
         return device;
@@ -531,11 +640,13 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   updateDevice(userId: UserId, id: DeviceId, update: Partial<Omit<Device, '_id'>>): Promise<void> {
     // Update first ;)
-    this.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, {
+    const payload = {
       ...update,
       user: userId,
       _id: id,
-    });
+    };
+    this.emit(ServerDeviceEvents.DEVICE_CHANGED, payload);
+    this.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, payload);
     return this._db.collection<Device>(Collections.DEVICES).updateOne({ _id: id }, { $set: update })
       .then((result) => {
         if (result.modifiedCount > 0) {
@@ -552,6 +663,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
+          this.emit(ServerDeviceEvents.DEVICE_REMOVED, id);
           this.sendToUser(result.value.userId, ServerDeviceEvents.DEVICE_REMOVED, id);
 
           // Delete associated producers
@@ -589,6 +701,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     };
     return this._db.collection<Stage>(Collections.STAGES).insertOne(stage)
       .then((result) => {
+        this.emit(ServerStageEvents.STAGE_ADDED, stage);
         stage.admins
           .forEach((adminId) => this.sendToUser(adminId, ServerStageEvents.STAGE_ADDED, stage));
         return result.ops[0];
@@ -671,12 +784,19 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
         stageId: stage._id,
         stageMemberId: stageMember._id,
       });
+      this.emit(ServerStageEvents.STAGE_LEFT, user._id);
       this.sendToUser(user._id, ServerStageEvents.STAGE_LEFT);
     }
 
     // Send whole stage
     await this.getWholeStage(user._id, stage._id, isAdmin || wasUserAlreadyInStage)
       .then((wholeStage) => {
+        this.emit(ServerStageEvents.STAGE_JOINED, {
+          ...wholeStage,
+          stageId: stage._id,
+          groupId,
+          user: user._id,
+        });
         this.sendToUser(user._id, ServerStageEvents.STAGE_JOINED, {
           ...wholeStage,
           stageId: stage._id,
@@ -783,6 +903,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       user.stageId = undefined;
       user.stageMemberId = undefined;
       await this.updateUser(user._id, { stageId: undefined, stageMemberId: undefined });
+      this.emit(ServerStageEvents.STAGE_LEFT, user._id);
       this.sendToUser(user._id, ServerStageEvents.STAGE_LEFT);
 
       // Set old stage member offline (async!)
@@ -849,6 +970,22 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   readStage(id: StageId): Promise<Stage> {
     return this._db.collection<Stage>(Collections.STAGES).findOne({ _id: id });
+  }
+
+  readStagesByRouter(routerId: RouterId): Promise<Stage[]> {
+    return this._db.collection<Stage>(Collections.STAGES)
+      .find({ 'ovServer.router': routerId })
+      .toArray();
+  }
+
+  readStagesWithoutRouter(limit?: number): Promise<Stage[]> {
+    if (limit) {
+      return this._db.collection<Stage>(Collections.STAGES)
+        .find({ ovServer: null })
+        .limit(limit)
+        .toArray();
+    }
+    return this._db.collection<Stage>(Collections.STAGES).find({ ovServer: null }).toArray();
   }
 
   readManagedStage(userId: UserId, id: StageId): Promise<Stage> {
@@ -952,10 +1089,14 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
 
   updateStage(id: StageId, update: Partial<Omit<Stage, '_id'>>): Promise<void> {
     return this._db.collection(Collections.STAGES).updateOne({ _id: id }, { $set: update })
-      .then(() => this.sendToStage(id, ServerStageEvents.STAGE_CHANGED, {
-        ...update,
-        _id: id,
-      }));
+      .then(() => {
+        const payload = {
+          ...update,
+          _id: id,
+        };
+        this.emit(ServerStageEvents.STAGE_CHANGED, payload);
+        this.sendToStage(id, ServerStageEvents.STAGE_CHANGED, payload);
+      });
   }
 
   deleteStage(id: StageId): Promise<any> {
@@ -963,7 +1104,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .find({ stageId: id }, { projection: { _id: 1 } })
       .toArray()
       .then((groups) => Promise.all(groups.map((group) => this.deleteGroup(group._id))))
-      .then(() => this.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id))
+      .then(() => {
+        this.emit(ServerStageEvents.STAGE_REMOVED, id);
+        this.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id);
+      })
       .then(() => this._db.collection<Stage>(Collections.STAGES).deleteOne({ _id: id }));
   }
 
@@ -974,6 +1118,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     })
       .then((result) => result.ops[0] as Group)
       .then((group) => {
+        this.emit(ServerStageEvents.GROUP_ADDED, group);
         this.sendToStage(group.stageId, ServerStageEvents.GROUP_ADDED, group);
         return group;
       });
@@ -983,6 +1128,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<SoundCard>(Collections.SOUND_CARDS).insertOne(initial)
       .then((result) => result.ops[0] as SoundCard)
       .then((soundCard) => {
+        this.emit(ServerDeviceEvents.SOUND_CARD_ADDED, soundCard);
         this.sendToUser(soundCard.userId, ServerDeviceEvents.SOUND_CARD_ADDED, soundCard);
         // Also create default preset
         this.createTrackPreset({
@@ -1001,6 +1147,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .insertOne(initial)
       .then((result) => result.ops[0] as StageMember)
       .then(async (stageMember) => {
+        this.emit(ServerStageEvents.STAGE_MEMBER_ADDED, stageMember);
         await this.sendToJoinedStageMembers(
           stageMember.stageId,
           ServerStageEvents.STAGE_MEMBER_ADDED,
@@ -1014,6 +1161,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<Track>(Collections.TRACKS).insertOne(initial)
       .then((result) => result.ops[0] as Track)
       .then((track) => {
+        this.emit(ServerDeviceEvents.TRACK_ADDED, track);
         this.sendToUser(track.userId, ServerDeviceEvents.TRACK_ADDED, track);
 
         this.readUser(track.userId).then(
@@ -1047,6 +1195,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<TrackPreset>(Collections.TRACK_PRESETS).insertOne(initial)
       .then((result) => result.ops[0] as TrackPreset)
       .then((preset) => {
+        this.emit(ServerDeviceEvents.TRACK_PRESET_ADDED, preset);
         this.sendToUser(preset.userId, ServerDeviceEvents.TRACK_PRESET_ADDED, preset);
         return preset;
       });
@@ -1084,6 +1233,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
             .then((customGroups) => customGroups
               .map((customGroup) => this.deleteCustomGroup(customGroup._id)));
 
+          this.emit(ServerStageEvents.GROUP_REMOVED, id);
           return this.sendToStage(result.value.stageId, ServerStageEvents.GROUP_REMOVED, id);
         }
         return null;
@@ -1113,6 +1263,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
             .toArray()
             .then((presets) => presets
               .map((preset) => this.deleteTrackPreset(userId, preset._id)));
+          this.emit(ServerDeviceEvents.SOUND_CARD_REMOVED, id);
           this.sendToUser(result.value.userId, ServerDeviceEvents.SOUND_CARD_REMOVED, id);
         }
       });
@@ -1146,6 +1297,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
             .then((tracks) => tracks
               .map((track) => this.deleteStageMemberOvTrack(track._id)));
 
+          this.emit(ServerStageEvents.STAGE_MEMBER_REMOVED, id);
           return this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_REMOVED,
@@ -1169,6 +1321,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
             .toArray()
             .then((tracks) => tracks
               .map((track) => this.deleteStageMemberOvTrack(track._id)));
+          this.emit(ServerDeviceEvents.TRACK_REMOVED, id);
           this.sendToUser(result.value.userId, ServerDeviceEvents.TRACK_REMOVED, id);
         }
       });
@@ -1186,6 +1339,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
             .find({ trackPresetId: id }, { projection: { _id: 1 } })
             .toArray()
             .then((tracks) => tracks.map((track) => this.deleteTrack(userId, track._id)));
+          this.emit(ServerDeviceEvents.TRACK_PRESET_REMOVED, id);
           this.sendToUser(result.value.userId, ServerDeviceEvents.TRACK_PRESET_REMOVED, id);
         }
       });
@@ -1216,10 +1370,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndUpdate({ _id: id }, { $set: update }, { projection: { stageId: 1 } })
       .then((result) => {
         if (result.value) {
-          return this.sendToStage(result.value.stageId, ServerStageEvents.GROUP_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerStageEvents.GROUP_CHANGED, payload);
+          return this.sendToStage(result.value.stageId, ServerStageEvents.GROUP_CHANGED, payload);
         }
         return null;
       });
@@ -1232,10 +1388,16 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          return this.sendToUser(result.value.userId, ServerDeviceEvents.SOUND_CARD_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerDeviceEvents.SOUND_CARD_CHANGED, payload);
+          return this.sendToUser(
+            result.value.userId,
+            ServerDeviceEvents.SOUND_CARD_CHANGED,
+            payload,
+          );
         }
         return null;
       });
@@ -1246,13 +1408,15 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndUpdate({ _id: id }, { $set: update }, { projection: { stageId: 1 } })
       .then((result) => {
         if (result.value) {
+          const payload = {
+            ...update,
+            _id: id,
+          };
+          this.emit(ServerStageEvents.STAGE_MEMBER_CHANGED, payload);
           return this.sendToJoinedStageMembers(
             result.value.stageId,
             ServerStageEvents.STAGE_MEMBER_CHANGED,
-            {
-              ...update,
-              _id: id,
-            },
+            payload,
           );
         }
         return null;
@@ -1266,10 +1430,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerDeviceEvents.TRACK_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerDeviceEvents.TRACK_CHANGED, payload);
+          this.sendToUser(result.value.userId, ServerDeviceEvents.TRACK_CHANGED, payload);
         }
       });
   }
@@ -1281,10 +1447,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerDeviceEvents.TRACK_PRESET_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerDeviceEvents.TRACK_PRESET_CHANGED, payload);
+          this.sendToUser(result.value.userId, ServerDeviceEvents.TRACK_PRESET_CHANGED, payload);
         }
       });
   }
@@ -1295,6 +1463,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).insertOne(initial)
       .then((result) => result.ops[0] as CustomGroup)
       .then((customGroup) => {
+        this.emit(ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
         this.sendToUser(customGroup.userId, ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
         return customGroup;
       });
@@ -1306,10 +1475,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_GROUP_CHANGED, payload);
+          this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, payload);
         }
       });
   }
@@ -1329,19 +1500,24 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .then((result) => {
         if (result.value) {
           // Return updated document
-          this.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, {
+          const payload = {
             ...update,
             _id: result.value._id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_GROUP_CHANGED, payload);
+          this.sendToUser(userId, ServerStageEvents.CUSTOM_GROUP_CHANGED, payload);
         } else if (result.ok) {
           // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
           this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS).findOne({
             userId, groupId,
-          }).then((customGroup) => this.sendToUser(
-            customGroup.userId,
-            ServerStageEvents.CUSTOM_GROUP_ADDED,
-            customGroup,
-          ));
+          }).then((customGroup) => {
+            this.emit(ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
+            this.sendToUser(
+              customGroup.userId,
+              ServerStageEvents.CUSTOM_GROUP_ADDED,
+              customGroup,
+            );
+          });
         }
       });
   }
@@ -1354,7 +1530,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<CustomGroup>(Collections.CUSTOM_GROUPS)
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
-        // TODO: Check if anything has to be done here
+        this.emit(ServerStageEvents.CUSTOM_GROUP_REMOVED, id);
         this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_GROUP_REMOVED, id);
       });
   }
@@ -1364,6 +1540,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .insertOne(initial)
       .then((result) => result.ops[0] as CustomStageMember)
       .then((customStageMember) => {
+        this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED, customStageMember);
         this.sendToUser(
           customStageMember.userId,
           ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
@@ -1378,10 +1555,16 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndUpdate({ _id: id }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, payload);
+          this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED,
+            payload,
+          );
         }
       });
   }
@@ -1400,21 +1583,26 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .then((result) => {
         if (result.value) {
           // Return updated document
-          this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, {
+          const payload = {
             ...update,
             _id: result.value._id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, payload);
+          this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, payload);
         } else if (result.ok) {
           // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
           this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS).findOne({
             stageMemberId,
             userId,
           })
-            .then((customStageMember) => this.sendToUser(
-              userId,
-              ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
-              customStageMember,
-            ));
+            .then((customStageMember) => {
+              this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED, customStageMember);
+              this.sendToUser(
+                userId,
+                ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
+                customStageMember,
+              );
+            });
         }
       });
   }
@@ -1428,6 +1616,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
+        this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_REMOVED, id);
         this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_REMOVED, id);
       });
   }
@@ -1438,6 +1627,10 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .insertOne(initial)
       .then((result) => result.ops[0] as CustomStageMemberAudioProducer)
       .then((customStageMemberAudioProducer) => {
+        this.emit(
+          ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
+          customStageMemberAudioProducer,
+        );
         this.sendToUser(
           customStageMemberAudioProducer.userId,
           ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
@@ -1468,10 +1661,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .then((result) => {
         if (result.value) {
           // Return updated document
-          this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED, {
+          const payload = {
             ...update,
             _id: result.value._id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED, payload);
+          this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED, payload);
         } else if (result.ok) {
           // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
           this._db
@@ -1479,11 +1674,14 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
             .findOne({
               stageMemberAudioProducerId,
               userId,
-            }).then((customAudioProducer) => this.sendToUser(
-              userId,
-              ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-              customAudioProducer,
-            ));
+            }).then((customAudioProducer) => {
+              this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED, customAudioProducer);
+              this.sendToUser(
+                userId,
+                ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
+                customAudioProducer,
+              );
+            });
         }
       });
   }
@@ -1494,13 +1692,15 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndUpdate({ _id: id }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
+          const payload = {
+            ...update,
+            _id: id,
+          };
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED, payload);
           this.sendToUser(
             result.value.userId,
             ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED,
-            {
-              ...update,
-              _id: id,
-            },
+            payload,
           );
         }
       });
@@ -1511,6 +1711,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
         if (result) {
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_REMOVED, id);
           this.sendToUser(
             result.value.userId,
             ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_REMOVED,
@@ -1525,6 +1726,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .insertOne(initial)
       .then((result) => result.ops[0] as CustomStageMemberOvTrack)
       .then((customStageMemberOvTrack) => {
+        this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED, customStageMemberOvTrack);
         this.sendToUser(
           customStageMemberOvTrack.userId,
           ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
@@ -1552,10 +1754,12 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .then((result) => {
         if (result.value) {
           // Return updated document
-          this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, {
+          const payload = {
             ...update,
             _id: result.value._id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, payload);
+          this.sendToUser(userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, payload);
         } else if (result.ok) {
           // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
           this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
@@ -1563,11 +1767,14 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
               stageMemberOvTrackId,
               userId,
             })
-            .then((customOvTrack) => this.sendToUser(
-              userId,
-              ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-              customOvTrack,
-            ));
+            .then((customOvTrack) => {
+              this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED, customOvTrack);
+              this.sendToUser(
+                userId,
+                ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
+                customOvTrack,
+              );
+            });
         }
       });
   }
@@ -1577,10 +1784,16 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
       .findOneAndUpdate({ _id: id }, { $set: update }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, {
+          const payload = {
             ...update,
             _id: id,
-          });
+          };
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED, payload);
+          this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED,
+            payload,
+          );
         }
       });
   }
@@ -1589,6 +1802,7 @@ class MongoRealtimeDatabase implements IRealtimeDatabase {
     return this._db.collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
+        this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_REMOVED, id);
         this.sendToUser(result.value.userId, ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_REMOVED, id);
       });
   }

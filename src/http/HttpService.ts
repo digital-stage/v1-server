@@ -32,6 +32,18 @@ class HttpService {
       res.writeStatus('200 OK').writeHeader('IsExample', 'Yes').end('Boom!');
     });
 
+    app.get('/routers', async (res) => {
+      res.onAborted(() => {
+        res.aborted = true;
+      });
+      return this.database.readRouters()
+        .then((routers) => {
+          if (!res.aborted) {
+            res.end(JSON.stringify(routers));
+          }
+        });
+    });
+
     app.get('/producers/:id', async (res, req) => {
       res.onAborted(() => {
         res.aborted = true;
@@ -39,13 +51,13 @@ class HttpService {
       const id = req.getParameter(0);
       d(`[/producers/:id] Producer with id ${id} requested`);
       if (!id
-      || typeof id !== 'string') {
+                || typeof id !== 'string') {
         warn('[/producers/:id] Bad request');
         return res.writeStatus('400 Bad Request').end();
       }
       const token = req.getHeader('authorization');
       if (!token
-        || typeof token !== 'string') {
+                || typeof token !== 'string') {
         warn('[/producers/:id] Missing authorization');
         return res.writeStatus('400 Bad Request').end();
       }

@@ -10,21 +10,21 @@ import {
   Track,
   TrackPreset,
   User,
-} from '../types';
-import { ClientDeviceEvents, ServerDeviceEvents } from '../events';
-import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
+} from '../../../types';
+import { ClientDeviceEvents, ServerDeviceEvents } from '../../../events';
+import MongoRealtimeDatabase from '../../../database/MongoRealtimeDatabase';
 import {
   AddAudioProducerPayload, AddSoundCardPayload, AddTrackPayload, AddTrackPresetPayload,
   AddVideoProducerPayload, ChangeSoundCardPayload, ChangeTrackPayload, ChangeTrackPresetPayload,
   RemoveAudioProducerPayload, RemoveSoundCardPayload, RemoveTrackPayload, RemoveTrackPresetPayload,
   RemoveVideoProducerPayload,
-} from '../payloads';
+} from '../../../payloads';
 
 const d = debug('server').extend('socket').extend('device');
 const err = d.extend('err');
 const trace = d.extend('trace');
 
-class SocketDeviceHandler {
+class SocketDeviceContext {
   private readonly serverAddress: string;
 
   private readonly database: MongoRealtimeDatabase;
@@ -347,4 +347,4 @@ class SocketDeviceHandler {
   }
 }
 
-export default SocketDeviceHandler;
+export default SocketDeviceContext;

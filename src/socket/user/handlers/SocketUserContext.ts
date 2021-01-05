@@ -1,14 +1,14 @@
 import { ITeckosSocket } from 'teckos';
 import debug from 'debug';
-import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
-import { User } from '../types';
-import { ClientStageEvents, ClientUserEvents } from '../events';
-import { ChangeUserPayload } from '../payloads';
+import MongoRealtimeDatabase from '../../../database/MongoRealtimeDatabase';
+import { User } from '../../../types';
+import { ClientStageEvents, ClientUserEvents } from '../../../events';
+import { ChangeUserPayload } from '../../../payloads';
 
 const d = debug('server').extend('socket').extend('user');
 const trace = d.extend('trace');
 
-class SocketUserHandler {
+class SocketUserContext {
   private readonly database: MongoRealtimeDatabase;
 
   private readonly user: User;
@@ -33,4 +33,4 @@ class SocketUserHandler {
       });
   }
 }
-export default SocketUserHandler;
+export default SocketUserContext;

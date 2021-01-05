@@ -1,4 +1,20 @@
-import { ThreeDimensionAudioProperties } from './types';
+import { GlobalAudioProducer, GlobalVideoProducer, ThreeDimensionAudioProperties } from './types';
+
+// Router
+export interface StageManaged {
+  id: string;
+  ovServer: {
+    ipv4: string;
+    ipv6?: string;
+    port: number;
+  }
+}
+
+export type StageUnManaged = string;
+export type ResolveProducer = {
+  id: string,
+  callback: (error: string | null, producer?: GlobalVideoProducer | GlobalAudioProducer) => void
+};
 
 // DEVICE
 export interface AddAudioProducerPayload {
@@ -24,9 +40,9 @@ export interface ChangeVideoProducerPayload {
 export type RemoveVideoProducerPayload = string;
 
 export interface AddSoundCardPayload {
-  id: string,
+  name: string;
   initial: {
-    name: string;
+    label?: string;
     driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC';
     numInputChannels?: number;
     numOutputChannels?: number;
@@ -34,13 +50,14 @@ export interface AddSoundCardPayload {
     sampleRate?: number;
     periodSize?: number;
     numPeriods?: number; // default to 2
-  }
+  };
 }
 
 export interface ChangeSoundCardPayload {
-  id: string,
+  id: string;
   update: Partial<{
     name: string;
+    label: string;
     driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC';
     numInputChannels?: number;
     numOutputChannels?: number;
@@ -48,7 +65,7 @@ export interface ChangeSoundCardPayload {
     sampleRate?: number;
     periodSize?: number;
     numPeriods?: number; // default to 2
-  }>
+  }>;
 }
 
 export type RemoveSoundCardPayload = string;
@@ -236,7 +253,8 @@ export interface JoinStagePayload {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface LeaveStagePayload {}
+export interface LeaveStagePayload {
+}
 
 export type LeaveStageForGoodPayload = string;
 
