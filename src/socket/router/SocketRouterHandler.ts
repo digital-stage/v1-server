@@ -3,7 +3,7 @@ import debug from 'debug';
 import { ObjectId } from 'mongodb';
 import MongoRealtimeDatabase from '../../database/MongoRealtimeDatabase';
 import { GlobalAudioProducer, GlobalVideoProducer, Router } from '../../types';
-import { ClientRouterEvents, ServerRouterEvents } from '../../events';
+import { ClientRouterEvents, ServerGlobalEvents, ServerRouterEvents } from '../../events';
 import { ResolveProducer, StageManaged, StageUnManaged } from '../../payloads';
 
 const d = debug('server').extend('socket').extend('router');
@@ -86,6 +86,8 @@ class SocketRouterHandler {
         ));
       this._database.deleteRouter(router._id);
     });
+
+    socket.emit(ServerGlobalEvents.READY, router);
   }
 }
 
