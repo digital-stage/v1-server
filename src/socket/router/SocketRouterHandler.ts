@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 import MongoRealtimeDatabase from '../../database/MongoRealtimeDatabase';
 import { GlobalAudioProducer, GlobalVideoProducer, Router } from '../../types';
 import { ClientRouterEvents, ServerGlobalEvents, ServerRouterEvents } from '../../events';
-import { ResolveProducer, StageManaged, StageUnManaged } from '../../payloads';
+import { StageManaged, StageUnManaged } from '../../payloads';
 
 const d = debug('server').extend('socket').extend('router');
 const info = d.extend('info');
@@ -57,16 +57,22 @@ class SocketRouterHandler {
       });
     });
 
-    socket.on(ClientRouterEvents.RESOLVE_PRODUCER, (payload: ResolveProducer) => {
-      const id = new ObjectId(payload.id);
-      return this.getProducer(id)
-        .then((producer) => {
-          if (!producer) {
-            return payload.callback('Not found');
-          }
-          return payload.callback(null, producer);
-        });
-    });
+    socket.on(
+      ClientRouterEvents.RESOLVE_PRODUCER,
+      (id: string,
+        callback: (
+          error: string | null,
+          producer?: GlobalVideoProducer | GlobalAudioProducer) => void) => {
+        const objectId = new ObjectId(id);
+        return this.getProducer(objectId)
+          .then((producer) => {
+            if (!producer) {
+              return callback('Not found');
+            }
+            return callback(null, producer);
+          });
+      },
+    );
 
     // Find all stages without server and assign them to this router
     const unassignedStages = await this._database.readStagesWithoutRouter(router.availableOVSlots);

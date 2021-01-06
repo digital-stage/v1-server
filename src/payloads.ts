@@ -11,10 +11,6 @@ export interface StageManaged {
 }
 
 export type StageUnManaged = string;
-export type ResolveProducer = {
-  id: string,
-  callback: (error: string | null, producer?: GlobalVideoProducer | GlobalAudioProducer) => void
-};
 
 // DEVICE
 export interface AddAudioProducerPayload {
