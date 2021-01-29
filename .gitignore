@@ -8,3 +8,4 @@ ecosystem.config.js
 .idea
 initdb.sh
 initdb-cloud.sh
+.DS_Store

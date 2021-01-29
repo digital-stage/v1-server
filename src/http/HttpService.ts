@@ -3,6 +3,7 @@ import * as uWebSocket from 'teckos/uws';
 import debug from 'debug';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import { IAuthentication } from '../auth/IAuthentication';
+import setupCORS from './setupCORS';
 
 const d = debug('server').extend('http');
 const warn = d.extend('warn');
@@ -32,7 +33,8 @@ class HttpService {
       res.writeStatus('200 OK').writeHeader('IsExample', 'Yes').end('Boom!');
     });
 
-    app.get('/routers', async (res) => {
+    app.get('/routers', async (res, req) => {
+      setupCORS(res, req);
       res.onAborted(() => {
         res.aborted = true;
       });
