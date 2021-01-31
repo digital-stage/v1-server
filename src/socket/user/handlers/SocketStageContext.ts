@@ -3,7 +3,7 @@ import { ITeckosSocket } from 'teckos';
 import debug from 'debug';
 import MongoRealtimeDatabase from '../../../database/MongoRealtimeDatabase';
 import { User } from '../../../types';
-import { ClientStageEvents } from '../../../events';
+import { ClientStageEvents, ServerStageEvents } from '../../../events';
 import {
   AddGroupPayload,
   AddStagePayload,
@@ -16,7 +16,7 @@ import {
   RemoveCustomStageMemberOvPayload,
   RemoveCustomStageMemberPayload,
   RemoveGroupPayload,
-  RemoveStagePayload,
+  RemoveStagePayload, SendMessage,
   SetCustomGroupPayload, SetCustomStageMemberAudioPayload,
   SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
 } from '../../../payloads';
@@ -40,6 +40,18 @@ class SocketStageContext {
 
   init() {
     // STAGE MANAGEMENT
+    this.socket.on(ClientStageEvents.SEND_MESSAGE,
+      (payload: SendMessage) => {
+        trace(`${this.user.name}: ${ClientStageEvents.SEND_MESSAGE}(${payload})`);
+        return this.database.readUser(this.user._id)
+          .then((user) => {
+            if (user && user.stageId) {
+              this.database.sendToStage(user.stageId, ServerStageEvents.MESSAGE_SENT, payload);
+            }
+          })
+          .catch((error) => err(error));
+      });
+
     this.socket.on(ClientStageEvents.ADD_STAGE,
       (payload: AddStagePayload) => this.database.createStage({
         ...payload,

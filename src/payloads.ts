@@ -1,4 +1,4 @@
-import { GlobalAudioProducer, GlobalVideoProducer, ThreeDimensionAudioProperties } from './types';
+import { ThreeDimensionAudioProperties } from './types';
 
 // Router
 export interface StageManaged {
@@ -253,6 +253,8 @@ export interface LeaveStagePayload {
 }
 
 export type LeaveStageForGoodPayload = string;
+
+export type SendMessage = string;
 
 // User
 export interface ChangeUserPayload {

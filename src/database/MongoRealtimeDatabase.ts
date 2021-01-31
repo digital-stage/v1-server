@@ -654,9 +654,11 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
         if (result.modifiedCount > 0) {
           return this.renewOnlineStatus(userId);
         }
+        /*
         return this.readDevice(id)
           .then((device) => console.log(device));
-        // return null;
+        */
+        return null;
       });
   }
 

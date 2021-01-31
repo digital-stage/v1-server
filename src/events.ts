@@ -82,6 +82,8 @@ export enum ClientDeviceEvents {
 }
 
 export enum ServerStageEvents {
+  MESSAGE_SENT = 'message-sent',
+
   STAGE_READY = 'stage-ready',
 
   STAGE_LEFT = 'stage-left',
@@ -134,6 +136,8 @@ export enum ServerStageEvents {
 }
 
 export enum ClientStageEvents {
+  SEND_MESSAGE = 'send-message',
+
   ADD_STAGE = 'add-stage',
 
   JOIN_STAGE = 'join-stage',
