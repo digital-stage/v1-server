@@ -16,7 +16,7 @@ import {
   RemoveCustomStageMemberOvPayload,
   RemoveCustomStageMemberPayload,
   RemoveGroupPayload,
-  RemoveStagePayload, SendChatMessage,
+  RemoveStagePayload, SendChatMessagePayload,
   SetCustomGroupPayload, SetCustomStageMemberAudioPayload,
   SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
 } from '../../../payloads';
@@ -41,7 +41,7 @@ class SocketStageContext {
   init() {
     // STAGE MANAGEMENT
     this.socket.on(ClientStageEvents.SEND_MESSAGE,
-      (payload: SendChatMessage) => {
+      (payload: SendChatMessagePayload) => {
         trace(`${this.user.name}: ${ClientStageEvents.SEND_MESSAGE}(${payload})`);
         return this.database.readUser(this.user._id)
           .then((user) => {
