@@ -254,7 +254,7 @@ export interface LeaveStagePayload {
 
 export type LeaveStageForGoodPayload = string;
 
-export type SendMessage = string;
+export type SendChatMessage = string;
 
 // User
 export interface ChangeUserPayload {

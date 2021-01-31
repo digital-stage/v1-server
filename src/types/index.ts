@@ -347,6 +347,13 @@ export interface InitialStagePackage extends StagePackage {
   groupId: GroupId;
 }
 
+export interface ChatMessage {
+  userId: UserId;
+  stageMemberId: StageMemberId;
+  message: string;
+  time: number;
+}
+
 export {
   ThreeDimensionAudioProperties,
 };

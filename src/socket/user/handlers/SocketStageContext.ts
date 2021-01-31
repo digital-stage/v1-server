@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { ITeckosSocket } from 'teckos';
 import debug from 'debug';
 import MongoRealtimeDatabase from '../../../database/MongoRealtimeDatabase';
-import { User } from '../../../types';
+import { ChatMessage, User } from '../../../types';
 import { ClientStageEvents, ServerStageEvents } from '../../../events';
 import {
   AddGroupPayload,
@@ -16,7 +16,7 @@ import {
   RemoveCustomStageMemberOvPayload,
   RemoveCustomStageMemberPayload,
   RemoveGroupPayload,
-  RemoveStagePayload, SendMessage,
+  RemoveStagePayload, SendChatMessage,
   SetCustomGroupPayload, SetCustomStageMemberAudioPayload,
   SetCustomStageMemberOvPayload, SetCustomStageMemberPayload,
 } from '../../../payloads';
@@ -41,13 +41,24 @@ class SocketStageContext {
   init() {
     // STAGE MANAGEMENT
     this.socket.on(ClientStageEvents.SEND_MESSAGE,
-      (payload: SendMessage) => {
+      (payload: SendChatMessage) => {
         trace(`${this.user.name}: ${ClientStageEvents.SEND_MESSAGE}(${payload})`);
         return this.database.readUser(this.user._id)
           .then((user) => {
-            if (user && user.stageId) {
-              this.database.sendToStage(user.stageId, ServerStageEvents.MESSAGE_SENT, payload);
+            if (user && user.stageId && user.stageMemberId) {
+              const chatMessage: ChatMessage = {
+                userId: this.user._id,
+                stageMemberId: this.user.stageMemberId,
+                message: payload,
+                time: Date.now(),
+              };
+              return this.database.sendToStage(
+                user.stageId,
+                ServerStageEvents.MESSAGE_SENT,
+                chatMessage,
+              );
             }
+            return null;
           })
           .catch((error) => err(error));
       });
