@@ -82,8 +82,8 @@ export interface Device {
   noiseSuppression?: boolean;
 
   // OV SoundCards
-  soundCardIds: SoundCardId[]; // refers to all available sound devices
-  soundCardId?: SoundCardId; // active sound device
+  soundCardNames: string[];
+  soundCardName?: string;
 
   // Optional for ov-based clients
   senderJitter?: number;
@@ -116,6 +116,8 @@ export interface SoundCard { // ov-specific
   sampleRates: number[];
   periodSize: number;
   numPeriods: number; // default to 2
+
+  softwareLatency?: number;
 
   // Optimizations for performance
   // trackPresets: TrackPresetId[];
