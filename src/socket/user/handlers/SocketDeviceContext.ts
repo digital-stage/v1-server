@@ -128,7 +128,7 @@ class SocketDeviceContext {
       fn?: (soundCard: SoundCard) => void) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.SET_SOUND_CARD}`);
 
-      return this.database.setSoundCard(this.user._id, payload.name,{
+      return this.database.setSoundCard(this.user._id, payload.name, {
         label: '',
         numInputChannels: 0,
         numOutputChannels: 0,
