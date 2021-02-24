@@ -144,7 +144,7 @@ class SocketDeviceContext {
       })
         .then((soundCard) => {
           if (fn) fn(soundCard);
-        });
+        }).catch((error) => err(error));
     });
 
     this.socket.on(ClientDeviceEvents.CHANGE_SOUND_CARD, (
