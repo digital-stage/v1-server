@@ -1151,6 +1151,7 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
         return this._db.collection<SoundCard>(Collections.SOUND_CARDS).findOne({
           userId, name,
         }).then((soundCard) => {
+
           this.sendToUser(
             soundCard.userId,
             ServerDeviceEvents.SOUND_CARD_ADDED,
