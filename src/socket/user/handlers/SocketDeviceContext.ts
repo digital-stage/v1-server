@@ -124,9 +124,9 @@ class SocketDeviceContext {
         });
     });
 
-    this.socket.on(ClientDeviceEvents.ADD_SOUND_CARD, (payload: AddSoundCardPayload,
+    this.socket.on(ClientDeviceEvents.SET_SOUND_CARD, (payload: AddSoundCardPayload,
       fn?: (soundCard: SoundCard) => void) => {
-      trace(`${this.user.name}: ${ClientDeviceEvents.ADD_SOUND_CARD}`);
+      trace(`${this.user.name}: ${ClientDeviceEvents.SET_SOUND_CARD}`);
 
       return this.database.createSoundCard({
         name: '',

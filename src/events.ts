@@ -68,7 +68,7 @@ export enum ClientDeviceEvents {
   ADD_VIDEO_PRODUCER = 'add-video-producer',
   REMOVE_VIDEO_PRODUCER = 'remove-video-producer',
 
-  ADD_SOUND_CARD = 'add-sound-card',
+  SET_SOUND_CARD = 'set-sound-card',
   CHANGE_SOUND_CARD = 'change-sound-card',
   REMOVE_SOUND_CARD = 'remove-sound-card',
 
