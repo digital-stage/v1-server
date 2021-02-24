@@ -53,10 +53,10 @@ class SocketDeviceContext {
       if (!payload._id) return Promise.resolve();
       const deviceId = new ObjectId(payload._id);
       const update = omit(payload, '_id');
-      if (payload.soundCardIds) {
-        // Transform soundCardIds
-        update.soundCardIds = payload.soundCardIds.map((id: any) => new ObjectId(id));
-      }
+      // if (payload.soundCardIds) {
+      // Transform soundCardIds
+      // update.soundCardIds = payload.soundCardIds.map((id: any) => new ObjectId(id));
+      // }
       return this.database.updateDevice(this.user._id, deviceId, update);
     });
 
