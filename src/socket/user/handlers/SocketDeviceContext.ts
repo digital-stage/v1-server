@@ -136,6 +136,8 @@ class SocketDeviceContext {
         periodSize: 96,
         numPeriods: 2,
         driver: 'JACK',
+        isDefault: false,
+        sampleRates: [],
         ...payload.initial,
         trackPresetId: payload.initial.trackPresetId
           ? new ObjectId(payload.initial.trackPresetId) : undefined,

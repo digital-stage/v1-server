@@ -103,6 +103,8 @@ export interface SoundCard { // ov-specific
   userId: UserId;
   name: string; // unique together with userId
 
+  isDefault?: boolean;
+
   driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC',
 
   numInputChannels: number;
@@ -111,6 +113,7 @@ export interface SoundCard { // ov-specific
   trackPresetId?: TrackPresetId; // Current default preset (outside or on new stages)
 
   sampleRate: number;
+  sampleRates: number[];
   periodSize: number;
   numPeriods: number; // default to 2
 
