@@ -127,6 +127,7 @@ class SocketDeviceContext {
     this.socket.on(ClientDeviceEvents.ADD_SOUND_CARD, (payload: AddSoundCardPayload,
       fn?: (soundCard: SoundCard) => void) => {
       trace(`${this.user.name}: ${ClientDeviceEvents.ADD_SOUND_CARD}`);
+
       return this.database.createSoundCard({
         name: '',
         numInputChannels: 0,

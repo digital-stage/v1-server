@@ -81,7 +81,7 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   deleteDevice(id: DeviceId): Promise<void>;
 
-  createSoundCard(initial: Omit<SoundCard, '_id'>): Promise<SoundCard>;
+  setSoundCard(userId: UserId, name: string, initial: Omit<SoundCard, '_id' | 'name' | 'userId'>): Promise<SoundCard>;
 
   readSoundCard(deviceId: DeviceId, id: SoundCardId): Promise<SoundCard>;
 

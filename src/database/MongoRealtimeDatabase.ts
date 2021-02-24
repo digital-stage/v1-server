@@ -1128,6 +1128,39 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
       });
   }
 
+  setSoundCard(userId: UserId, name: string, update: Omit<SoundCard, '_id' | 'name' | 'userId'>): Promise<SoundCard> {
+    return this._db.collection<SoundCard>(Collections.SOUND_CARDS)
+      .findOneAndUpdate(
+        {
+          userId,
+          name,
+        },
+        { $set: update },
+      )
+      .then((result) => {
+        if (result.value) {
+          // Return updated document
+          this.sendToUser(userId, ServerDeviceEvents.SOUND_CARD_CHANGED, {
+            ...update,
+            name,
+            userId,
+            _id: result.value._id,
+          });
+          return result.value;
+        }
+        return this._db.collection<SoundCard>(Collections.SOUND_CARDS).findOne({
+          userId, name,
+        }).then((soundCard) => {
+          this.sendToUser(
+            soundCard.userId,
+            ServerDeviceEvents.SOUND_CARD_ADDED,
+            soundCard,
+          );
+          return soundCard;
+        });
+      });
+  }
+
   createSoundCard(initial: Omit<SoundCard, '_id'>): Promise<SoundCard> {
     return this._db.collection<SoundCard>(Collections.SOUND_CARDS).insertOne(initial)
       .then((result) => result.ops[0] as SoundCard)

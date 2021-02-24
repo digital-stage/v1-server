@@ -101,8 +101,7 @@ export interface WebRTCDevice {
 export interface SoundCard { // ov-specific
   _id: SoundCardId;
   userId: UserId;
-
-  name: string; // unique together with deviceId
+  name: string; // unique together with userId
 
   driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC',
 
