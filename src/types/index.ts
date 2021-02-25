@@ -86,8 +86,15 @@ export interface Device {
   soundCardId?: SoundCardId; // active sound device
 
   // Optional for ov-based clients
+  receiverType: 'ortf' | 'hrtf';
   senderJitter?: number;
   receiverJitter?: number;
+  p2p: boolean;
+  reverbReverb: boolean;
+  reverbGain: number;
+  renderISM: boolean;
+  rawMode: boolean;
+  egoGain: number;
 
   // Optimizations for performance
   server: string;
@@ -189,12 +196,15 @@ export interface Stage {
   height: number;
   absorption: number;
   damping: number;
+  ambientSoundUrl?: string;
+  ambientLevel: number;
 
   ovServer?: {
     router: RouterId;
     ipv4: string;
     ipv6?: string;
     port: number;
+    pin: number;
   }
 }
 
@@ -232,6 +242,10 @@ export interface StageMember extends ThreeDimensionAudioProperties {
 
   // SETTINGS (modifiable only by admins)
   isDirector: boolean;
+
+  ovStageDeviceId: number; // 0 - 30
+
+  sendlocal: boolean;
 
   // Optimizations for performance
   stageId: StageId;
@@ -303,8 +317,8 @@ export interface StageMemberOvTrack extends Track, ThreeDimensionAudioProperties
 
   online: boolean;
 
-  gain: number; // Overrides track gain (for stage)
-
+  gain: number;
+  sourceport?: string;
   directivity: 'omni' | 'cardioid'; // Overrides track directivity (for stage)
 
   // Optimizations for performance

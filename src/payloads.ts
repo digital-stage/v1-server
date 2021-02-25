@@ -7,6 +7,7 @@ export interface StageManaged {
     ipv4: string;
     ipv6?: string;
     port: number;
+    pin: number;
   }
 }
 

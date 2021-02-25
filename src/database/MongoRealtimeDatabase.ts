@@ -655,9 +655,9 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
           return this.renewOnlineStatus(userId);
         }
         /*
-        return this.readDevice(id)
-          .then((device) => console.log(device));
-        */
+                        return this.readDevice(id)
+                          .then((device) => console.log(device));
+                        */
         return null;
       });
   }
@@ -701,6 +701,7 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
       absorption: 0.6,
       damping: 0.7,
       admins: [],
+      ambientLevel: 1,
       ...init,
     };
     return this._db.collection<Stage>(Collections.STAGES).insertOne(stage)
@@ -730,9 +731,24 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
       userId: user._id,
       stageId: stage._id,
     });
+
     const wasUserAlreadyInStage = stageMember !== null;
     if (!stageMember) {
       // Create stage member
+      // TODO: Get next free ovStageDeviceId
+      const ovStageDeviceId = await this._db.collection<StageMember>(Collections.STAGE_MEMBERS)
+        .find({ stageId })
+        .toArray()
+        .then((stageMembers) => {
+          for (let i = 0; i < 30; i += 1) {
+            if (stageMembers.find((current) => current.ovStageDeviceId !== i)) {
+              return i;
+            }
+          }
+          return -1;
+        });
+      if (ovStageDeviceId === -1) throw new Error('No more members possible, max of 30 reached');
+
       stageMember = await this.createStageMember({
         userId: user._id,
         stageId: stage._id,
@@ -747,6 +763,8 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
         rX: 0,
         rY: 0,
         rZ: -180,
+        sendlocal: false,
+        ovStageDeviceId,
       });
       // Also create a custom stage member for the same user and mute it per default
       await this.setCustomStageMember(userId, stageMember._id, {
@@ -1151,7 +1169,6 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
         return this._db.collection<SoundCard>(Collections.SOUND_CARDS).findOne({
           userId, name,
         }).then((soundCard) => {
-
           this.sendToUser(
             soundCard.userId,
             ServerDeviceEvents.SOUND_CARD_ADDED,
@@ -1286,7 +1303,7 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
       .then((result) => {
         if (result.value) {
           this._db.collection<Device>(Collections.DEVICES)
-            .find({ soundCardIds: id })
+            .find({ soundCardId: id })
             .toArray()
             .then((devices) => {
               devices.map((device) => {
