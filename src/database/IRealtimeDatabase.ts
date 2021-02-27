@@ -1,11 +1,15 @@
-import { Db } from 'mongodb';
-import { ITeckosSocket } from 'teckos';
-import * as EventEmitter from 'events';
+import { Db } from "mongodb";
+import { ITeckosSocket } from "teckos";
+import * as EventEmitter from "events";
 import {
   CustomGroup,
   CustomGroupId,
-  CustomStageMember, CustomStageMemberAudioProducer, CustomStageMemberAudioProducerId,
-  CustomStageMemberId, CustomStageMemberOvTrack, CustomStageMemberOvTrackId,
+  CustomStageMember,
+  CustomStageMemberAudioProducer,
+  CustomStageMemberAudioProducerId,
+  CustomStageMemberId,
+  CustomStageMemberOvTrack,
+  CustomStageMemberOvTrackId,
   Device,
   DeviceId,
   GlobalAudioProducer,
@@ -32,8 +36,10 @@ import {
   TrackPresetId,
   User,
   UserId,
-  ThreeDimensionAudioProperties, Router, RouterId,
-} from '../types';
+  ThreeDimensionAudioProperties,
+  Router,
+  RouterId,
+} from "../types";
 
 export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
   connect(database: string): Promise<void>;
@@ -43,7 +49,7 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
   cleanUp(serverAddress: string): Promise<void>;
 
   // ROUTER HANDLING
-  createRouter(initial: Omit<Router, '_id'>): Promise<Router>;
+  createRouter(initial: Omit<Router, "_id">): Promise<Router>;
 
   readRouter(id: RouterId): Promise<Router | null>;
 
@@ -51,23 +57,28 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   readRoutersByServer(serverAddress: string): Promise<Router[]>;
 
-  updateRouter(id: RouterId, update: Partial<Omit<Router, '_id'>>): Promise<void>;
+  updateRouter(
+    id: RouterId,
+    update: Partial<Omit<Router, "_id">>
+  ): Promise<void>;
 
   deleteRouter(id: RouterId): Promise<void>;
 
   // USER HANDLING
-  createUser(initial: Omit<User, '_id' | 'stageId' | 'stageMemberId'>): Promise<User>;
+  createUser(
+    initial: Omit<User, "_id" | "stageId" | "stageMemberId">
+  ): Promise<User>;
 
   readUser(id: UserId): Promise<User>;
 
   readUserByUid(uid: string): Promise<User>;
 
-  updateUser(id: UserId, update: Partial<Omit<User, '_id'>>): Promise<void>;
+  updateUser(id: UserId, update: Partial<Omit<User, "_id">>): Promise<void>;
 
   deleteUser(id: UserId): Promise<void>;
 
   // DEVICE HANDLING
-  createDevice(initial: Omit<Device, '_id'>): Promise<Device>;
+  createDevice(initial: Omit<Device, "_id">): Promise<Device>;
 
   readDevice(id: DeviceId): Promise<Device | null>;
 
@@ -77,52 +88,90 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   readDeviceByUserAndMac(userId: UserId, mac: string): Promise<Device | null>;
 
-  updateDevice(userId: UserId, id: DeviceId, update: Partial<Omit<Device, '_id'>>): Promise<void>;
+  updateDevice(
+    userId: UserId,
+    id: DeviceId,
+    update: Partial<Omit<Device, "_id">>
+  ): Promise<void>;
 
   deleteDevice(id: DeviceId): Promise<void>;
 
-  setSoundCard(userId: UserId, name: string, initial: Omit<SoundCard, '_id' | 'name' | 'userId'>): Promise<SoundCard>;
+  setSoundCard(
+    userId: UserId,
+    name: string,
+    initial: Omit<SoundCard, "_id" | "name" | "userId">
+  ): Promise<SoundCard>;
 
   readSoundCard(deviceId: DeviceId, id: SoundCardId): Promise<SoundCard>;
 
-  updateSoundCard(deviceId: DeviceId, id: SoundCardId, update: Partial<Omit<SoundCard, '_id'>>): Promise<void>;
+  updateSoundCard(
+    deviceId: DeviceId,
+    id: SoundCardId,
+    update: Partial<Omit<SoundCard, "_id">>
+  ): Promise<void>;
 
   deleteSoundCard(deviceId: DeviceId, id: SoundCardId): Promise<void>;
 
-  createTrackPreset(initial: Omit<TrackPreset, '_id'>): Promise<TrackPreset>;
+  createTrackPreset(initial: Omit<TrackPreset, "_id">): Promise<TrackPreset>;
 
   readTrackPreset(deviceId: DeviceId, id: TrackPresetId): Promise<TrackPreset>;
 
-  updateTrackPreset(deviceId: DeviceId, id: TrackPresetId, update: Partial<Omit<TrackPreset, '_id'>>): Promise<void>;
+  updateTrackPreset(
+    deviceId: DeviceId,
+    id: TrackPresetId,
+    update: Partial<Omit<TrackPreset, "_id">>
+  ): Promise<void>;
 
   deleteTrackPreset(deviceId: DeviceId, id: TrackPresetId): Promise<void>;
 
-  createTrack(initial: Omit<Track, '_id' | 'stageId'>): Promise<Track>;
+  createTrack(initial: Omit<Track, "_id" | "stageId">): Promise<Track>;
 
   readTrack(deviceId: DeviceId, id: TrackId): Promise<Track>;
 
-  updateTrack(deviceId: DeviceId, id: TrackId, update: Partial<Omit<Track, '_id'>>): Promise<void>;
+  updateTrack(
+    deviceId: DeviceId,
+    id: TrackId,
+    update: Partial<Omit<Track, "_id">>
+  ): Promise<void>;
 
   deleteTrack(deviceId: DeviceId, id: TrackId): Promise<void>;
 
-  createAudioProducer(initial: Omit<GlobalAudioProducer, '_id'>): Promise<GlobalAudioProducer>;
+  createAudioProducer(
+    initial: Omit<GlobalAudioProducer, "_id">
+  ): Promise<GlobalAudioProducer>;
 
   readAudioProducer(id: GlobalAudioProducerId): Promise<GlobalAudioProducer>;
 
-  updateAudioProducer(deviceId: DeviceId, id: GlobalAudioProducerId, update: Partial<Omit<GlobalAudioProducer, '_id'>>): Promise<void>;
+  updateAudioProducer(
+    deviceId: DeviceId,
+    id: GlobalAudioProducerId,
+    update: Partial<Omit<GlobalAudioProducer, "_id">>
+  ): Promise<void>;
 
-  deleteAudioProducer(deviceId: DeviceId, id: GlobalAudioProducerId): Promise<void>;
+  deleteAudioProducer(
+    deviceId: DeviceId,
+    id: GlobalAudioProducerId
+  ): Promise<void>;
 
-  createVideoProducer(initial: Omit<GlobalVideoProducer, '_id'>): Promise<GlobalVideoProducer>;
+  createVideoProducer(
+    initial: Omit<GlobalVideoProducer, "_id">
+  ): Promise<GlobalVideoProducer>;
 
   readVideoProducer(id: GlobalVideoProducerId): Promise<GlobalVideoProducer>;
 
-  updateVideoProducer(deviceId: DeviceId, id: GlobalVideoProducerId, update: Partial<Omit<GlobalVideoProducer, '_id'>>): Promise<void>;
+  updateVideoProducer(
+    deviceId: DeviceId,
+    id: GlobalVideoProducerId,
+    update: Partial<Omit<GlobalVideoProducer, "_id">>
+  ): Promise<void>;
 
-  deleteVideoProducer(deviceId: DeviceId, id: GlobalVideoProducerId): Promise<void>;
+  deleteVideoProducer(
+    deviceId: DeviceId,
+    id: GlobalVideoProducerId
+  ): Promise<void>;
 
   // STAGE HANDLING
-  createStage(initial: Omit<Stage, '_id'>): Promise<Stage>;
+  createStage(initial: Omit<Stage, "_id">): Promise<Stage>;
 
   readStage(id: StageId): Promise<Stage>;
 
@@ -130,56 +179,83 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   readManagedStage(userId: UserId, id: StageId): Promise<Stage>;
 
-  joinStage(userId: UserId, stageId: StageId, groupId: GroupId, password?: string): Promise<void>;
+  joinStage(
+    userId: UserId,
+    stageId: StageId,
+    groupId: GroupId,
+    password?: string
+  ): Promise<void>;
 
   leaveStage(userId: UserId, skipLeaveNotification?: boolean): Promise<void>;
 
-  updateStage(id: StageId, update: Partial<Omit<Stage, '_id'>>): Promise<void>;
+  updateStage(id: StageId, update: Partial<Omit<Stage, "_id">>): Promise<void>;
 
   deleteStage(id: StageId): Promise<any>;
 
-  createGroup(initial: Omit<Group, '_id'>): Promise<Group>;
+  createGroup(initial: Omit<Group, "_id">): Promise<Group>;
 
   readGroup(id: GroupId): Promise<Group>;
 
-  updateGroup(id: GroupId, update: Partial<Omit<Group, '_id'>>): Promise<void>;
+  updateGroup(id: GroupId, update: Partial<Omit<Group, "_id">>): Promise<void>;
 
   deleteGroup(id: GroupId): Promise<void>;
 
-  createStageMember(initial: Omit<StageMember, '_id'>): Promise<StageMember>;
+  createStageMember(initial: Omit<StageMember, "_id">): Promise<StageMember>;
 
   readStageMember(id: StageMemberId): Promise<StageMember>;
 
-  updateStageMember(id: StageMemberId, update: Partial<Omit<StageMember, '_id'>>): Promise<void>;
+  updateStageMember(
+    id: StageMemberId,
+    update: Partial<Omit<StageMember, "_id">>
+  ): Promise<void>;
 
   deleteStageMember(id: StageMemberId): Promise<void>;
 
-  createStageMemberOvTrack(initial: Omit<StageMemberOvTrack, '_id'>): Promise<StageMemberOvTrack>;
+  createStageMemberOvTrack(
+    initial: Omit<StageMemberOvTrack, "_id">
+  ): Promise<StageMemberOvTrack>;
 
   readStageMemberOvTrack(id: StageMemberOvTrackId): Promise<StageMemberOvTrack>;
 
-  updateStageMemberOvTrack(id: StageMemberOvTrackId, update: Partial<Omit<StageMemberOvTrack, '_id'>>): Promise<void>;
+  updateStageMemberOvTrack(
+    id: StageMemberOvTrackId,
+    update: Partial<Omit<StageMemberOvTrack, "_id">>
+  ): Promise<void>;
 
   deleteStageMemberOvTrack(id: StageMemberOvTrackId): Promise<void>;
 
-  createStageMemberAudioProducer(initial: Omit<StageMemberAudioProducer, '_id'>): Promise<StageMemberAudioProducer>;
+  createStageMemberAudioProducer(
+    initial: Omit<StageMemberAudioProducer, "_id">
+  ): Promise<StageMemberAudioProducer>;
 
-  readStageMemberAudioProducer(id: StageMemberAudioProducerId): Promise<StageMemberAudioProducer>;
+  readStageMemberAudioProducer(
+    id: StageMemberAudioProducerId
+  ): Promise<StageMemberAudioProducer>;
 
-  updateStageMemberAudioProducer(id: StageMemberAudioProducerId, update: Partial<Omit<StageMemberAudioProducer, '_id'>>): Promise<void>;
+  updateStageMemberAudioProducer(
+    id: StageMemberAudioProducerId,
+    update: Partial<Omit<StageMemberAudioProducer, "_id">>
+  ): Promise<void>;
 
   deleteStageMemberAudioProducer(id: StageMemberAudioProducerId): Promise<void>;
 
-  createStageMemberVideoProducer(initial: Omit<StageMemberVideoProducer, '_id'>): Promise<StageMemberVideoProducer>;
+  createStageMemberVideoProducer(
+    initial: Omit<StageMemberVideoProducer, "_id">
+  ): Promise<StageMemberVideoProducer>;
 
-  readStageMemberVideoProducer(id: StageMemberVideoProducerId): Promise<StageMemberVideoProducer>;
+  readStageMemberVideoProducer(
+    id: StageMemberVideoProducerId
+  ): Promise<StageMemberVideoProducer>;
 
-  updateStageMemberVideoProducer(id: StageMemberVideoProducerId, update: Partial<Omit<StageMemberVideoProducer, '_id'>>): Promise<void>;
+  updateStageMemberVideoProducer(
+    id: StageMemberVideoProducerId,
+    update: Partial<Omit<StageMemberVideoProducer, "_id">>
+  ): Promise<void>;
 
   deleteStageMemberVideoProducer(id: StageMemberVideoProducerId): Promise<void>;
 
   // Customized elements for each stage member
-  createCustomGroup(initial: Omit<CustomGroup, '_id'>): Promise<CustomGroup>;
+  createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup>;
 
   readCustomGroup(id: CustomGroupId): Promise<CustomGroup>;
 
@@ -189,45 +265,83 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
     update: Partial<ThreeDimensionAudioProperties>
   ): Promise<void>;
 
-  updateCustomGroup(id: CustomGroupId, update: Partial<Omit<CustomGroup, '_id'>>): Promise<void>;
+  updateCustomGroup(
+    id: CustomGroupId,
+    update: Partial<Omit<CustomGroup, "_id">>
+  ): Promise<void>;
 
   deleteCustomGroup(id: CustomGroupId): Promise<void>;
 
-  createCustomStageMember(initial: Omit<CustomStageMember, '_id'>): Promise<CustomStageMember>;
+  createCustomStageMember(
+    initial: Omit<CustomStageMember, "_id">
+  ): Promise<CustomStageMember>;
 
   readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember>;
 
-  setCustomStageMember(userId: UserId, stageMemberId: StageMemberId, update: Partial<Omit<CustomStageMember, '_id'>>): Promise<void>;
+  setCustomStageMember(
+    userId: UserId,
+    stageMemberId: StageMemberId,
+    update: Partial<Omit<CustomStageMember, "_id">>
+  ): Promise<void>;
 
-  updateCustomStageMember(id: CustomStageMemberId, update: Partial<Omit<CustomStageMember, '_id'>>): Promise<void>;
+  updateCustomStageMember(
+    id: CustomStageMemberId,
+    update: Partial<Omit<CustomStageMember, "_id">>
+  ): Promise<void>;
 
   deleteCustomStageMember(id: CustomStageMemberId): Promise<void>;
 
-  createCustomStageMemberAudioProducer(initial: Omit<CustomStageMemberAudioProducer, '_id'>): Promise<CustomStageMemberAudioProducer>;
+  createCustomStageMemberAudioProducer(
+    initial: Omit<CustomStageMemberAudioProducer, "_id">
+  ): Promise<CustomStageMemberAudioProducer>;
 
-  readCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId):
-  Promise<CustomStageMemberAudioProducer>;
+  readCustomStageMemberAudioProducer(
+    id: CustomStageMemberAudioProducerId
+  ): Promise<CustomStageMemberAudioProducer>;
 
-  setCustomStageMemberAudioProducer(userId: UserId, stageMemberAudioProducerId: StageMemberAudioProducerId, update: Partial<Omit<CustomStageMemberAudioProducer, '_id'>>): Promise<void>;
+  setCustomStageMemberAudioProducer(
+    userId: UserId,
+    stageMemberAudioProducerId: StageMemberAudioProducerId,
+    update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>
+  ): Promise<void>;
 
-  updateCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId, update: Partial<Omit<CustomStageMemberAudioProducer, '_id'>>): Promise<void>;
+  updateCustomStageMemberAudioProducer(
+    id: CustomStageMemberAudioProducerId,
+    update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>
+  ): Promise<void>;
 
-  deleteCustomStageMemberAudioProducer(id: CustomStageMemberAudioProducerId): Promise<void>;
+  deleteCustomStageMemberAudioProducer(
+    id: CustomStageMemberAudioProducerId
+  ): Promise<void>;
 
-  createCustomStageMemberOvTrack(initial: Omit<CustomStageMemberOvTrack, '_id'>): Promise<CustomStageMemberOvTrack>;
+  createCustomStageMemberOvTrack(
+    initial: Omit<CustomStageMemberOvTrack, "_id">
+  ): Promise<CustomStageMemberOvTrack>;
 
-  readCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<CustomStageMemberOvTrack>;
+  readCustomStageMemberOvTrack(
+    id: CustomStageMemberOvTrackId
+  ): Promise<CustomStageMemberOvTrack>;
 
-  setCustomStageMemberOvTrack(userId: UserId, stageMemberOvTrackId: StageMemberOvTrackId, update: Partial<Omit<CustomStageMemberOvTrack, '_id'>>): Promise<void>;
+  setCustomStageMemberOvTrack(
+    userId: UserId,
+    stageMemberOvTrackId: StageMemberOvTrackId,
+    update: Partial<Omit<CustomStageMemberOvTrack, "_id">>
+  ): Promise<void>;
 
-  updateCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId, update: Partial<Omit<CustomStageMemberOvTrack, '_id'>>): Promise<void>;
+  updateCustomStageMemberOvTrack(
+    id: CustomStageMemberOvTrackId,
+    update: Partial<Omit<CustomStageMemberOvTrack, "_id">>
+  ): Promise<void>;
 
   deleteCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<void>;
 
   // MESSAGING
   sendStageDataToDevice(socket: ITeckosSocket, user: User): Promise<void>;
 
-  sendDeviceConfigurationToDevice(socket: ITeckosSocket, user: User): Promise<void>;
+  sendDeviceConfigurationToDevice(
+    socket: ITeckosSocket,
+    user: User
+  ): Promise<void>;
 
   /**
    * Send event with payload to all users,
@@ -244,7 +358,11 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
    * @param event
    * @param payload
    */
-  sendToStageManagers(stageId: StageId, event: string, payload?: any): Promise<void>;
+  sendToStageManagers(
+    stageId: StageId,
+    event: string,
+    payload?: any
+  ): Promise<void>;
 
   /**
    * Send event with payload to the device
@@ -261,7 +379,11 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
    * @param event
    * @param payload
    */
-  sendToJoinedStageMembers(stageId: StageId, event: string, payload?: any): Promise<void>;
+  sendToJoinedStageMembers(
+    stageId: StageId,
+    event: string,
+    payload?: any
+  ): Promise<void>;
 
   /**
    * Send event with payload to the given user (and all her/his devices)

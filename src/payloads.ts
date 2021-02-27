@@ -1,4 +1,4 @@
-import { ThreeDimensionAudioProperties } from './types';
+import { ThreeDimensionAudioProperties } from "./types";
 
 // Router
 export interface StageManaged {
@@ -8,30 +8,30 @@ export interface StageManaged {
     ipv6?: string;
     port: number;
     pin: number;
-  }
+  };
 }
 
 export type StageUnManaged = string;
 
 // DEVICE
 export interface AddAudioProducerPayload {
-  routerId: string,
-  routerProducerId: string
+  routerId: string;
+  routerProducerId: string;
 }
 
 export type RemoveAudioProducerPayload = string;
 
 export interface AddVideoProducerPayload {
-  routerId: string,
-  routerProducerId: string
+  routerId: string;
+  routerProducerId: string;
 }
 
 export interface ChangeVideoProducerPayload {
-  id: string,
+  id: string;
   producer: Partial<{
     routerId: string;
     routerProducerId: string;
-  }>
+  }>;
 }
 
 export type RemoveVideoProducerPayload = string;
@@ -40,7 +40,7 @@ export interface AddSoundCardPayload {
   name: string;
   initial: {
     label?: string;
-    driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC';
+    driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
     numInputChannels?: number;
     numOutputChannels?: number;
     trackPresetId?: string;
@@ -55,7 +55,7 @@ export interface ChangeSoundCardPayload {
   update: Partial<{
     name: string;
     label: string;
-    driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC';
+    driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
     numInputChannels?: number;
     numOutputChannels?: number;
     trackPresetId?: string;
@@ -75,35 +75,35 @@ export interface AddTrackPresetPayload {
 }
 
 export interface ChangeTrackPresetPayload {
-  id: string,
+  id: string;
   update: Partial<{
     name: string;
     inputChannels: number[];
     outputChannels: number[];
-  }>
+  }>;
 }
 
 export type RemoveTrackPresetPayload = string;
 
 export interface AddTrackPayload {
-  id: string,
+  id: string;
   initial: {
     trackPresetId: string;
     channel: number;
     gain?: number;
     volume?: number;
-    directivity: 'omni' | 'cardioid';
-  }
+    directivity: "omni" | "cardioid";
+  };
 }
 
 export interface ChangeTrackPayload {
-  id: string,
+  id: string;
   update: Partial<{
     channel: number;
     gain: number;
     volume: number;
-    directivity: 'omni' | 'cardioid';
-  }>
+    directivity: "omni" | "cardioid";
+  }>;
 }
 
 export type RemoveTrackPayload = string;
@@ -131,20 +131,21 @@ export interface ChangeStagePayload {
     absorption: number;
     damping: number;
     // admins: string[];
-  }>
+  }>;
 }
 
 export type RemoveStagePayload = string;
 
 // GROUP
-export interface AddGroupPayload extends Partial<ThreeDimensionAudioProperties> {
+export interface AddGroupPayload
+  extends Partial<ThreeDimensionAudioProperties> {
   stageId: string;
   name: string;
 }
 
 export interface ChangeGroupPayload {
   id: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export type RemoveGroupPayload = string;
@@ -152,9 +153,11 @@ export type RemoveGroupPayload = string;
 // STAGE MEMBER
 export interface ChangeStageMemberPayload {
   id: string;
-  update: Partial<{
-    isDirector: boolean;
-  } & ThreeDimensionAudioProperties>
+  update: Partial<
+    {
+      isDirector: boolean;
+    } & ThreeDimensionAudioProperties
+  >;
 }
 
 export type RemoveStageMemberPayload = string;
@@ -172,13 +175,14 @@ export interface ChangeStageMemberOvTrackPayload {
 }
 
 // CUSTOM GROUP
-export interface AddCustomGroupPayload extends Partial<ThreeDimensionAudioProperties> {
+export interface AddCustomGroupPayload
+  extends Partial<ThreeDimensionAudioProperties> {
   groupId: string;
 }
 
 export interface SetCustomGroupPayload {
   groupId: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export interface UpdateCustomGroupPayload {
@@ -190,68 +194,70 @@ export interface UpdateCustomGroupPayload {
 export type RemoveCustomGroupPayload = string;
 
 // CUSTOM STAGE MEMBER
-export interface AddCustomStageMemberPayload extends Partial<ThreeDimensionAudioProperties> {
+export interface AddCustomStageMemberPayload
+  extends Partial<ThreeDimensionAudioProperties> {
   stageMemberId: string;
 }
 
 export interface SetCustomStageMemberPayload {
   stageMemberId: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export interface UpdateCustomStageMemberPayload {
   id: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export type RemoveCustomStageMemberPayload = string;
 
 // CUSTOM STAGE MEMBER AUDIO
-export interface AddCustomStageMemberAudioPayload extends Partial<ThreeDimensionAudioProperties> {
+export interface AddCustomStageMemberAudioPayload
+  extends Partial<ThreeDimensionAudioProperties> {
   stageMemberAudioId: string;
 }
 
 export interface SetCustomStageMemberAudioPayload {
   stageMemberAudioId: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export interface UpdateCustomStageMemberAudioPayload {
   id: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export type RemoveCustomStageMemberAudioPayload = string;
 
 // CUSTOM STAGE MEMBER OV
-export interface AddCustomStageMemberOvPayload extends Partial<ThreeDimensionAudioProperties> {
+export interface AddCustomStageMemberOvPayload
+  extends Partial<ThreeDimensionAudioProperties> {
   stageMemberOvTrackId: string;
   gain: number;
-  directivity: 'omni' | 'cardioid'
+  directivity: "omni" | "cardioid";
 }
 
 export interface SetCustomStageMemberOvPayload {
   stageMemberOvTrackId: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export interface UpdateCustomStageMemberOvPayload {
   id: string;
-  update: Partial<ThreeDimensionAudioProperties>
+  update: Partial<ThreeDimensionAudioProperties>;
 }
 
 export type RemoveCustomStageMemberOvPayload = string;
 
 // JOIN STAGE
 export interface JoinStagePayload {
-  stageId: string,
-  groupId: string,
-  password?: string
+  stageId: string;
+  groupId: string;
+  password?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface LeaveStagePayload {
-}
+export interface LeaveStagePayload {}
 
 export type LeaveStageForGoodPayload = string;
 

@@ -1,5 +1,5 @@
-import { ObjectId } from 'mongodb';
-import ThreeDimensionAudioProperties from './ThreeDimensionAudioProperties';
+import { ObjectId } from "mongodb";
+import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 
 export type StageId = ObjectId;
 export type GroupId = ObjectId;
@@ -86,7 +86,7 @@ export interface Device {
   soundCardId?: SoundCardId;
 
   // Optional for ov-based clients
-  receiverType: 'ortf' | 'hrtf';
+  receiverType: "ortf" | "hrtf";
   senderJitter?: number;
   receiverJitter?: number;
   p2p: boolean;
@@ -105,14 +105,15 @@ export interface WebRTCDevice {
   label: string;
 }
 
-export interface SoundCard { // ov-specific
+export interface SoundCard {
+  // ov-specific
   _id: SoundCardId;
   userId: UserId;
   name: string; // unique together with userId
 
   isDefault?: boolean;
 
-  driver: 'JACK' | 'ALSA' | 'ASIO' | 'WEBRTC',
+  driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
 
   numInputChannels: number;
   numOutputChannels: number;
@@ -159,7 +160,7 @@ export interface Track {
   gain: number;
   volume: number;
 
-  directivity: 'omni' | 'cardioid'
+  directivity: "omni" | "cardioid";
 
   // Optimizations for performance
   userId: UserId;
@@ -170,7 +171,7 @@ export interface Track {
 interface GlobalProducer {
   deviceId: DeviceId; // <-- RELATION
 
-  routerId: RouterId | 'STANDALONE';
+  routerId: RouterId | "STANDALONE";
   routerProducerId: string;
 
   // Optimizations for performance
@@ -214,10 +215,10 @@ export interface Stage {
         [desOvStageDeviceId: number]: {
           latency: number;
           jitter: number;
-        }
-      }
-    }
-  }
+        };
+      };
+    };
+  };
 }
 
 /**
@@ -290,7 +291,8 @@ export interface StageMemberVideoProducer {
   stageId: StageId;
 }
 
-export interface StageMemberAudioProducer extends ThreeDimensionAudioProperties {
+export interface StageMemberAudioProducer
+  extends ThreeDimensionAudioProperties {
   _id: StageMemberVideoProducerId;
   stageMemberId: StageMemberId; // <-- RELATION
   globalProducerId: GlobalAudioProducerId; // <-- RELATION
@@ -302,7 +304,8 @@ export interface StageMemberAudioProducer extends ThreeDimensionAudioProperties 
   stageId: StageId;
 }
 
-export interface CustomStageMemberAudioProducer extends ThreeDimensionAudioProperties {
+export interface CustomStageMemberAudioProducer
+  extends ThreeDimensionAudioProperties {
   _id: CustomStageMemberAudioProducerId;
   userId: UserId; // <-- RELATION
   stageMemberAudioProducerId: StageMemberAudioProducerId; // <-- RELATION
@@ -322,7 +325,9 @@ export interface CustomStageMemberAudioProducer extends ThreeDimensionAudioPrope
  * maybe for integrating webrtc and ov later and use
  * the web audio api panner for 3D audio interpolation later.
  */
-export interface StageMemberOvTrack extends Track, ThreeDimensionAudioProperties {
+export interface StageMemberOvTrack
+  extends Track,
+    ThreeDimensionAudioProperties {
   _id: StageMemberOvTrackId;
   trackId: TrackId; // <-- RELATION
   stageMemberId: StageMemberId; // <-- RELATION
@@ -331,7 +336,7 @@ export interface StageMemberOvTrack extends Track, ThreeDimensionAudioProperties
 
   gain: number;
   sourceport?: string;
-  directivity: 'omni' | 'cardioid'; // Overrides track directivity (for stage)
+  directivity: "omni" | "cardioid"; // Overrides track directivity (for stage)
 
   // Optimizations for performance
   userId: UserId;
@@ -341,7 +346,8 @@ export interface StageMemberOvTrack extends Track, ThreeDimensionAudioProperties
 /**
  * Each user can overwrite the global stage member track settings with personal preferences.
  */
-export interface CustomStageMemberOvTrack extends ThreeDimensionAudioProperties {
+export interface CustomStageMemberOvTrack
+  extends ThreeDimensionAudioProperties {
   _id: CustomStageMemberOvTrackId;
 
   userId: UserId; // <-- RELATION
@@ -349,7 +355,7 @@ export interface CustomStageMemberOvTrack extends ThreeDimensionAudioProperties 
 
   gain: number; // Overrides track gain (for user)
 
-  directivity: 'omni' | 'cardioid'; // Overrides track directivity (for user)
+  directivity: "omni" | "cardioid"; // Overrides track directivity (for user)
 
   // Optimizations for performance
   stageId: StageId;
@@ -382,6 +388,4 @@ export interface ChatMessage {
   time: number;
 }
 
-export {
-  ThreeDimensionAudioProperties,
-};
+export { ThreeDimensionAudioProperties };

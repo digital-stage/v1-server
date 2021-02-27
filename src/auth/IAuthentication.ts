@@ -1,5 +1,5 @@
-import { HttpRequest } from 'teckos/uws';
-import { User } from '../types';
+import { HttpRequest } from "teckos/uws";
+import { User } from "../types";
 
 export interface IAuthentication {
   verifyWithToken(token: string): Promise<User>;

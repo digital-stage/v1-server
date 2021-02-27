@@ -1,12 +1,12 @@
-import { ITeckosSocket } from 'teckos';
-import debug from 'debug';
-import MongoRealtimeDatabase from '../../../database/MongoRealtimeDatabase';
-import { User } from '../../../types';
-import { ClientStageEvents, ClientUserEvents } from '../../../events';
-import { ChangeUserPayload } from '../../../payloads';
+import { ITeckosSocket } from "teckos";
+import debug from "debug";
+import MongoRealtimeDatabase from "../../../database/MongoRealtimeDatabase";
+import { User } from "../../../types";
+import { ClientStageEvents, ClientUserEvents } from "../../../events";
+import { ChangeUserPayload } from "../../../payloads";
 
-const d = debug('server').extend('socket').extend('user');
-const trace = d.extend('trace');
+const d = debug("server").extend("socket").extend("user");
+const trace = d.extend("trace");
 
 class SocketUserContext {
   private readonly database: MongoRealtimeDatabase;
@@ -18,7 +18,7 @@ class SocketUserContext {
   constructor(
     database: MongoRealtimeDatabase,
     user: User,
-    socket: ITeckosSocket,
+    socket: ITeckosSocket
   ) {
     this.user = user;
     this.database = database;
@@ -26,11 +26,13 @@ class SocketUserContext {
   }
 
   init() {
-    this.socket.on(ClientUserEvents.CHANGE_USER,
+    this.socket.on(
+      ClientUserEvents.CHANGE_USER,
       (payload: ChangeUserPayload) => {
         trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE_MEMBER_OV}`);
         return this.database.updateUser(this.user._id, payload);
-      });
+      }
+    );
   }
 }
 export default SocketUserContext;
