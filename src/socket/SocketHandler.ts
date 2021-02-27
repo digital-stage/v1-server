@@ -1,10 +1,15 @@
 import { ITeckosProvider, ITeckosSocket } from 'teckos';
+import debug from 'debug';
 import MongoRealtimeDatabase from '../database/MongoRealtimeDatabase';
 import { IAuthentication } from '../auth/IAuthentication';
 import { Device, Router } from '../types';
 import { API_KEY } from '../env';
 import SocketUserHandler from './user/SocketUserHandler';
 import SocketRouterHandler from './router/SocketRouterHandler';
+
+const d = debug('server').extend('socket');
+const info = d.extend('info');
+const error = d.extend('error');
 
 interface RouterConnectionPayload {
   apiKey: string;
@@ -48,6 +53,9 @@ class SocketHandler {
               socket.disconnect();
             });
         }
+        error(`Router ${router.url} tried to sign in with wrong api key`);
+      } else {
+        error(`Router ${router.url} dit not provide any api key`);
       }
       return socket.disconnect();
     });
