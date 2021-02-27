@@ -30,7 +30,7 @@ class SocketRouterHandler {
     this._serverAddress = serverAddress;
     this._database = database;
     this._database.addListener(ServerStageEvents.STAGE_ADDED, this.onAddStage);
-    this._database.addListener(ServerStageEvents.STAGE_REMOVED, this.onAddStage);
+    this._database.addListener(ServerStageEvents.STAGE_REMOVED, this.onStageRemoved);
   }
 
   private getProducer = async (globalProducerId: ObjectId)
