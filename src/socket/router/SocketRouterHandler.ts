@@ -30,7 +30,7 @@ class SocketRouterHandler {
   private _routers: {
     socket: ITeckosSocket;
     router: Router;
-  }[];
+  }[] = [];
 
   constructor(serverAddress, database: MongoRealtimeDatabase) {
     this._serverAddress = serverAddress;
