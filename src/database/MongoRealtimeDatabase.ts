@@ -54,7 +54,7 @@ const trace = d.extend('trace');
 const warn = d.extend('warn');
 const err = d.extend('err');
 
-enum Collections {
+export enum Collections {
   ROUTERS = 'routers',
 
   USERS = 'users',
@@ -709,6 +709,7 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
         this.emit(ServerStageEvents.STAGE_ADDED, stage);
         stage.admins
           .forEach((adminId) => this.sendToUser(adminId, ServerStageEvents.STAGE_ADDED, stage));
+
         return result.ops[0];
       });
   }
@@ -1126,8 +1127,9 @@ class MongoRealtimeDatabase extends EventEmitter.EventEmitter implements IRealti
       .find({ stageId: id }, { projection: { _id: 1 } })
       .toArray()
       .then((groups) => Promise.all(groups.map((group) => this.deleteGroup(group._id))))
-      .then(() => {
-        this.emit(ServerStageEvents.STAGE_REMOVED, id);
+      .then(async () => {
+        await this.readStage(id)
+          .then((stage) => this.emit(ServerStageEvents.STAGE_REMOVED, stage));
         this.sendToStage(id, ServerStageEvents.STAGE_REMOVED, id);
       })
       .then(() => this._db.collection<Stage>(Collections.STAGES).deleteOne({ _id: id }));

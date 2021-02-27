@@ -82,8 +82,8 @@ export interface Device {
   noiseSuppression?: boolean;
 
   // OV SoundCards
-  soundCardNames: string[];
-  soundCardName?: string;
+  soundCardIds: SoundCardId[];
+  soundCardId?: SoundCardId;
 
   // Optional for ov-based clients
   receiverType: 'ortf' | 'hrtf';
@@ -207,6 +207,16 @@ export interface Stage {
     ipv6?: string;
     port: number;
     pin: number;
+    serverJitter?: number;
+
+    latency?: {
+      [srcOvStageDeviceId: number]: {
+        [desOvStageDeviceId: number]: {
+          latency: number;
+          jitter: number;
+        }
+      }
+    }
   }
 }
 
