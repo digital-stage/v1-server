@@ -26,8 +26,10 @@ if (USE_SENTRY) {
     // for finer control
     tracesSampleRate: 1.0,
   });
-
-  d.log = Sentry.captureMessage.bind(Sentry);
+  Sentry.startTransaction({
+    op: "test",
+    name: "My First Test Transaction",
+  });
 
   uncaught.addListener((e) => {
     Sentry.captureException(e);
