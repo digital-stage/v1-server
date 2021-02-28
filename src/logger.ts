@@ -36,6 +36,7 @@ if (USE_SENTRY) {
     Sentry.captureException(e);
   });
 } else {
+  d.log("Using console for logging");
   const reportError = d.extend("error");
   reportError.log = console.error.bind(console);
   uncaught.addListener((e) => {
