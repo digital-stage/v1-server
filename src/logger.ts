@@ -1,7 +1,9 @@
+/* eslint-disable no-console */
 import debug, { IDebugger } from "debug";
 import * as Sentry from "@sentry/node";
 import * as uncaught from "uncaught";
 import * as Tracing from "@sentry/tracing";
+import { CaptureConsole } from "@sentry/integrations";
 import { USE_SENTRY } from "./env";
 
 const d = debug("server");
@@ -15,8 +17,9 @@ if (USE_SENTRY) {
 
     integrations: [
       new Tracing.Integrations.Mongo(),
-      // or new Tracing.Integrations.Postgres(),
-      // or new Tracing.Integrations.Mysql(),
+      new CaptureConsole({
+        levels: ["info", "warn", "error"],
+      }),
     ],
 
     // We recommend adjusting this value in production, or using tracesSampler
@@ -31,6 +34,7 @@ if (USE_SENTRY) {
   });
 } else {
   const reportError = d.extend("error");
+  reportError.log = console.error.bind(console);
   uncaught.addListener((e) => {
     reportError("Uncaught error or rejection: ", e.message);
   });
@@ -49,9 +53,13 @@ const logger = (
     namespace += ":";
   }
   const info = d.extend(`${namespace}info`);
+  info.log = console.info.bind(console);
   const trace = d.extend(`${namespace}trace`);
+  trace.log = console.debug.bind(console);
   const warn = d.extend(`${namespace}warn`);
+  warn.log = console.warn.bind(console);
   const error = d.extend(`${namespace}error`);
+  error.log = console.error.bind(console);
   return {
     info,
     trace,
