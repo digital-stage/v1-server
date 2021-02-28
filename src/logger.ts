@@ -11,6 +11,7 @@ const d = debug("server");
 uncaught.start();
 
 if (USE_SENTRY) {
+  d.log("Using Sentry for logging");
   Sentry.init({
     dsn:
       "https://ef973e3c21114d5bbef27d6a49e4a0db@o403353.ingest.sentry.io/5655472",
