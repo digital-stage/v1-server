@@ -133,12 +133,14 @@ class SocketRouterHandler {
           ) => void
         ) => {
           const objectId = new ObjectId(id);
-          return this.getProducer(objectId).then((producer) => {
-            if (!producer) {
-              return callback("Not found");
-            }
-            return callback(null, producer);
-          });
+          return this.getProducer(objectId)
+            .then((producer) => {
+              if (!producer) {
+                return callback(null, producer);
+              }
+              throw new Error("Not found");
+            })
+            .catch((err) => callback(err));
         }
       );
 

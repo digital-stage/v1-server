@@ -49,7 +49,8 @@ class SocketHandler {
       if (apiKey) {
         // A router is trying to connect
         if (apiKey === API_KEY) {
-          return this._routerHandler.handle(socket, router).catch(() => {
+          return this._routerHandler.handle(socket, router).catch((err) => {
+            error(`Router handler reported error: ${err}`);
             socket.disconnect();
           });
         }

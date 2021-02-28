@@ -70,7 +70,9 @@ class SocketDeviceContext {
             (id: any) => new ObjectId(id)
           );
         }
-        return this.database.updateDevice(this.user._id, deviceId, update);
+        return this.database
+          .updateDevice(this.user._id, deviceId, update)
+          .catch((error) => err(error));
       }
     );
 
@@ -85,7 +87,7 @@ class SocketDeviceContext {
           ? new ObjectId(payload.routerId)
           : "STANDALONE";
         // Get current stage id
-        return this.database
+        this.database
           .createAudioProducer({
             routerId,
             routerProducerId: payload.routerProducerId,
@@ -101,7 +103,7 @@ class SocketDeviceContext {
       (payload: RemoveAudioProducerPayload, fn: (error?: string) => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_AUDIO_PRODUCER}`);
         const id = new ObjectId(payload);
-        return this.database
+        this.database
           .deleteAudioProducer(this.user._id, id)
           .then(() => fn())
           .catch((error) => {
@@ -125,7 +127,7 @@ class SocketDeviceContext {
         const routerId = payload.routerId
           ? new ObjectId(payload.routerId)
           : "STANDALONE";
-        return this.database
+        this.database
           .createVideoProducer({
             routerId,
             routerProducerId: payload.routerProducerId,
@@ -142,7 +144,7 @@ class SocketDeviceContext {
         trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_VIDEO_PRODUCER}`);
         const id = new ObjectId(payload);
         d(`REMOVE VIDEO PRODUCER ${payload}`);
-        return this.database
+        this.database
           .deleteVideoProducer(this.user._id, id)
           .then(() => fn())
           .catch((error) => {
@@ -157,7 +159,7 @@ class SocketDeviceContext {
       (payload: AddSoundCardPayload, fn?: (soundCard: SoundCard) => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.SET_SOUND_CARD}`);
 
-        return this.database
+        this.database
           .setSoundCard(this.user._id, payload.name, {
             label: "",
             numInputChannels: 0,
@@ -192,7 +194,7 @@ class SocketDeviceContext {
         const trackPresetId = payload.update.trackPresetId
           ? new ObjectId(payload.update.trackPresetId)
           : undefined;
-        return this.database
+        this.database
           .updateSoundCard(this.device._id, id, {
             ...payload.update,
             trackPresetId,
@@ -206,7 +208,8 @@ class SocketDeviceContext {
               });
             }
             return null;
-          });
+          })
+          .catch((error) => err(error));
       }
     );
 
@@ -216,12 +219,13 @@ class SocketDeviceContext {
         trace(
           `${this.user.name}: ${ClientDeviceEvents.REMOVE_SOUND_CARD} with id ${id}`
         );
-        return this.database
+        this.database
           .deleteSoundCard(this.user._id, new ObjectId(id))
           .then(() => {
             if (fn) return fn();
             return null;
-          });
+          })
+          .catch((error) => err(error));
       }
     );
 
@@ -233,7 +237,7 @@ class SocketDeviceContext {
       ) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.ADD_TRACK_PRESET}`);
         const soundCardId = new ObjectId(payload.soundCardId);
-        return this.database
+        this.database
           .createTrackPreset({
             name: "",
             inputChannels: [],
@@ -245,7 +249,8 @@ class SocketDeviceContext {
           .then((trackPreset) => {
             if (fn) return fn(trackPreset);
             return null;
-          });
+          })
+          .catch((error) => err(error));
       }
     );
     this.socket.on(
@@ -256,7 +261,7 @@ class SocketDeviceContext {
       ) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_TRACK_PRESET}`);
         const id = new ObjectId(payload.id);
-        return this.database
+        this.database
           .updateTrackPreset(this.user._id, id, payload.update)
           .then(() => {
             if (fn) {
@@ -266,19 +271,21 @@ class SocketDeviceContext {
               });
             }
             return null;
-          });
+          })
+          .catch((error) => err(error));
       }
     );
     this.socket.on(
       ClientDeviceEvents.REMOVE_TRACK_PRESET,
       (id: RemoveTrackPresetPayload, fn: () => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_TRACK_PRESET}`);
-        return this.database
+        this.database
           .deleteTrackPreset(this.user._id, new ObjectId(id))
           .then(() => {
             if (fn) return fn();
             return null;
-          });
+          })
+          .catch((error) => err(error));
       }
     );
 
@@ -288,7 +295,7 @@ class SocketDeviceContext {
         trace(`${this.user.name}: ${ClientDeviceEvents.ADD_TRACK}`);
         if (payload.initial.trackPresetId) {
           const trackPresetId = new ObjectId(payload.initial.trackPresetId);
-          return this.database
+          this.database
             .createTrack({
               channel: payload.initial.channel || 0,
               gain: payload.initial.gain || 0,
@@ -298,9 +305,9 @@ class SocketDeviceContext {
               online: true,
               userId: this.user._id,
             })
-            .then((track) => fn(track));
+            .then((track) => fn(track))
+            .catch((error) => err(error));
         }
-        return Promise.resolve();
       }
     );
     this.socket.on(
@@ -308,39 +315,43 @@ class SocketDeviceContext {
       (payload: ChangeTrackPayload, fn: (track: Partial<Track>) => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_TRACK}`);
         const id = new ObjectId(payload.id);
-        return this.database
+        this.database
           .updateTrack(this.device._id, id, payload.update)
           .then(() =>
             fn({
               ...payload.update,
               _id: id,
             })
-          );
+          )
+          .catch((error) => err(error));
       }
     );
     this.socket.on(
       ClientDeviceEvents.REMOVE_TRACK,
       (id: RemoveTrackPayload, fn: () => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_TRACK}`);
-        return this.database
+        this.database
           .deleteTrack(this.device._id, new ObjectId(id))
-          .then(() => fn());
+          .then(() => fn())
+          .catch((error) => err(error));
       }
     );
 
     this.socket.on("disconnect", async () => {
       if (this.device && !this.device.mac) {
         d(`Removed device '${this.device.name}' of ${this.user.name}`);
-        return this.database
+        this.database
           .deleteDevice(this.device._id)
-          .then(() => this.database.renewOnlineStatus(this.user._id));
+          .then(() => this.database.renewOnlineStatus(this.user._id))
+          .catch((error) => err(error));
       }
       d(
         `Switched device '${this.device.name}' of ${this.user.name} to offline`
       );
-      return this.database
+      this.database
         .updateDevice(this.user._id, this.device._id, { online: false })
-        .then(() => this.database.renewOnlineStatus(this.user._id));
+        .then(() => this.database.renewOnlineStatus(this.user._id))
+        .catch((error) => err(error));
     });
     d(
       `Registered handler for user ${this.user.name} at socket ${this.socket.id}`
