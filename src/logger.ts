@@ -1,6 +1,7 @@
 import debug, { IDebugger } from "debug";
 import * as Sentry from "@sentry/node";
-import uncaught from "uncaught";
+import * as uncaught from "uncaught";
+import * as Tracing from "@sentry/tracing";
 import { USE_SENTRY } from "./env";
 
 const d = debug("server");
@@ -11,6 +12,12 @@ if (USE_SENTRY) {
   Sentry.init({
     dsn:
       "https://ef973e3c21114d5bbef27d6a49e4a0db@o403353.ingest.sentry.io/5655472",
+
+    integrations: [
+      new Tracing.Integrations.Mongo(),
+      // or new Tracing.Integrations.Postgres(),
+      // or new Tracing.Integrations.Mysql(),
+    ],
 
     // We recommend adjusting this value in production, or using tracesSampler
     // for finer control
