@@ -16,7 +16,7 @@ import {
   REDIS_URL,
 } from "./env";
 
-const d = debug("Server");
+const d = debug("server");
 const warn = d.extend("warn");
 const err = d.extend("error");
 
