@@ -1,7 +1,6 @@
 import * as ip from "ip";
 import * as uWS from "teckos/uws";
 import { UWSProvider } from "teckos";
-import debug from "debug";
 import HttpService from "./http/HttpService";
 import MongoRealtimeDatabase from "./database/MongoRealtimeDatabase";
 import DefaultAuthentication from "./auth/DefaultAuthentication";
@@ -15,10 +14,9 @@ import {
   PORT,
   REDIS_URL,
 } from "./env";
+import logger from "./logger";
 
-const d = debug("server");
-const warn = d.extend("warn");
-const err = d.extend("error");
+const { warn, error, info } = logger("");
 
 if (DEBUG_PAYLOAD) warn("[WARN] Debugging payloads");
 
@@ -42,9 +40,9 @@ const init = async () =>
     .then(() => new SocketHandler(serverAddress, database, auth, io))
     .then(() => new HttpService(database, auth).init(uws))
     .then(() => io.listen(parseInt(PORT, 10)))
-    .catch((error) => err(error));
+    .catch((e) => error(e));
 
-d("[SERVER] Starting ...");
+info("Starting ...");
 init()
-  .then(() => d(`[SERVER] DONE, running on port ${PORT}`))
-  .catch((error) => d(`[SERVER] Could not start:\n${error}`));
+  .then(() => info(`DONE, running on port ${PORT}`))
+  .catch((e) => info(`Could not start:\n${e}`));

@@ -1,14 +1,13 @@
 import { ITeckosProvider, ITeckosSocket } from "teckos";
-import debug from "debug";
 import MongoRealtimeDatabase from "../database/MongoRealtimeDatabase";
 import { IAuthentication } from "../auth/IAuthentication";
 import { Device, Router } from "../types";
 import { API_KEY } from "../env";
 import SocketUserHandler from "./user/SocketUserHandler";
 import SocketRouterHandler from "./router/SocketRouterHandler";
+import logger from "../logger";
 
-const d = debug("server").extend("socket");
-const error = d.extend("error");
+const { error } = logger("socket");
 
 interface RouterConnectionPayload {
   apiKey: string;

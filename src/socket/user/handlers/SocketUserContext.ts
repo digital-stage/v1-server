@@ -1,12 +1,11 @@
 import { ITeckosSocket } from "teckos";
-import debug from "debug";
 import MongoRealtimeDatabase from "../../../database/MongoRealtimeDatabase";
 import { User } from "../../../types";
 import { ClientStageEvents, ClientUserEvents } from "../../../events";
 import { ChangeUserPayload } from "../../../payloads";
+import logger from "../../../logger";
 
-const d = debug("server").extend("socket").extend("user");
-const trace = d.extend("trace");
+const { trace } = logger("socket:user");
 
 class SocketUserContext {
   private readonly database: MongoRealtimeDatabase;

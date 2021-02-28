@@ -1,6 +1,5 @@
 import { ObjectId } from "mongodb";
 import { ITeckosSocket } from "teckos";
-import debug from "debug";
 import MongoRealtimeDatabase from "../../../database/MongoRealtimeDatabase";
 import { ChatMessage, User } from "../../../types";
 import { ClientStageEvents, ServerStageEvents } from "../../../events";
@@ -26,10 +25,9 @@ import {
   SetCustomStageMemberOvPayload,
   SetCustomStageMemberPayload,
 } from "../../../payloads";
+import logger from "../../../logger";
 
-const d = debug("server").extend("socket").extend("stage");
-const trace = d.extend("trace");
-const err = d.extend("error");
+const { trace, error } = logger("socket:stage");
 
 class SocketStageContext {
   private readonly user: User;
@@ -74,7 +72,7 @@ class SocketStageContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -87,7 +85,7 @@ class SocketStageContext {
         .then(() =>
           trace(`User ${this.user.name} created stage ${payload.name}`)
         )
-        .catch((error) => err(error))
+        .catch((e) => error(e))
     );
     this.socket.on(
       ClientStageEvents.CHANGE_STAGE,
@@ -109,7 +107,7 @@ class SocketStageContext {
               `Unknown stage or user has no privileges to change stage ${id}`
             );
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
     this.socket.on(
@@ -127,7 +125,7 @@ class SocketStageContext {
               `Unknown stage or user has no privileges to delete stage ${id}`
             );
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -156,7 +154,7 @@ class SocketStageContext {
             `User has no privileges to add group for stage ${stageId}`
           );
         })
-        .catch((error) => err(error));
+        .catch((e) => error(e));
     });
     this.socket.on(
       ClientStageEvents.CHANGE_GROUP,
@@ -179,11 +177,11 @@ class SocketStageContext {
                     `User has no privileges to change group ${id}`
                   );
                 })
-                .catch((error) => err(error));
+                .catch((e) => error(e));
             }
             throw new Error(`Unknown group ${id}`);
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
     this.socket.on(
@@ -207,7 +205,7 @@ class SocketStageContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -238,7 +236,7 @@ class SocketStageContext {
             }
             throw new Error(`Unknown stage member audio ${id}`);
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -267,7 +265,7 @@ class SocketStageContext {
             }
             throw new Error(`Unknown stage member ov track ${id}`);
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -278,7 +276,7 @@ class SocketStageContext {
         const groupId = new ObjectId(payload.groupId);
         return this.database
           .setCustomGroup(this.user._id, groupId, payload.update)
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -295,7 +293,7 @@ class SocketStageContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -311,7 +309,7 @@ class SocketStageContext {
         const stageMemberId = new ObjectId(payload.stageMemberId);
         this.database
           .setCustomStageMember(this.user._id, stageMemberId, payload.update)
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -330,7 +328,7 @@ class SocketStageContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -350,7 +348,7 @@ class SocketStageContext {
             stageMemberAudioId,
             payload.update
           )
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -369,7 +367,7 @@ class SocketStageContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -389,7 +387,7 @@ class SocketStageContext {
             stageMemberOvTrackId,
             payload.update
           )
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -408,7 +406,7 @@ class SocketStageContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -438,7 +436,7 @@ class SocketStageContext {
             }
             throw new Error(`Unknown stage member ${id}`);
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -453,19 +451,21 @@ class SocketStageContext {
         return this.database
           .joinStage(this.user._id, stageId, groupId, payload.password)
           .then(() =>
-            d(`${this.user.name} joined stage ${stageId} and group ${groupId}`)
+            trace(
+              `${this.user.name} joined stage ${stageId} and group ${groupId}`
+            )
           )
           .then(() => fn())
-          .catch((error) => {
-            err(error);
-            return fn(error.message);
+          .catch((e) => {
+            error(e);
+            return fn(e.message);
           });
       }
     );
     this.socket.on(ClientStageEvents.LEAVE_STAGE, () =>
       this.database
         .leaveStage(this.user._id)
-        .then(() => d(`${this.user.name} left stage`))
+        .then(() => trace(`${this.user.name} left stage`))
     );
 
     this.socket.on(
@@ -476,8 +476,8 @@ class SocketStageContext {
         const stageId = new ObjectId(payload);
         return this.database
           .leaveStageForGood(this.user._id, stageId)
-          .then(() => d(`${this.user.name} left stage for good`))
-          .catch((error) => err(error));
+          .then(() => trace(`${this.user.name} left stage for good`))
+          .catch((e) => error(e));
       }
     );
 

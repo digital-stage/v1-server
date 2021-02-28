@@ -1,5 +1,4 @@
 import { ITeckosSocket } from "teckos";
-import debug from "debug";
 import SocketDeviceContext from "./handlers/SocketDeviceContext";
 import SocketStageContext from "./handlers/SocketStageContext";
 import SocketUserContext from "./handlers/SocketUserContext";
@@ -7,10 +6,9 @@ import MongoRealtimeDatabase from "../../database/MongoRealtimeDatabase";
 import { ServerGlobalEvents, ServerUserEvents } from "../../events";
 import { IAuthentication } from "../../auth/IAuthentication";
 import { Device } from "../../types";
+import logger from "../../logger";
 
-const d = debug("server").extend("socket").extend("user");
-const error = d.extend("error");
-const trace = d.extend("trace");
+const { trace, error } = logger("socket:user");
 
 class SocketUserHandler {
   private readonly _serverAddress: string;

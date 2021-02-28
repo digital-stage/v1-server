@@ -1,6 +1,5 @@
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { ITeckosProvider, ITeckosSocket } from "teckos";
-import debug from "debug";
 import * as EventEmitter from "events";
 import {
   CustomGroup,
@@ -51,12 +50,9 @@ import {
 } from "../events";
 import { IRealtimeDatabase } from "./IRealtimeDatabase";
 import { DEBUG_EVENTS, DEBUG_PAYLOAD } from "../env";
+import logger from "../logger";
 
-const d = debug("server:MongoRealtimeDatabase");
-
-const trace = d.extend("trace");
-const warn = d.extend("warn");
-const err = d.extend("err");
+const { info, error, trace, warn } = logger("database");
 
 export enum Collections {
   ROUTERS = "routers",
@@ -763,7 +759,7 @@ class MongoRealtimeDatabase
     this._mongoClient = await this._mongoClient.connect();
     this._db = this._mongoClient.db(database);
     if (this._mongoClient.isConnected()) {
-      d(`Connected to ${database}`);
+      info(`Connected to ${database}`);
     }
     // TODO: Clean up old devices etc.
   }
@@ -1165,7 +1161,7 @@ class MongoRealtimeDatabase
               this.deleteStageMemberVideoProducer(producer._id)
             )
           )
-          .catch((e) => err(e));
+          .catch((e) => error(e));
         await this._db
           .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS)
           .find({
@@ -1251,7 +1247,7 @@ class MongoRealtimeDatabase
         );
     }
 
-    d(`joinStage: ${Date.now() - startTime}ms`);
+    trace(`joinStage: ${Date.now() - startTime}ms`);
   }
 
   async leaveStage(userId: UserId): Promise<any> {
@@ -1314,7 +1310,7 @@ class MongoRealtimeDatabase
           ),
       ]);
     }
-    d(`leaveStage: ${Date.now() - startTime}ms`);
+    trace(`leaveStage: ${Date.now() - startTime}ms`);
   }
 
   leaveStageForGood(userId: UserId, stageId: StageId): Promise<any> {
@@ -2719,7 +2715,7 @@ class MongoRealtimeDatabase
           initialStage
         );
       } else {
-        err("Group member or stage should exists, but could not be found");
+        error("Group member or stage should exists, but could not be found");
       }
     }
   }

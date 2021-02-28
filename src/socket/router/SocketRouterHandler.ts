@@ -1,5 +1,4 @@
 import { ITeckosSocket } from "teckos";
-import debug from "debug";
 import { ObjectId } from "mongodb";
 import MongoRealtimeDatabase, {
   Collections,
@@ -17,10 +16,9 @@ import {
   ServerStageEvents,
 } from "../../events";
 import { StageManaged, StageUnManaged } from "../../payloads";
+import logger from "../../logger";
 
-const d = debug("server").extend("socket").extend("router");
-const info = d.extend("info");
-const error = d.extend("error");
+const { info, error } = logger("socket:router");
 
 class SocketRouterHandler {
   private readonly _serverAddress: string;

@@ -1,7 +1,6 @@
 import { ObjectId } from "mongodb";
 import { omit } from "lodash";
 import { ITeckosSocket } from "teckos";
-import debug from "debug";
 import {
   Device,
   GlobalAudioProducer,
@@ -28,10 +27,9 @@ import {
   RemoveTrackPresetPayload,
   RemoveVideoProducerPayload,
 } from "../../../payloads";
+import logger from "../../../logger";
 
-const d = debug("server").extend("socket").extend("device");
-const err = d.extend("err");
-const trace = d.extend("trace");
+const { trace, error } = logger("socket:device");
 
 class SocketDeviceContext {
   private readonly serverAddress: string;
@@ -72,7 +70,7 @@ class SocketDeviceContext {
         }
         return this.database
           .updateDevice(this.user._id, deviceId, update)
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -95,7 +93,7 @@ class SocketDeviceContext {
             userId: this.user._id,
           })
           .then((producer) => fn(null, producer))
-          .catch((error) => fn(error.message));
+          .catch((e) => fn(e.message));
       }
     );
     this.socket.on(
@@ -106,9 +104,9 @@ class SocketDeviceContext {
         this.database
           .deleteAudioProducer(this.user._id, id)
           .then(() => fn())
-          .catch((error) => {
-            err(error);
-            fn(error.message);
+          .catch((e) => {
+            error(e);
+            fn(e.message);
           });
       }
     );
@@ -121,7 +119,7 @@ class SocketDeviceContext {
       ) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.ADD_VIDEO_PRODUCER}`);
         // Get current stage id
-        d(
+        trace(
           `ADD VIDEO PRODUCER FOR MS PRODUCER ${payload.routerProducerId} AND ROUTER ${payload.routerId}`
         );
         const routerId = payload.routerId
@@ -135,7 +133,7 @@ class SocketDeviceContext {
             userId: this.user._id,
           })
           .then((producer) => fn(null, producer))
-          .catch((error) => fn(error.message));
+          .catch((e) => fn(e.message));
       }
     );
     this.socket.on(
@@ -143,13 +141,13 @@ class SocketDeviceContext {
       (payload: RemoveVideoProducerPayload, fn: (error?: string) => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.REMOVE_VIDEO_PRODUCER}`);
         const id = new ObjectId(payload);
-        d(`REMOVE VIDEO PRODUCER ${payload}`);
+        trace(`REMOVE VIDEO PRODUCER ${payload}`);
         this.database
           .deleteVideoProducer(this.user._id, id)
           .then(() => fn())
-          .catch((error) => {
-            err(error);
-            fn(error.message);
+          .catch((e) => {
+            error(e);
+            fn(e.message);
           });
       }
     );
@@ -179,7 +177,7 @@ class SocketDeviceContext {
             if (fn) return fn(soundCard);
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -209,7 +207,7 @@ class SocketDeviceContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -225,7 +223,7 @@ class SocketDeviceContext {
             if (fn) return fn();
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -250,7 +248,7 @@ class SocketDeviceContext {
             if (fn) return fn(trackPreset);
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
     this.socket.on(
@@ -272,7 +270,7 @@ class SocketDeviceContext {
             }
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
     this.socket.on(
@@ -285,7 +283,7 @@ class SocketDeviceContext {
             if (fn) return fn();
             return null;
           })
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
@@ -306,7 +304,7 @@ class SocketDeviceContext {
               userId: this.user._id,
             })
             .then((track) => fn(track))
-            .catch((error) => err(error));
+            .catch((e) => error(e));
         }
       }
     );
@@ -323,7 +321,7 @@ class SocketDeviceContext {
               _id: id,
             })
           )
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
     this.socket.on(
@@ -333,33 +331,33 @@ class SocketDeviceContext {
         this.database
           .deleteTrack(this.device._id, new ObjectId(id))
           .then(() => fn())
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
     );
 
     this.socket.on("disconnect", async () => {
       if (this.device && !this.device.mac) {
-        d(`Removed device '${this.device.name}' of ${this.user.name}`);
+        trace(`Removed device '${this.device.name}' of ${this.user.name}`);
         this.database
           .deleteDevice(this.device._id)
           .then(() => this.database.renewOnlineStatus(this.user._id))
-          .catch((error) => err(error));
+          .catch((e) => error(e));
       }
-      d(
+      trace(
         `Switched device '${this.device.name}' of ${this.user.name} to offline`
       );
       this.database
         .updateDevice(this.user._id, this.device._id, { online: false })
         .then(() => this.database.renewOnlineStatus(this.user._id))
-        .catch((error) => err(error));
+        .catch((e) => error(e));
     });
-    d(
+    trace(
       `Registered handler for user ${this.user.name} at socket ${this.socket.id}`
     );
   }
 
   async generateDevice(initialDevice?: Partial<Device>): Promise<Device> {
-    d(`Generating device for user ${this.user.name}...`);
+    trace(`Generating device for user ${this.user.name}...`);
     if (initialDevice && initialDevice.mac) {
       // Try to get device by mac
       this.device = await this.database.readDeviceByUserAndMac(
@@ -415,7 +413,9 @@ class SocketDeviceContext {
       ServerDeviceEvents.LOCAL_DEVICE_READY,
       this.device
     );
-    d(`Finished generating device for user ${this.user.name} by creating new.`);
+    trace(
+      `Finished generating device for user ${this.user.name} by creating new.`
+    );
     return this.device;
   }
 
@@ -426,7 +426,7 @@ class SocketDeviceContext {
       .then((remoteDevices) =>
         remoteDevices.forEach((remoteDevice) => {
           if (remoteDevice._id.toString() !== this.device._id.toString()) {
-            d(
+            trace(
               `Sent remote device ${remoteDevice._id} to device ${this.device.name} of ${this.user.name}!`
             );
             MongoRealtimeDatabase.sendToDevice(

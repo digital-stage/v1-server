@@ -1,13 +1,11 @@
 import { ObjectId } from "mongodb";
 import * as uWebSocket from "teckos/uws";
-import debug from "debug";
 import MongoRealtimeDatabase from "../database/MongoRealtimeDatabase";
 import { IAuthentication } from "../auth/IAuthentication";
 import setupCORS from "./setupCORS";
+import logger from "../logger";
 
-const d = debug("server").extend("http");
-const warn = d.extend("warn");
-const err = d.extend("err");
+const { trace, warn, error } = logger("http");
 
 class HttpService {
   private authentication: IAuthentication;
@@ -49,7 +47,7 @@ class HttpService {
           }
           return null;
         })
-        .catch((error) => err(error));
+        .catch((e) => error(e));
     });
 
     app.get("/producers/:id", async (res, req) => {
@@ -57,7 +55,7 @@ class HttpService {
         res.aborted = true;
       });
       const id = req.getParameter(0);
-      d(`[/producers/:id] Producer with id ${id} requested`);
+      trace(`[/producers/:id] Producer with id ${id} requested`);
       if (!id || typeof id !== "string") {
         warn("[/producers/:id] Bad request");
         return res.writeStatus("400 Bad Request").end();
@@ -74,17 +72,17 @@ class HttpService {
         .then((producer) => {
           if (!res.aborted) {
             if (producer) {
-              d(`[/producers/:id] Found producer with id ${id}`);
+              trace(`[/producers/:id] Found producer with id ${id}`);
               return res.end(JSON.stringify(producer));
             }
             warn(`[/producers/:id] Producer with id ${id} not found`);
             return res.writeStatus("404 Not Found").end();
           }
-          d("[/producers/:id] Request aborted");
+          warn("[/producers/:id] Request aborted");
           return null;
         })
-        .catch((error) => {
-          err(error);
+        .catch((e) => {
+          error(e);
           if (!res.aborted) {
             return res.writeStatus("500 Internal Server Error").end();
           }
