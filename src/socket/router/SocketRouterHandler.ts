@@ -51,10 +51,6 @@ class SocketRouterHandler {
   };
 
   onAddStage = (stage: Stage) => {
-    if (!this._routers) {
-      console.error("HAEH?");
-      return;
-    }
     const routerStruct = this._routers.find((p) =>
       this._database
         .readRouter(p.router._id)
@@ -76,7 +72,10 @@ class SocketRouterHandler {
     }
   };
 
-  async handle(socket: ITeckosSocket, initialRouter: Omit<Router, "_id">) {
+  handle = async (
+    socket: ITeckosSocket,
+    initialRouter: Omit<Router, "_id">
+  ) => {
     try {
       // Add router to database
       info("NEW ROUTER AVAILABLE");
@@ -178,7 +177,7 @@ class SocketRouterHandler {
     } catch (err) {
       error(err);
     }
-  }
+  };
 }
 
 export default SocketRouterHandler;
