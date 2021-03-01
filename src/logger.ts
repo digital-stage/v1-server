@@ -19,7 +19,7 @@ if (USE_SENTRY) {
     integrations: [
       new Tracing.Integrations.Mongo(),
       new CaptureConsole({
-        levels: ["info", "warn", "error"],
+        levels: ["warn", "error"],
       }),
     ],
 
