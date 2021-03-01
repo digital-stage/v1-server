@@ -50,7 +50,7 @@ class SocketRouterHandler {
     return producer;
   };
 
-  onAddStage(stage: Stage) {
+  onAddStage = (stage: Stage) => {
     if (!this._routers) {
       console.error("HAEH?");
       return;
@@ -63,9 +63,9 @@ class SocketRouterHandler {
     if (routerStruct) {
       routerStruct.socket.emit(ServerRouterEvents.MANAGE_STAGE, stage);
     }
-  }
+  };
 
-  onStageRemoved(stage: Stage) {
+  onStageRemoved = (stage: Stage) => {
     if (stage.ovServer && stage.ovServer.router) {
       const routerStruct = this._routers.find(
         (r) => r.router._id === stage.ovServer.router
@@ -74,7 +74,7 @@ class SocketRouterHandler {
         routerStruct.socket.emit(ServerRouterEvents.UN_MANAGE_STAGE, stage._id);
       }
     }
-  }
+  };
 
   async handle(socket: ITeckosSocket, initialRouter: Omit<Router, "_id">) {
     try {
