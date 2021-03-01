@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import debug, { IDebugger } from "debug";
+import debug, { Debugger } from "debug";
 import * as Sentry from "@sentry/node";
 import * as uncaught from "uncaught";
 import * as Tracing from "@sentry/tracing";
@@ -8,10 +8,10 @@ import { USE_SENTRY } from "./env";
 
 const d = debug("server");
 
-uncaught.start();
+// uncaught.start();
 
 if (USE_SENTRY) {
-  d.log("Using Sentry for logging");
+  d("Using Sentry for logging");
   Sentry.init({
     dsn:
       "https://ef973e3c21114d5bbef27d6a49e4a0db@o403353.ingest.sentry.io/5655472",
@@ -36,21 +36,21 @@ if (USE_SENTRY) {
     Sentry.captureException(e);
   });
 } else {
-  d.log("Using console for logging");
+  d("Using console for logging");
   const reportError = d.extend("error");
   reportError.log = console.error.bind(console);
-  uncaught.addListener((e) => {
+  /* uncaught.addListener((e) => {
     reportError("Uncaught error or rejection: ", e.message);
-  });
+  }); */
 }
 
 const logger = (
   context: string
 ): {
-  info: IDebugger;
-  trace: IDebugger;
-  warn: IDebugger;
-  error: IDebugger;
+  info: Debugger;
+  trace: Debugger;
+  warn: Debugger;
+  error: Debugger;
 } => {
   let namespace = context;
   if (namespace.length > 0) {

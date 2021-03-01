@@ -16,7 +16,7 @@ import {
 } from "./env";
 import logger from "./logger";
 
-const { warn, error, info } = logger("");
+const { warn, error, info } = logger("A");
 
 if (DEBUG_PAYLOAD) warn("[WARN] Debugging payloads");
 
