@@ -51,6 +51,10 @@ class SocketRouterHandler {
   };
 
   onAddStage(stage: Stage) {
+    if (!this._routers) {
+      console.error("HAEH?");
+      return;
+    }
     const routerStruct = this._routers.find((p) =>
       this._database
         .readRouter(p.router._id)
