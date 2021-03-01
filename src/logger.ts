@@ -27,12 +27,11 @@ if (USE_SENTRY) {
     // for finer control
     tracesSampleRate: 1.0,
   });
-  /*
+
   Sentry.startTransaction({
     op: "test",
     name: "My First Test Transaction",
   });
-   */
 
   uncaught.addListener((e) => {
     Sentry.captureException(e);
@@ -62,10 +61,17 @@ const logger = (
   info.log = console.info.bind(console);
   const trace = d.extend(`${namespace}trace`);
   trace.log = console.debug.bind(console);
-  const warn = d.extend(`${namespace}warn`);
-  warn.log = console.warn.bind(console);
-  const error = d.extend(`${namespace}error`);
-  error.log = console.error.bind(console);
+  let warn;
+  let error;
+  if (USE_SENTRY) {
+    warn = (message) => console.warn(`${namespace}:warm ${message}`);
+    error = (message) => console.error(`${namespace}:error ${message}`);
+  } else {
+    warn = d.extend(`${namespace}warn`);
+    warn.log = console.warn.bind(console);
+    error = d.extend(`${namespace}error`);
+    error.log = console.error.bind(console);
+  }
   return {
     info,
     trace,
