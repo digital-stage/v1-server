@@ -8,7 +8,7 @@ import { USE_SENTRY } from "./env";
 
 const d = debug("server");
 
-// uncaught.start();
+uncaught.start();
 
 if (USE_SENTRY) {
   d("Using Sentry for logging");
@@ -27,10 +27,12 @@ if (USE_SENTRY) {
     // for finer control
     tracesSampleRate: 1.0,
   });
+  /*
   Sentry.startTransaction({
     op: "test",
     name: "My First Test Transaction",
   });
+   */
 
   uncaught.addListener((e) => {
     Sentry.captureException(e);
@@ -39,9 +41,9 @@ if (USE_SENTRY) {
   d("Using console for logging");
   const reportError = d.extend("error");
   reportError.log = console.error.bind(console);
-  /* uncaught.addListener((e) => {
+  uncaught.addListener((e) => {
     reportError("Uncaught error or rejection: ", e.message);
-  }); */
+  });
 }
 
 const logger = (
