@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/node";
 import * as uncaught from "uncaught";
 import * as Tracing from "@sentry/tracing";
 import { CaptureConsole } from "@sentry/integrations";
-import { USE_SENTRY } from "./env";
+import { SENTRY_DSN, USE_SENTRY } from "./env";
 
 const d = debug("server");
 
@@ -13,8 +13,7 @@ uncaught.start();
 if (USE_SENTRY) {
   d("Using Sentry for logging");
   Sentry.init({
-    dsn:
-      "https://ef973e3c21114d5bbef27d6a49e4a0db@o403353.ingest.sentry.io/5655472",
+    dsn: SENTRY_DSN,
 
     integrations: [
       new Tracing.Integrations.Mongo(),
