@@ -88,6 +88,7 @@ export type RemoveTrackPresetPayload = string;
 export interface AddTrackPayload {
   id: string;
   initial: {
+    soundCardId: string;
     trackPresetId: string;
     channel: number;
     gain?: number;

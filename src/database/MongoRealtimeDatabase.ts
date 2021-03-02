@@ -34,7 +34,6 @@ import {
   StagePackage,
   Track,
   TrackId,
-  TrackPreset,
   TrackPresetId,
   User,
   UserId,
@@ -1037,12 +1036,15 @@ class MongoRealtimeDatabase
         .find({ stageId })
         .toArray()
         .then((stageMembers) => {
-          for (let i = 0; i < 30; i += 1) {
-            if (stageMembers.find((current) => current.ovStageDeviceId !== i)) {
-              return i;
+          if( stageMember ) {
+            for (let i = 0; i < 30; i += 1) {
+              if (stageMembers.find((current) => current.ovStageDeviceId !== i)) {
+                return i;
+              }
             }
+            return -1;
           }
-          return -1;
+          return 0;
         });
       if (ovStageDeviceId === -1)
         throw new Error("No more members possible, max of 30 reached");
@@ -1225,14 +1227,13 @@ class MongoRealtimeDatabase
         .then((tracks) =>
           tracks.map((track) =>
             this.createStageMemberOvTrack({
-              trackPresetId: track.trackPresetId,
+              //trackPresetId: track.trackPresetId,
               channel: track.channel,
               stageMemberId: user.stageMemberId,
-              trackId: track._id,
+              //trackId: track._id,
               userId: user._id,
               stageId: user.stageId,
               online: true,
-              gain: 1,
               volume: 1,
               muted: false,
               directivity: "omni",
@@ -1602,6 +1603,7 @@ class MongoRealtimeDatabase
       });
   }
 
+  /*
   createSoundCard(initial: Omit<SoundCard, "_id">): Promise<SoundCard> {
     return this._db
       .collection<SoundCard>(Collections.SOUND_CARDS)
@@ -1625,6 +1627,7 @@ class MongoRealtimeDatabase
         return soundCard;
       });
   }
+  */
 
   createStageMember(initial: Omit<StageMember, "_id">): Promise<StageMember> {
     return this._db
@@ -1653,11 +1656,13 @@ class MongoRealtimeDatabase
           .then((user) => {
             if (user && user.stageMemberId) {
               const stageTrack: Omit<StageMemberOvTrack, "_id"> = {
+                directivity: "omni",
+                volume: 1,
                 ...initial,
                 stageId: user.stageId,
                 stageMemberId: user.stageMemberId,
                 userId: user._id,
-                trackId: track._id,
+                //trackId: track._id,
                 muted: false,
                 online: true,
                 x: 0,
@@ -1674,7 +1679,7 @@ class MongoRealtimeDatabase
           .then(() => track);
       });
   }
-
+/*
   createTrackPreset(initial: Omit<TrackPreset, "_id">): Promise<TrackPreset> {
     return this._db
       .collection<TrackPreset>(Collections.TRACK_PRESETS)
@@ -1689,7 +1694,7 @@ class MongoRealtimeDatabase
         );
         return preset;
       });
-  }
+  }*/
 
   deleteGroup(id: GroupId): Promise<any> {
     return this._db
@@ -1784,6 +1789,15 @@ class MongoRealtimeDatabase
                 })
               ),
             this._db
+                .collection<Track>(Collections.TRACKS)
+                .find({ soundCardId: id }, { projection: { _id: 1 } })
+                .toArray()
+                .then((presets) =>
+                    presets.map((track) =>
+                        this.deleteTrack(userId, track._id)
+                    )
+                ),
+            /*this._db
               .collection<TrackPreset>(Collections.TRACK_PRESETS)
               .find({ soundCardId: id }, { projection: { _id: 1 } })
               .toArray()
@@ -1791,7 +1805,7 @@ class MongoRealtimeDatabase
                 presets.map((preset) =>
                   this.deleteTrackPreset(userId, preset._id)
                 )
-              ),
+              ),*/
           ]);
         }
         throw new Error(`Could not find and delete the sound card ${id}`);
@@ -1888,7 +1902,7 @@ class MongoRealtimeDatabase
         throw new Error(`Could not find and delete track ${id}`);
       });
   }
-
+/*
   deleteTrackPreset(userId: UserId, id: TrackPresetId): Promise<any> {
     return this._db
       .collection<TrackPreset>(Collections.TRACK_PRESETS)
@@ -1918,13 +1932,14 @@ class MongoRealtimeDatabase
         }
         throw new Error(`Could not find and delete track preset ${id}`);
       });
-  }
+  }*/
 
+/*
   readTrackPreset(id: TrackPresetId): Promise<TrackPreset> {
     return this._db
       .collection<TrackPreset>(Collections.TRACK_PRESETS)
       .findOne({ _id: id });
-  }
+  }*/
 
   readGroup(id: GroupId): Promise<Group> {
     return this._db.collection<Group>(Collections.GROUPS).findOne({ _id: id });
@@ -2062,7 +2077,7 @@ class MongoRealtimeDatabase
         throw new Error(`Could not find or update track ${id}`);
       });
   }
-
+/*
   updateTrackPreset(
     userId: UserId,
     id: TrackPresetId,
@@ -2094,7 +2109,7 @@ class MongoRealtimeDatabase
         }
         throw new Error(`Could not find or update track preset ${id}`);
       });
-  }
+  }*/
 
   /* CUSTOMIZED STATES FOR EACH STAGE MEMBER */
 
@@ -2596,7 +2611,6 @@ class MongoRealtimeDatabase
         | "rY"
         | "rZ"
         | "stageMemberOvTrackId"
-        | "gain"
         | "directivity"
       >
     >

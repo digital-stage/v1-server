@@ -32,8 +32,6 @@ import {
   StageMemberVideoProducerId,
   Track,
   TrackId,
-  TrackPreset,
-  TrackPresetId,
   User,
   UserId,
   ThreeDimensionAudioProperties,
@@ -112,6 +110,7 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   deleteSoundCard(deviceId: DeviceId, id: SoundCardId): Promise<void>;
 
+  /*
   createTrackPreset(initial: Omit<TrackPreset, "_id">): Promise<TrackPreset>;
 
   readTrackPreset(deviceId: DeviceId, id: TrackPresetId): Promise<TrackPreset>;
@@ -123,7 +122,7 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
   ): Promise<void>;
 
   deleteTrackPreset(deviceId: DeviceId, id: TrackPresetId): Promise<void>;
-
+*/
   createTrack(initial: Omit<Track, "_id" | "stageId">): Promise<Track>;
 
   readTrack(deviceId: DeviceId, id: TrackId): Promise<Track>;

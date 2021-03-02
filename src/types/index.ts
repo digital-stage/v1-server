@@ -81,10 +81,6 @@ export interface Device {
   autoGainControl?: boolean;
   noiseSuppression?: boolean;
 
-  // OV SoundCards
-  soundCardIds: SoundCardId[];
-  soundCardId?: SoundCardId;
-
   // Optional for ov-based clients
   receiverType: "ortf" | "hrtf";
   senderJitter?: number;
@@ -98,6 +94,11 @@ export interface Device {
 
   // Optimizations for performance
   server: string;
+
+
+  // OV SoundCards
+  soundCardIds: SoundCardId[];
+  soundCardId?: SoundCardId;
 }
 
 export interface WebRTCDevice {
@@ -108,17 +109,12 @@ export interface WebRTCDevice {
 export interface SoundCard {
   // ov-specific
   _id: SoundCardId;
-  userId: UserId;
+  deviceId: DeviceId;
   name: string; // unique together with userId
 
   isDefault?: boolean;
 
   driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
-
-  numInputChannels: number;
-  numOutputChannels: number;
-
-  trackPresetId?: TrackPresetId; // Current default preset (outside or on new stages)
 
   sampleRate: number;
   sampleRates: number[];
@@ -127,14 +123,26 @@ export interface SoundCard {
 
   softwareLatency?: number;
 
+  numInputChannels: number;
+  numOutputChannels: number;
+
+  inputChannels: number[];  //TODO: Replace this later by track presets
+  outputChannels: number[]; // Will be 0 and 1 per default TODO: Later let user decide
+
+
+  //TODO: For later we should use track presets
+  //trackPresetId?: TrackPresetId; // Current default preset (outside or on new stages)
+
   // Optimizations for performance
   // trackPresets: TrackPresetId[];
+  userId: UserId;
 }
+
 
 /**
  * A preset for channels / track configuration
  */
-export interface TrackPreset {
+/*export interface TrackPreset {
   _id: TrackPresetId;
   userId: UserId; // <--- RELATION
   soundCardId: SoundCardId; // <--- RELATION
@@ -144,7 +152,7 @@ export interface TrackPreset {
 
   // Optimization
   // trackIds: TrackId[];
-}
+}*/
 
 /**
  * A track is always assigned to a specific stage member and channel of an sound card.
@@ -152,19 +160,14 @@ export interface TrackPreset {
  */
 export interface Track {
   _id: TrackId;
-  trackPresetId: TrackPresetId; // <--- RELATION
+  soundCardId: SoundCardId;
   channel: number; // UNIQUE WITH TRACK PRESET ID
 
-  online: boolean;
-
-  gain: number;
-  volume: number;
-
-  directivity: "omni" | "cardioid";
+  //trackPresetId: TrackPresetId; // <--- RELATION
 
   // Optimizations for performance
   userId: UserId;
-  // soundCardId: SoundCardId;
+  deviceId: DeviceId;
 }
 
 // WEBRTC specific
@@ -326,21 +329,22 @@ export interface CustomStageMemberAudioProducer
  * the web audio api panner for 3D audio interpolation later.
  */
 export interface StageMemberOvTrack
-  extends Track,
-    ThreeDimensionAudioProperties {
+  extends ThreeDimensionAudioProperties {
   _id: StageMemberOvTrackId;
-  trackId: TrackId; // <-- RELATION
   stageMemberId: StageMemberId; // <-- RELATION
+
+  channel: number;
 
   online: boolean;
 
-  gain: number;
   sourceport?: string;
   directivity: "omni" | "cardioid"; // Overrides track directivity (for stage)
 
   // Optimizations for performance
   userId: UserId;
   stageId: StageId;
+
+  //trackId: TrackId;
 }
 
 /**
@@ -352,8 +356,6 @@ export interface CustomStageMemberOvTrack
 
   userId: UserId; // <-- RELATION
   stageMemberOvTrackId: StageMemberOvTrackId; // <-- RELATION
-
-  gain: number; // Overrides track gain (for user)
 
   directivity: "omni" | "cardioid"; // Overrides track directivity (for user)
 
