@@ -230,6 +230,7 @@ export interface Stage {
 export interface Group extends ThreeDimensionAudioProperties {
   _id: GroupId;
   name: string;
+  color: string;
   stageId: StageId; // <--- RELATION
 }
 
