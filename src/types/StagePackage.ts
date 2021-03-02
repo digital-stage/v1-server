@@ -18,9 +18,9 @@ export interface StagePackage {
     stageMembers: StageMember[];
     customGroups: CustomGroup[];
     customStageMembers: CustomStageMember[];
-    videoProducers: RemoteVideoProducer[];
-    audioProducers: RemoteAudioProducer[];
-    customAudioProducers: CustomRemoteAudioProducer[];
-    ovTracks: RemoteOvTrack[];
-    customOvTracks: CustomRemoteOvTrack[];
+    remoteVideoProducers: RemoteVideoProducer[];
+    remoteAudioProducers: RemoteAudioProducer[];
+    customRemoteAudioProducers: CustomRemoteAudioProducer[];
+    remoteOvTracks: RemoteOvTrack[];
+    customRemoteOvTracks: CustomRemoteOvTrack[];
 }

@@ -1452,40 +1452,40 @@ class MongoRealtimeDatabase
                 },
             })
             .toArray();
-        const videoProducers: RemoteVideoProducer[] = await this._db
+        const remoteVideoProducers: RemoteVideoProducer[] = await this._db
             .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
             .find({
                 stageId,
             })
             .toArray();
-        const audioProducers: RemoteAudioProducer[] = await this._db
+        const remoteAudioProducers: RemoteAudioProducer[] = await this._db
             .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
             .find({
                 stageId,
             })
             .toArray();
-        const customAudioProducers: CustomRemoteAudioProducer[] = await this._db
+        const customRemoteAudioProducers: CustomRemoteAudioProducer[] = await this._db
             .collection<CustomRemoteAudioProducer>(
                 Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .find({
                 userId,
                 RemoteAudioProducerId: {
-                    $in: audioProducers.map((audioProducer) => audioProducer._id),
+                    $in: remoteAudioProducers.map((audioProducer) => audioProducer._id),
                 },
             })
             .toArray();
-        const ovTracks: RemoteOvTrack[] = await this._db
+        const remoteOvTracks: RemoteOvTrack[] = await this._db
             .collection<RemoteOvTrack>(Collections.TRACKS)
             .find({
                 stageId,
             })
             .toArray();
-        const customOvTracks: CustomRemoteOvTrack[] = await this._db
+        const customRemoteOvTracks: CustomRemoteOvTrack[] = await this._db
             .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .find({
                 userId,
-                CustomRemoteOvTrackId: {$in: ovTracks.map((ovTrack) => ovTrack._id)},
+                CustomRemoteOvTrackId: {$in: remoteOvTracks.map((ovTrack) => ovTrack._id)},
             })
             .toArray();
 
@@ -1495,11 +1495,11 @@ class MongoRealtimeDatabase
                 stageMembers,
                 customGroups,
                 customStageMembers,
-                videoProducers,
-                audioProducers,
-                customAudioProducers,
-                ovTracks,
-                customOvTracks,
+                remoteVideoProducers,
+                remoteAudioProducers,
+                customRemoteAudioProducers,
+                remoteOvTracks,
+                customRemoteOvTracks,
             };
         }
         return {
@@ -1509,11 +1509,11 @@ class MongoRealtimeDatabase
             stageMembers,
             customGroups,
             customStageMembers,
-            videoProducers,
-            audioProducers,
-            customAudioProducers,
-            ovTracks,
-            customOvTracks,
+            remoteVideoProducers,
+            remoteAudioProducers,
+            customRemoteAudioProducers,
+            remoteOvTracks,
+            customRemoteOvTracks,
         };
     }
 
