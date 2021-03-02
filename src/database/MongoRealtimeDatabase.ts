@@ -1036,7 +1036,7 @@ class MongoRealtimeDatabase
         .find({ stageId })
         .toArray()
         .then((stageMembers) => {
-          if( stageMember ) {
+          if( stageMembers ) {
             for (let i = 0; i < 30; i += 1) {
               if (stageMembers.find((current) => current.ovStageDeviceId !== i)) {
                 return i;
