@@ -1039,7 +1039,7 @@ class MongoRealtimeDatabase
                 .then((stageMembers) => {
                     if (stageMembers) {
                         for (let i = 0; i < 30; i += 1) {
-                            if (stageMembers.find((current) => current.ovStageDeviceId !== i)) {
+                            if (!stageMembers.find((current) => current.ovStageDeviceId === i)) {
                                 return i;
                             }
                         }
