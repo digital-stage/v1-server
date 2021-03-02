@@ -104,8 +104,8 @@ class MongoRealtimeDatabase
     });
   }
 
-  async cleanUp(serverAddress: string): Promise<void> {
-    await Promise.all([
+  cleanUp(serverAddress: string): Promise<any> {
+    return Promise.all([
       this.readDevicesByServer(serverAddress).then((devices) =>
         devices.map((device) =>
           this.deleteDevice(device._id).then(() =>
@@ -124,7 +124,7 @@ class MongoRealtimeDatabase
     ]);
   }
 
-  async cleanUpStages(): Promise<any> {
+  cleanUpStages(): Promise<any> {
     return this._db
       .collection<Stage>(Collections.STAGES)
       .find({ ovServer: { $exists: true, $ne: null } })
@@ -492,14 +492,13 @@ class MongoRealtimeDatabase
       .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
       .insertOne(initial)
       .then((result) => result.ops[0])
-      .then(async (track) => {
+      .then((track) => {
         this.emit(ServerStageEvents.STAGE_MEMBER_OV_ADDED, track);
-        await this.sendToJoinedStageMembers(
+        return this.sendToJoinedStageMembers(
           initial.stageId,
           ServerStageEvents.STAGE_MEMBER_OV_ADDED,
           track
-        );
-        return track;
+        ).then(() => track);
       });
   }
 
@@ -526,7 +525,7 @@ class MongoRealtimeDatabase
         },
         { projection: { stageId: 1 } }
       )
-      .then(async (result) => {
+      .then((result) => {
         if (result.value) {
           const payload = {
             ...update,
@@ -551,7 +550,7 @@ class MongoRealtimeDatabase
       .findOneAndDelete({
         _id: id,
       })
-      .then(async (result) => {
+      .then((result) => {
         if (result.value) {
           this.emit(
             ServerStageEvents.STAGE_MEMBER_OV_REMOVED,
@@ -586,14 +585,13 @@ class MongoRealtimeDatabase
       .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
       .insertOne(initial)
       .then((result) => result.ops[0])
-      .then(async (producer) => {
+      .then((producer) => {
         this.emit(ServerStageEvents.STAGE_MEMBER_AUDIO_ADDED, producer);
-        await this.sendToJoinedStageMembers(
+        return this.sendToJoinedStageMembers(
           initial.stageId,
           ServerStageEvents.STAGE_MEMBER_AUDIO_ADDED,
           producer
-        );
-        return producer;
+        ).then(() => producer);
       });
   }
 
@@ -650,7 +648,7 @@ class MongoRealtimeDatabase
         },
         { projection: { stageId: 1 } }
       )
-      .then(async (result) => {
+      .then((result) => {
         if (result.value) {
           this.emit(ServerStageEvents.STAGE_MEMBER_AUDIO_REMOVED, id);
           return this.sendToJoinedStageMembers(
@@ -672,14 +670,13 @@ class MongoRealtimeDatabase
       .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
       .insertOne(initial)
       .then((result) => result.ops[0])
-      .then(async (producer) => {
+      .then((producer) => {
         this.emit(ServerStageEvents.STAGE_MEMBER_VIDEO_ADDED, producer);
-        await this.sendToJoinedStageMembers(
+        return this.sendToJoinedStageMembers(
           initial.stageId,
           ServerStageEvents.STAGE_MEMBER_VIDEO_ADDED,
           producer
-        );
-        return producer;
+        ).then(() => producer);
       });
   }
 
@@ -708,7 +705,7 @@ class MongoRealtimeDatabase
         },
         { projection: { stageId: 1 } }
       )
-      .then(async (result) => {
+      .then((result) => {
         if (result.value) {
           const payload = {
             ...update,
@@ -736,7 +733,7 @@ class MongoRealtimeDatabase
         },
         { projection: { stageId: 1 } }
       )
-      .then(async (result) => {
+      .then((result) => {
         if (result.value) {
           this.emit(ServerStageEvents.STAGE_MEMBER_VIDEO_REMOVED, id);
           return this.sendToJoinedStageMembers(
@@ -866,11 +863,10 @@ class MongoRealtimeDatabase
       .collection(Collections.DEVICES)
       .insertOne(init)
       .then((result) => result.ops[0])
-      .then(async (device) => {
+      .then((device) => {
         this.emit(ServerDeviceEvents.DEVICE_ADDED, device);
         this.sendToUser(init.userId, ServerDeviceEvents.DEVICE_ADDED, device);
-        await this.renewOnlineStatus(init.userId);
-        return device;
+        return this.renewOnlineStatus(init.userId).then(() => device);
       });
   }
 
@@ -2441,7 +2437,7 @@ class MongoRealtimeDatabase
               Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .findOne({
-              RemoteAudioProducerId,
+              remoteAudioProducerId,
               userId,
             })
             .then((customAudioProducer) => {
@@ -2457,7 +2453,7 @@ class MongoRealtimeDatabase
             });
         }
         throw new Error(
-          `Could not customize stage member audio producer ${RemoteAudioProducerId} and user ${userId}`
+          `Could not customize stage member audio producer ${remoteAudioProducerId} and user ${userId}`
         );
       });
   }
