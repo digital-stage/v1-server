@@ -3,43 +3,25 @@ import {ITeckosProvider, ITeckosSocket} from "teckos";
 import * as EventEmitter from "events";
 import {
     CustomGroup,
-    CustomGroupId,
     CustomStageMember,
-    CustomStageMemberAudioProducer,
-    CustomStageMemberAudioProducerId,
-    CustomStageMemberId,
-    CustomStageMemberOvTrack,
-    CustomStageMemberOvTrackId,
+    CustomRemoteAudioProducer,
+    CustomRemoteOvTrack,
     Device,
-    DeviceId,
     GlobalAudioProducer,
-    GlobalAudioProducerId,
     GlobalVideoProducer,
-    GlobalVideoProducerId,
     Group,
-    GroupId,
     InitialStagePackage,
     SoundCard,
-    SoundCardId,
     Stage,
-    StageId,
     StageMember,
-    StageMemberAudioProducer,
-    StageMemberAudioProducerId,
-    StageMemberId,
-    StageMemberOvTrack,
-    StageMemberOvTrackId,
-    StageMemberVideoProducer,
-    StageMemberVideoProducerId,
+    RemoteAudioProducer,
+    RemoteOvTrack,
+    RemoteVideoProducer,
     StagePackage,
-    Track,
-    TrackId,
-    TrackPresetId,
+    OvTrack,
     User,
-    UserId,
     ThreeDimensionAudioProperties,
     Router,
-    RouterId,
 } from "../types";
 import {
     ServerDeviceEvents,
@@ -51,7 +33,19 @@ import {IRealtimeDatabase} from "./IRealtimeDatabase";
 import {DEBUG_EVENTS, DEBUG_PAYLOAD} from "../env";
 import logger from "../logger";
 import generateColor from "../util/generateColor";
-import HSLColor from "../util/generateColor/HSLColor";
+import {
+    CustomGroupId, CustomRemoteAudioProducerId,
+    CustomRemoteOvTrackId,
+    CustomStageMemberId,
+    DeviceId,
+    GlobalAudioProducerId,
+    GlobalVideoProducerId, GroupId,
+    OvTrackId, RemoteAudioProducerId,
+    RemoteVideoProducerId,
+    RouterId, SoundCardId, StageId,
+    StageMemberId,
+    UserId
+} from "../types/IdTypes";
 
 const {info, error, trace, warn} = logger("database");
 
@@ -267,7 +261,7 @@ class MongoRealtimeDatabase
                 return this.readUser(initial.userId)
                     .then((user) => {
                         if (user.stageMemberId) {
-                            return this.createStageMemberAudioProducer({
+                            return this.createRemoteAudioProducer({
                                 stageMemberId: user.stageMemberId,
                                 globalProducerId: producer._id,
                                 volume: 1,
@@ -351,7 +345,7 @@ class MongoRealtimeDatabase
                     );
                     // Also delete all published producers
                     return this._db
-                        .collection<StageMemberAudioProducer>(
+                        .collection<RemoteAudioProducer>(
                             Collections.STAGE_MEMBER_AUDIOS
                         )
                         .find(
@@ -364,7 +358,7 @@ class MongoRealtimeDatabase
                         .then((globalProducers) =>
                             Promise.all(
                                 globalProducers.map((globalProducer) =>
-                                    this.deleteStageMemberAudioProducer(globalProducer._id)
+                                    this.deleteRemoteAudioProducer(globalProducer._id)
                                 )
                             )
                         );
@@ -391,7 +385,7 @@ class MongoRealtimeDatabase
                 return this.readUser(initial.userId)
                     .then((user) => {
                         if (user.stageMemberId) {
-                            return this.createStageMemberVideoProducer({
+                            return this.createRemoteVideoProducer({
                                 stageMemberId: user.stageMemberId,
                                 globalProducerId: producer._id,
                                 userId: user._id,
@@ -468,7 +462,7 @@ class MongoRealtimeDatabase
                     );
                     // Also delete all published producers
                     return this._db
-                        .collection<StageMemberVideoProducer>(
+                        .collection<RemoteVideoProducer>(
                             Collections.STAGE_MEMBER_VIDEOS
                         )
                         .find(
@@ -481,7 +475,7 @@ class MongoRealtimeDatabase
                         .then((globalProducers) =>
                             Promise.all(
                                 globalProducers.map((globalProducer) =>
-                                    this.deleteStageMemberVideoProducer(globalProducer._id)
+                                    this.deleteRemoteVideoProducer(globalProducer._id)
                                 )
                             )
                         );
@@ -490,11 +484,11 @@ class MongoRealtimeDatabase
             });
     }
 
-    createStageMemberOvTrack(
-        initial: Omit<StageMemberOvTrack, "_id">
-    ): Promise<StageMemberOvTrack> {
+    createRemoteOvTrack(
+        initial: Omit<RemoteOvTrack, "_id">
+    ): Promise<RemoteOvTrack> {
         return this._db
-            .collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS)
+            .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
             .insertOne(initial)
             .then((result) => result.ops[0])
             .then(async (track) => {
@@ -508,22 +502,22 @@ class MongoRealtimeDatabase
             });
     }
 
-    readStageMemberOvTrack(
-        id: StageMemberOvTrackId
-    ): Promise<StageMemberOvTrack> {
+    readRemoteOvTrack(
+        id: CustomRemoteOvTrackId
+    ): Promise<RemoteOvTrack> {
         return this._db
-            .collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS)
+            .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
             .findOne({
                 _id: id,
             });
     }
 
-    updateStageMemberOvTrack(
-        id: StageMemberOvTrackId,
-        update: Partial<Omit<StageMemberOvTrack, "_id">>
+    updateRemoteOvTrack(
+        id: CustomRemoteOvTrackId,
+        update: Partial<Omit<RemoteOvTrack, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS)
+            .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
             .findOneAndUpdate(
                 {
                     _id: id,
@@ -552,9 +546,9 @@ class MongoRealtimeDatabase
             });
     }
 
-    deleteStageMemberOvTrack(id: StageMemberOvTrackId): Promise<void> {
+    deleteRemoteOvTrack(id: OvTrackId): Promise<any> {
         return this._db
-            .collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS)
+            .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
             .findOneAndDelete({
                 _id: id,
             })
@@ -564,11 +558,21 @@ class MongoRealtimeDatabase
                         ServerStageEvents.STAGE_MEMBER_OV_REMOVED,
                         result.value._id
                     );
-                    return this.sendToJoinedStageMembers(
-                        result.value.stageId,
-                        ServerStageEvents.STAGE_MEMBER_OV_REMOVED,
-                        result.value._id
-                    );
+                    return Promise.all([
+                        // Delete all stage member tracks
+                        this._db
+                            .collection<RemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+                            .find({ovTrackId: id}, {projection: {_id: 1}})
+                            .toArray()
+                            .then((tracks) =>
+                                tracks.map((track) => this.deleteCustomRemoteOvTrack(track._id))
+                            ),
+                        this.sendToJoinedStageMembers(
+                            result.value.stageId,
+                            ServerStageEvents.STAGE_MEMBER_OV_REMOVED,
+                            result.value._id
+                        )
+                    ]);
                 }
                 throw new Error(
                     `Could not find and delete stage member ov track ${id}`
@@ -576,11 +580,11 @@ class MongoRealtimeDatabase
             });
     }
 
-    createStageMemberAudioProducer(
-        initial: Omit<StageMemberAudioProducer, "_id">
-    ): Promise<StageMemberAudioProducer> {
+    createRemoteAudioProducer(
+        initial: Omit<RemoteAudioProducer, "_id">
+    ): Promise<RemoteAudioProducer> {
         return this._db
-            .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+            .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
             .insertOne(initial)
             .then((result) => result.ops[0])
             .then(async (producer) => {
@@ -594,22 +598,22 @@ class MongoRealtimeDatabase
             });
     }
 
-    readStageMemberAudioProducer(
-        id: StageMemberAudioProducerId
-    ): Promise<StageMemberAudioProducer> {
+    readRemoteAudioProducer(
+        id: RemoteAudioProducerId
+    ): Promise<RemoteAudioProducer> {
         return this._db
-            .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+            .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
             .findOne({
                 _id: id,
             });
     }
 
-    updateStageMemberAudioProducer(
-        id: StageMemberAudioProducerId,
-        update: Partial<Omit<StageMemberAudioProducer, "_id">>
+    updateRemoteAudioProducer(
+        id: RemoteAudioProducerId,
+        update: Partial<Omit<RemoteAudioProducer, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+            .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
             .findOneAndUpdate(
                 {
                     _id: id,
@@ -638,11 +642,11 @@ class MongoRealtimeDatabase
             });
     }
 
-    deleteStageMemberAudioProducer(
-        id: StageMemberAudioProducerId
+    deleteRemoteAudioProducer(
+        id: RemoteAudioProducerId
     ): Promise<void> {
         return this._db
-            .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+            .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
             .findOneAndDelete(
                 {
                     _id: id,
@@ -664,11 +668,11 @@ class MongoRealtimeDatabase
             });
     }
 
-    createStageMemberVideoProducer(
-        initial: Omit<StageMemberVideoProducer, "_id">
-    ): Promise<StageMemberVideoProducer> {
+    createRemoteVideoProducer(
+        initial: Omit<RemoteVideoProducer, "_id">
+    ): Promise<RemoteVideoProducer> {
         return this._db
-            .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+            .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
             .insertOne(initial)
             .then((result) => result.ops[0])
             .then(async (producer) => {
@@ -682,22 +686,22 @@ class MongoRealtimeDatabase
             });
     }
 
-    readStageMemberVideoProducer(
-        id: StageMemberVideoProducerId
-    ): Promise<StageMemberVideoProducer> {
+    readRemoteVideoProducer(
+        id: RemoteVideoProducerId
+    ): Promise<RemoteVideoProducer> {
         return this._db
-            .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+            .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
             .findOne({
                 _id: id,
             });
     }
 
-    updateStageMemberVideoProducer(
-        id: StageMemberVideoProducerId,
-        update: Partial<Omit<StageMemberVideoProducer, "_id">>
+    updateRemoteVideoProducer(
+        id: RemoteVideoProducerId,
+        update: Partial<Omit<RemoteVideoProducer, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+            .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
             .findOneAndUpdate(
                 {
                     _id: id,
@@ -726,11 +730,11 @@ class MongoRealtimeDatabase
             });
     }
 
-    deleteStageMemberVideoProducer(
-        id: StageMemberVideoProducerId
+    deleteRemoteVideoProducer(
+        id: RemoteVideoProducerId
     ): Promise<void> {
         return this._db
-            .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+            .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
             .findOneAndDelete(
                 {
                     _id: id,
@@ -1143,37 +1147,37 @@ class MongoRealtimeDatabase
                 // Set old stage member tracks offline (async!)
                 // Remove stage member related audio and video
                 await this._db
-                    .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+                    .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
                     .find({
                         stageMemberId: previousStageMemberId,
                     })
                     .toArray()
                     .then((producers) =>
                         producers.map((producer) =>
-                            this.deleteStageMemberAudioProducer(producer._id)
+                            this.deleteRemoteAudioProducer(producer._id)
                         )
                     );
                 await this._db
-                    .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+                    .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
                     .find({
                         stageMemberId: previousStageMemberId,
                     })
                     .toArray()
                     .then((producers) =>
                         producers.map((producer) =>
-                            this.deleteStageMemberVideoProducer(producer._id)
+                            this.deleteRemoteVideoProducer(producer._id)
                         )
                     )
                     .catch((e) => error(e));
                 await this._db
-                    .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS)
+                    .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_OVS)
                     .find({
                         stageMemberId: previousStageMemberId,
                     })
                     .toArray()
                     .then((tracks) =>
                         tracks.map((track) =>
-                            this.updateStageMemberOvTrack(track._id, {
+                            this.updateRemoteOvTrack(track._id, {
                                 online: false,
                             })
                         )
@@ -1187,7 +1191,7 @@ class MongoRealtimeDatabase
                 .toArray()
                 .then((producers) =>
                     producers.map((producer) =>
-                        this.createStageMemberVideoProducer({
+                        this.createRemoteVideoProducer({
                             stageMemberId: user.stageMemberId,
                             globalProducerId: producer._id,
                             userId: user._id,
@@ -1203,7 +1207,7 @@ class MongoRealtimeDatabase
                 .toArray()
                 .then((producers) =>
                     producers.map((producer) =>
-                        this.createStageMemberAudioProducer({
+                        this.createRemoteAudioProducer({
                             stageMemberId: user.stageMemberId,
                             globalProducerId: producer._id,
                             userId: user._id,
@@ -1222,18 +1226,17 @@ class MongoRealtimeDatabase
                 );
 
             await this._db
-                .collection<Track>(Collections.TRACKS)
+                .collection<OvTrack>(Collections.TRACKS)
                 .find({userId}, {projection: {_id: 1}})
                 .toArray()
                 .then((tracks) =>
                     tracks.map((track) =>
-                        this.createStageMemberOvTrack({
-                            //trackPresetId: track.trackPresetId,
+                        this.createRemoteOvTrack({
                             channel: track.channel,
-                            stageMemberId: user.stageMemberId,
-                            //trackId: track._id,
+                            ovTrackId: track._id,
                             userId: user._id,
                             stageId: user.stageId,
+                            stageMemberId: user.stageMemberId,
                             online: true,
                             volume: 1,
                             muted: false,
@@ -1275,37 +1278,37 @@ class MongoRealtimeDatabase
             // Remove old stage member related video and audio
             await Promise.all([
                 this._db
-                    .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+                    .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
                     .find({
                         stageMemberId: previousStageMemberId,
                     })
                     .toArray()
                     .then((producers) =>
                         producers.map((producer) =>
-                            this.deleteStageMemberAudioProducer(producer._id)
+                            this.deleteRemoteAudioProducer(producer._id)
                         )
                     ),
                 this._db
-                    .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+                    .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
                     .find({
                         stageMemberId: previousStageMemberId,
                     })
                     .toArray()
                     .then((producers) =>
                         producers.map((producer) =>
-                            this.deleteStageMemberVideoProducer(producer._id)
+                            this.deleteRemoteVideoProducer(producer._id)
                         )
                     ),
                 // Set tracks offline
                 this._db
-                    .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_OVS)
+                    .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_OVS)
                     .find({
                         stageMemberId: previousStageMemberId,
                     })
                     .toArray()
                     .then((tracks) =>
                         tracks.map((track) =>
-                            this.updateStageMemberOvTrack(track._id, {
+                            this.updateRemoteOvTrack(track._id, {
                                 online: false,
                             })
                         )
@@ -1449,40 +1452,40 @@ class MongoRealtimeDatabase
                 },
             })
             .toArray();
-        const videoProducers: StageMemberVideoProducer[] = await this._db
-            .collection<StageMemberVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+        const videoProducers: RemoteVideoProducer[] = await this._db
+            .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
             .find({
                 stageId,
             })
             .toArray();
-        const audioProducers: StageMemberAudioProducer[] = await this._db
-            .collection<StageMemberAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+        const audioProducers: RemoteAudioProducer[] = await this._db
+            .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
             .find({
                 stageId,
             })
             .toArray();
-        const customAudioProducers: CustomStageMemberAudioProducer[] = await this._db
-            .collection<CustomStageMemberAudioProducer>(
+        const customAudioProducers: CustomRemoteAudioProducer[] = await this._db
+            .collection<CustomRemoteAudioProducer>(
                 Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .find({
                 userId,
-                stageMemberAudioProducerId: {
+                RemoteAudioProducerId: {
                     $in: audioProducers.map((audioProducer) => audioProducer._id),
                 },
             })
             .toArray();
-        const ovTracks: StageMemberOvTrack[] = await this._db
-            .collection<StageMemberOvTrack>(Collections.TRACKS)
+        const ovTracks: RemoteOvTrack[] = await this._db
+            .collection<RemoteOvTrack>(Collections.TRACKS)
             .find({
                 stageId,
             })
             .toArray();
-        const customOvTracks: CustomStageMemberOvTrack[] = await this._db
-            .collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+        const customOvTracks: CustomRemoteOvTrack[] = await this._db
+            .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .find({
                 userId,
-                stageMemberOvTrackId: {$in: ovTracks.map((ovTrack) => ovTrack._id)},
+                CustomRemoteOvTrackId: {$in: ovTracks.map((ovTrack) => ovTrack._id)},
             })
             .toArray();
 
@@ -1649,25 +1652,25 @@ class MongoRealtimeDatabase
             });
     }
 
-    createTrack(initial: Omit<Track, "_id">): Promise<Track> {
+    createOvTrack(initial: Omit<OvTrack, "_id">): Promise<OvTrack> {
         return this._db
-            .collection<Track>(Collections.TRACKS)
+            .collection<OvTrack>(Collections.TRACKS)
             .insertOne(initial)
-            .then((result) => result.ops[0] as Track)
+            .then((result) => result.ops[0] as OvTrack)
             .then((track) => {
                 this.emit(ServerDeviceEvents.TRACK_ADDED, track);
                 this.sendToUser(track.userId, ServerDeviceEvents.TRACK_ADDED, track);
                 return this.readUser(track.userId)
                     .then((user) => {
                         if (user && user.stageMemberId) {
-                            const stageTrack: Omit<StageMemberOvTrack, "_id"> = {
+                            const remoteOvTrack: Omit<RemoteOvTrack, "_id"> = {
                                 directivity: "omni",
                                 volume: 1,
                                 ...initial,
                                 stageId: user.stageId,
                                 stageMemberId: user.stageMemberId,
                                 userId: user._id,
-                                //trackId: track._id,
+                                ovTrackId: track._id,
                                 muted: false,
                                 online: true,
                                 x: 0,
@@ -1677,7 +1680,7 @@ class MongoRealtimeDatabase
                                 rY: 0,
                                 rZ: 0,
                             };
-                            return this.createStageMemberOvTrack(stageTrack);
+                            return this.createRemoteOvTrack(remoteOvTrack);
                         }
                         return null;
                     })
@@ -1795,12 +1798,12 @@ class MongoRealtimeDatabase
                                 })
                             ),
                         this._db
-                            .collection<Track>(Collections.TRACKS)
+                            .collection<OvTrack>(Collections.TRACKS)
                             .find({soundCardId: id}, {projection: {_id: 1}})
                             .toArray()
                             .then((presets) =>
                                 presets.map((track) =>
-                                    this.deleteTrack(userId, track._id)
+                                    this.deleteOvTrack(userId, track._id)
                                 )
                             ),
                         /*this._db
@@ -1839,33 +1842,33 @@ class MongoRealtimeDatabase
                                 )
                             ),
                         this._db
-                            .collection<StageMemberVideoProducer>(
+                            .collection<RemoteVideoProducer>(
                                 Collections.STAGE_MEMBER_VIDEOS
                             )
                             .find({stageMemberId: id}, {projection: {_id: 1}})
                             .toArray()
                             .then((producers) =>
                                 producers.map((producer) =>
-                                    this.deleteStageMemberVideoProducer(producer._id)
+                                    this.deleteRemoteVideoProducer(producer._id)
                                 )
                             ),
                         this._db
-                            .collection<StageMemberAudioProducer>(
+                            .collection<RemoteAudioProducer>(
                                 Collections.STAGE_MEMBER_AUDIOS
                             )
                             .find({stageMemberId: id}, {projection: {_id: 1}})
                             .toArray()
                             .then((producers) =>
                                 producers.map((producer) =>
-                                    this.deleteStageMemberAudioProducer(producer._id)
+                                    this.deleteRemoteAudioProducer(producer._id)
                                 )
                             ),
                         this._db
-                            .collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS)
+                            .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
                             .find({stageMemberId: id}, {projection: {_id: 1}})
                             .toArray()
                             .then((tracks) =>
-                                tracks.map((track) => this.deleteStageMemberOvTrack(track._id))
+                                tracks.map((track) => this.deleteCustomRemoteOvTrack(track._id))
                             ),
                         this.sendToJoinedStageMembers(
                             result.value.stageId,
@@ -1878,9 +1881,9 @@ class MongoRealtimeDatabase
             });
     }
 
-    deleteTrack(userId: UserId, id: TrackId): Promise<any> {
+    deleteOvTrack(userId: UserId, id: OvTrackId): Promise<any> {
         return this._db
-            .collection<Track>(Collections.TRACKS)
+            .collection<OvTrack>(Collections.TRACKS)
             .findOneAndDelete(
                 {
                     _id: id,
@@ -1896,13 +1899,13 @@ class MongoRealtimeDatabase
                         ServerDeviceEvents.TRACK_REMOVED,
                         id
                     );
-                    // Delete all custom stage members and stage member tracks
+                    // Delete all stage member tracks
                     return this._db
-                        .collection<StageMemberOvTrack>(Collections.STAGE_MEMBER_OVS)
+                        .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
                         .find({trackId: id}, {projection: {_id: 1}})
                         .toArray()
                         .then((tracks) =>
-                            tracks.map((track) => this.deleteStageMemberOvTrack(track._id))
+                            tracks.map((track) => this.deleteRemoteOvTrack(track._id))
                         );
                 }
                 throw new Error(`Could not find and delete track ${id}`);
@@ -1964,8 +1967,8 @@ class MongoRealtimeDatabase
             .findOne({_id: id});
     }
 
-    readTrack(id: TrackId): Promise<Track> {
-        return this._db.collection<Track>(Collections.TRACKS).findOne({_id: id});
+    readOvTrack(id: OvTrackId): Promise<OvTrack> {
+        return this._db.collection<OvTrack>(Collections.TRACKS).findOne({_id: id});
     }
 
     updateGroup(id: GroupId, update: Partial<Omit<Group, "_id">>): Promise<void> {
@@ -2053,13 +2056,13 @@ class MongoRealtimeDatabase
             });
     }
 
-    updateTrack(
+    updateOvTrack(
         deviceId: DeviceId,
-        id: TrackId,
-        update: Partial<Omit<Track, "_id">>
+        id: OvTrackId,
+        update: Partial<Omit<OvTrack, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<Track>(Collections.TRACKS)
+            .collection<OvTrack>(Collections.TRACKS)
             .findOneAndUpdate(
                 {
                     _id: id,
@@ -2367,51 +2370,51 @@ class MongoRealtimeDatabase
             });
     }
 
-    createCustomStageMemberAudioProducer(
-        initial: Omit<CustomStageMemberAudioProducer, "_id">
-    ): Promise<CustomStageMemberAudioProducer> {
+    createCustomRemoteAudioProducer(
+        initial: Omit<CustomRemoteAudioProducer, "_id">
+    ): Promise<CustomRemoteAudioProducer> {
         return this._db
-            .collection<CustomStageMemberAudioProducer>(
+            .collection<CustomRemoteAudioProducer>(
                 Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .insertOne(initial)
-            .then((result) => result.ops[0] as CustomStageMemberAudioProducer)
-            .then((customStageMemberAudioProducer) => {
+            .then((result) => result.ops[0] as CustomRemoteAudioProducer)
+            .then((customRemoteAudioProducer) => {
                 this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-                    customStageMemberAudioProducer
+                    customRemoteAudioProducer
                 );
                 this.sendToUser(
-                    customStageMemberAudioProducer.userId,
+                    customRemoteAudioProducer.userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-                    customStageMemberAudioProducer
+                    customRemoteAudioProducer
                 );
-                return customStageMemberAudioProducer;
+                return customRemoteAudioProducer;
             });
     }
 
-    readCustomStageMemberAudioProducer(
-        id: StageMemberAudioProducerId
-    ): Promise<CustomStageMemberAudioProducer> {
+    readCustomRemoteAudioProducer(
+        id: RemoteAudioProducerId
+    ): Promise<CustomRemoteAudioProducer> {
         return this._db
-            .collection<CustomStageMemberAudioProducer>(
+            .collection<CustomRemoteAudioProducer>(
                 Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .findOne({_id: id});
     }
 
-    setCustomStageMemberAudioProducer(
+    setCustomRemoteAudioProducer(
         userId: UserId,
-        stageMemberAudioProducerId: StageMemberAudioProducerId,
-        update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>
+        RemoteAudioProducerId: RemoteAudioProducerId,
+        update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<CustomStageMemberAudioProducer>(
+            .collection<CustomRemoteAudioProducer>(
                 Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .findOneAndUpdate(
                 {
-                    stageMemberAudioProducerId,
+                    RemoteAudioProducerId,
                     userId,
                 },
                 {$set: update},
@@ -2437,11 +2440,11 @@ class MongoRealtimeDatabase
                 if (result.ok) {
                     // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
                     return this._db
-                        .collection<CustomStageMemberAudioProducer>(
+                        .collection<CustomRemoteAudioProducer>(
                             Collections.CUSTOM_STAGE_MEMBER_AUDIOS
                         )
                         .findOne({
-                            stageMemberAudioProducerId,
+                            RemoteAudioProducerId,
                             userId,
                         })
                         .then((customAudioProducer) => {
@@ -2457,17 +2460,17 @@ class MongoRealtimeDatabase
                         });
                 }
                 throw new Error(
-                    `Could not customize stage member audio producer ${stageMemberAudioProducerId} and user ${userId}`
+                    `Could not customize stage member audio producer ${RemoteAudioProducerId} and user ${userId}`
                 );
             });
     }
 
-    updateCustomStageMemberAudioProducer(
-        id: CustomStageMemberAudioProducerId,
-        update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>
+    updateCustomRemoteAudioProducer(
+        id: CustomRemoteAudioProducerId,
+        update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<CustomStageMemberAudioProducer>(
+            .collection<CustomRemoteAudioProducer>(
                 Collections.CUSTOM_STAGE_MEMBER_AUDIOS
             )
             .findOneAndUpdate(
@@ -2497,8 +2500,8 @@ class MongoRealtimeDatabase
             });
     }
 
-    deleteCustomStageMemberAudioProducer(
-        id: CustomStageMemberAudioProducerId
+    deleteCustomRemoteAudioProducer(
+        id: CustomRemoteAudioProducerId
     ): Promise<void> {
         return this._db
             .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS)
@@ -2518,45 +2521,45 @@ class MongoRealtimeDatabase
             });
     }
 
-    createCustomStageMemberOvTrack(
-        initial: Omit<CustomStageMemberOvTrack, "_id">
-    ): Promise<CustomStageMemberOvTrack> {
+    createCustomRemoteOvTrack(
+        initial: Omit<CustomRemoteOvTrack, "_id">
+    ): Promise<CustomRemoteOvTrack> {
         return this._db
-            .collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+            .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .insertOne(initial)
-            .then((result) => result.ops[0] as CustomStageMemberOvTrack)
-            .then((customStageMemberOvTrack) => {
+            .then((result) => result.ops[0] as CustomRemoteOvTrack)
+            .then((CustomRemoteOvTrack) => {
                 this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-                    customStageMemberOvTrack
+                    CustomRemoteOvTrack
                 );
                 this.sendToUser(
-                    customStageMemberOvTrack.userId,
+                    CustomRemoteOvTrack.userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-                    customStageMemberOvTrack
+                    CustomRemoteOvTrack
                 );
-                return customStageMemberOvTrack;
+                return CustomRemoteOvTrack;
             });
     }
 
-    readCustomStageMemberOvTrack(
-        id: CustomStageMemberOvTrackId
-    ): Promise<CustomStageMemberOvTrack> {
+    readCustomRemoteOvTrack(
+        id: CustomRemoteOvTrackId
+    ): Promise<CustomRemoteOvTrack> {
         return this._db
-            .collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+            .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .findOne({_id: id});
     }
 
-    setCustomStageMemberOvTrack(
+    setCustomRemoteOvTrack(
         userId: UserId,
-        stageMemberOvTrackId: StageMemberOvTrackId,
-        update: Partial<Omit<CustomStageMemberOvTrack, "_id">>
+        CustomRemoteOvTrackId: CustomRemoteOvTrackId,
+        update: Partial<Omit<CustomRemoteOvTrack, "_id">>
     ): Promise<void> {
         return this._db
-            .collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+            .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .findOneAndUpdate(
                 {
-                    stageMemberOvTrackId,
+                    CustomRemoteOvTrackId,
                     userId,
                 },
                 {$set: update},
@@ -2579,11 +2582,11 @@ class MongoRealtimeDatabase
                 if (result.ok) {
                     // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
                     return this._db
-                        .collection<CustomStageMemberOvTrack>(
+                        .collection<CustomRemoteOvTrack>(
                             Collections.CUSTOM_STAGE_MEMBER_OVS
                         )
                         .findOne({
-                            stageMemberOvTrackId,
+                            CustomRemoteOvTrackId,
                             userId,
                         })
                         .then((customOvTrack) => {
@@ -2599,14 +2602,14 @@ class MongoRealtimeDatabase
                         });
                 }
                 throw new Error(
-                    `Could not customize stage member ov track ${stageMemberOvTrackId} for user ${userId}`
+                    `Could not customize stage member ov track ${CustomRemoteOvTrackId} for user ${userId}`
                 );
             });
     }
 
-    updateCustomStageMemberOvTrack(
+    updateCustomRemoteOvTrack(
         id: ObjectId,
-        update: Partial<Pick<CustomStageMemberOvTrack,
+        update: Partial<Pick<CustomRemoteOvTrack,
             | "stageId"
             | "userId"
             | "volume"
@@ -2616,11 +2619,11 @@ class MongoRealtimeDatabase
             | "rX"
             | "rY"
             | "rZ"
-            | "stageMemberOvTrackId"
+            | "remoteOvTrackId"
             | "directivity">>
     ): Promise<void> {
         return this._db
-            .collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+            .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .findOneAndUpdate(
                 {_id: id},
                 {$set: update},
@@ -2645,9 +2648,9 @@ class MongoRealtimeDatabase
             });
     }
 
-    deleteCustomStageMemberOvTrack(id: ObjectId): Promise<void> {
+    deleteCustomRemoteOvTrack(id: ObjectId): Promise<void> {
         return this._db
-            .collection<CustomStageMemberOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+            .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
             .findOneAndDelete({_id: id}, {projection: {userId: 1}})
             .then((result) => {
                 this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_REMOVED, id);

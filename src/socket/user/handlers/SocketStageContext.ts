@@ -217,14 +217,14 @@ class SocketStageContext {
         );
         const id = new ObjectId(payload.id);
         return this.database
-          .readStageMemberAudioProducer(id)
+          .readRemoteAudioProducer(id)
           .then((audioProducer) => {
             if (audioProducer) {
               return this.database
                 .readManagedStage(this.user._id, audioProducer.stageId)
                 .then((stage) => {
                   if (stage) {
-                    return this.database.updateStageMemberAudioProducer(
+                    return this.database.updateRemoteAudioProducer(
                       id,
                       payload.update
                     );
@@ -246,14 +246,14 @@ class SocketStageContext {
         trace(`${this.user.name}: ${ClientStageEvents.CHANGE_STAGE_MEMBER_OV}`);
         const id = new ObjectId(payload.id);
         return this.database
-          .readStageMemberOvTrack(id)
+          .readRemoteOvTrack(id)
           .then((audioProducer) => {
             if (audioProducer) {
               return this.database
                 .readManagedStage(this.user._id, audioProducer.stageId)
                 .then((stage) => {
                   if (stage) {
-                    return this.database.updateStageMemberOvTrack(
+                    return this.database.updateRemoteOvTrack(
                       id,
                       payload.update
                     );
@@ -343,7 +343,7 @@ class SocketStageContext {
         }
         const stageMemberAudioId = new ObjectId(payload.stageMemberAudioId);
         this.database
-          .setCustomStageMemberAudioProducer(
+          .setCustomRemoteAudioProducer(
             this.user._id,
             stageMemberAudioId,
             payload.update
@@ -360,10 +360,10 @@ class SocketStageContext {
         );
         const id = new ObjectId(payload);
         return this.database
-          .readCustomStageMemberAudioProducer(id)
+          .readCustomRemoteAudioProducer(id)
           .then((group) => {
             if (group && group.userId.equals(this.user._id)) {
-              return this.database.deleteCustomStageMemberAudioProducer(id);
+              return this.database.deleteCustomRemoteAudioProducer(id);
             }
             return null;
           })
@@ -382,7 +382,7 @@ class SocketStageContext {
         }
         const stageMemberOvTrackId = new ObjectId(payload.stageMemberOvTrackId);
         this.database
-          .setCustomStageMemberOvTrack(
+          .setCustomRemoteOvTrack(
             this.user._id,
             stageMemberOvTrackId,
             payload.update
@@ -399,10 +399,10 @@ class SocketStageContext {
         );
         const id = new ObjectId(payload);
         return this.database
-          .readCustomStageMemberOvTrack(id)
+          .readCustomRemoteOvTrack(id)
           .then((item) => {
             if (item && item.userId.equals(this.user._id)) {
-              return this.database.deleteCustomStageMemberOvTrack(id);
+              return this.database.deleteCustomRemoteOvTrack(id);
             }
             return null;
           })

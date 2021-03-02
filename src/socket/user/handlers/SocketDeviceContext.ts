@@ -5,7 +5,7 @@ import {
     Device,
     GlobalAudioProducer,
     GlobalVideoProducer,
-    SoundCard, Track,
+    SoundCard, OvTrack,
     User,
 } from "../../../types";
 import {ClientDeviceEvents, ServerDeviceEvents} from "../../../events";
@@ -76,9 +76,7 @@ class SocketDeviceContext {
                 fn: (error: string | null, producer?: GlobalAudioProducer) => void
             ) => {
                 trace(`${this.user.name}: ${ClientDeviceEvents.ADD_AUDIO_PRODUCER}`);
-                const routerId = payload.routerId
-                    ? new ObjectId(payload.routerId)
-                    : "STANDALONE";
+                const routerId = new ObjectId(payload.routerId);
                 // Get current stage id
                 this.database
                     .createAudioProducer({
@@ -117,9 +115,7 @@ class SocketDeviceContext {
                 trace(
                     `ADD VIDEO PRODUCER FOR MS PRODUCER ${payload.routerProducerId} AND ROUTER ${payload.routerId}`
                 );
-                const routerId = payload.routerId
-                    ? new ObjectId(payload.routerId)
-                    : "STANDALONE";
+                const routerId = new ObjectId(payload.routerId);
                 this.database
                     .createVideoProducer({
                         routerId,
@@ -166,10 +162,7 @@ class SocketDeviceContext {
                         sampleRates: [],
                         inputChannels: [],
                         outputChannels: [],
-                        ...payload.initial,
-                        /*trackPresetId: payload.initial.trackPresetId
-                          ? new ObjectId(payload.initial.trackPresetId)
-                          : undefined,*/
+                        ...payload.initial
                     })
                     .then((soundCard) => {
                         if (fn) return fn(soundCard);
@@ -187,21 +180,16 @@ class SocketDeviceContext {
             ) => {
                 trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_SOUND_CARD}`);
                 const id = new ObjectId(payload.id);
-                const trackPresetId = payload.update.trackPresetId
-                    ? new ObjectId(payload.update.trackPresetId)
-                    : undefined;
                 this.database
                     .updateSoundCard(this.device._id, id, {
                         ...payload.update,
-                        deviceId: this.device._id,
-                        //trackPresetId,
+                        deviceId: this.device._id
                     })
                     .then(() => {
                         if (fn) {
                             return fn({
                                 ...payload.update,
                                 deviceId: this.device._id,
-                                //trackPresetId,
                                 _id: id,
                             });
                         }
@@ -289,13 +277,13 @@ class SocketDeviceContext {
 
         this.socket.on(
             ClientDeviceEvents.ADD_TRACK,
-            (payload: AddTrackPayload, fn: (track: Track) => void) => {
+            (payload: AddTrackPayload, fn: (track: OvTrack) => void) => {
                 trace(`${this.user.name}: ${ClientDeviceEvents.ADD_TRACK}`);
                 if (payload.initial.trackPresetId) {
                     //const trackPresetId = new ObjectId(payload.initial.trackPresetId);
                     const soundCardId = new ObjectId(payload.initial.soundCardId);
                     this.database
-                        .createTrack({
+                        .createOvTrack({
                             channel: payload.initial.channel || 0,
                             //trackPresetId,
                             soundCardId,
@@ -309,11 +297,11 @@ class SocketDeviceContext {
         );
         this.socket.on(
             ClientDeviceEvents.CHANGE_TRACK,
-            (payload: ChangeTrackPayload, fn: (track: Partial<Track>) => void) => {
+            (payload: ChangeTrackPayload, fn: (track: Partial<OvTrack>) => void) => {
                 trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_TRACK}`);
                 const id = new ObjectId(payload.id);
                 this.database
-                    .updateTrack(this.device._id, id, payload.update)
+                    .updateOvTrack(this.device._id, id, payload.update)
                     .then(() =>
                         fn({
                             ...payload.update,
@@ -328,7 +316,7 @@ class SocketDeviceContext {
             (id: RemoveTrackPayload, fn: () => void) => {
                 trace(`${this.user.name}: ${ClientDeviceEvents.CHANGE_TRACK}`);
                 this.database
-                    .deleteTrack(this.device._id, new ObjectId(id))
+                    .deleteOvTrack(this.device._id, new ObjectId(id))
                     .then(() => fn())
                     .catch((e) => error(e));
             }

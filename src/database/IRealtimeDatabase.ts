@@ -2,41 +2,32 @@ import { Db } from "mongodb";
 import { ITeckosSocket } from "teckos";
 import * as EventEmitter from "events";
 import {
-  CustomGroup,
   CustomGroupId,
-  CustomStageMember,
-  CustomStageMemberAudioProducer,
-  CustomStageMemberAudioProducerId,
   CustomStageMemberId,
-  CustomStageMemberOvTrack,
-  CustomStageMemberOvTrackId,
-  Device,
   DeviceId,
-  GlobalAudioProducer,
   GlobalAudioProducerId,
-  GlobalVideoProducer,
   GlobalVideoProducerId,
-  Group,
   GroupId,
-  SoundCard,
   SoundCardId,
-  Stage,
   StageId,
-  StageMember,
-  StageMemberAudioProducer,
-  StageMemberAudioProducerId,
   StageMemberId,
-  StageMemberOvTrack,
-  StageMemberOvTrackId,
-  StageMemberVideoProducer,
-  StageMemberVideoProducerId,
-  Track,
-  TrackId,
-  User,
+  RemoteOvTrackId,
+  RemoteVideoProducerId,
+  OvTrackId,
   UserId,
-  ThreeDimensionAudioProperties,
+  RouterId, RemoteAudioProducerId, CustomRemoteAudioProducerId, CustomRemoteOvTrackId,
+} from "../types/IdTypes";
+import {
+  CustomGroup, CustomRemoteAudioProducer, CustomRemoteOvTrack, CustomStageMember,
+  Device,
+  GlobalAudioProducer,
+  GlobalVideoProducer,
+  Group,
+  OvTrack, RemoteAudioProducer, RemoteOvTrack, RemoteVideoProducer,
   Router,
-  RouterId,
+  SoundCard,
+  Stage, StageMember, ThreeDimensionAudioProperties,
+  User
 } from "../types";
 
 export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
@@ -123,17 +114,17 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   deleteTrackPreset(deviceId: DeviceId, id: TrackPresetId): Promise<void>;
 */
-  createTrack(initial: Omit<Track, "_id" | "stageId">): Promise<Track>;
+  createOvTrack(initial: Omit<OvTrack, "_id" | "stageId">): Promise<OvTrack>;
 
-  readTrack(deviceId: DeviceId, id: TrackId): Promise<Track>;
+  readOvTrack(deviceId: DeviceId, id: OvTrackId): Promise<OvTrack>;
 
-  updateTrack(
+  updateOvTrack(
     deviceId: DeviceId,
-    id: TrackId,
-    update: Partial<Omit<Track, "_id">>
+    id: OvTrackId,
+    update: Partial<Omit<OvTrack, "_id">>
   ): Promise<void>;
 
-  deleteTrack(deviceId: DeviceId, id: TrackId): Promise<void>;
+  deleteOvTrack(deviceId: DeviceId, id: OvTrackId): Promise<void>;
 
   createAudioProducer(
     initial: Omit<GlobalAudioProducer, "_id">
@@ -210,48 +201,48 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   deleteStageMember(id: StageMemberId): Promise<void>;
 
-  createStageMemberOvTrack(
-    initial: Omit<StageMemberOvTrack, "_id">
-  ): Promise<StageMemberOvTrack>;
+  createRemoteOvTrack(
+    initial: Omit<RemoteOvTrack, "_id">
+  ): Promise<RemoteOvTrack>;
 
-  readStageMemberOvTrack(id: StageMemberOvTrackId): Promise<StageMemberOvTrack>;
+  readRemoteOvTrack(id: RemoteOvTrackId): Promise<RemoteOvTrack>;
 
-  updateStageMemberOvTrack(
-    id: StageMemberOvTrackId,
-    update: Partial<Omit<StageMemberOvTrack, "_id">>
+  updateRemoteOvTrack(
+    id: RemoteOvTrackId,
+    update: Partial<Omit<RemoteOvTrack, "_id">>
   ): Promise<void>;
 
-  deleteStageMemberOvTrack(id: StageMemberOvTrackId): Promise<void>;
+  deleteRemoteOvTrack(id: RemoteOvTrackId): Promise<void>;
 
-  createStageMemberAudioProducer(
-    initial: Omit<StageMemberAudioProducer, "_id">
-  ): Promise<StageMemberAudioProducer>;
+  createRemoteAudioProducer(
+    initial: Omit<RemoteAudioProducer, "_id">
+  ): Promise<RemoteAudioProducer>;
 
-  readStageMemberAudioProducer(
-    id: StageMemberAudioProducerId
-  ): Promise<StageMemberAudioProducer>;
+  readRemoteAudioProducer(
+    id: RemoteAudioProducerId
+  ): Promise<RemoteAudioProducer>;
 
-  updateStageMemberAudioProducer(
-    id: StageMemberAudioProducerId,
-    update: Partial<Omit<StageMemberAudioProducer, "_id">>
+  updateRemoteAudioProducer(
+    id: RemoteAudioProducerId,
+    update: Partial<Omit<RemoteAudioProducer, "_id">>
   ): Promise<void>;
 
-  deleteStageMemberAudioProducer(id: StageMemberAudioProducerId): Promise<void>;
+  deleteRemoteAudioProducer(id: RemoteAudioProducerId): Promise<void>;
 
-  createStageMemberVideoProducer(
-    initial: Omit<StageMemberVideoProducer, "_id">
-  ): Promise<StageMemberVideoProducer>;
+  createRemoteVideoProducer(
+    initial: Omit<RemoteVideoProducer, "_id">
+  ): Promise<RemoteVideoProducer>;
 
-  readStageMemberVideoProducer(
-    id: StageMemberVideoProducerId
-  ): Promise<StageMemberVideoProducer>;
+  readRemoteVideoProducer(
+    id: RemoteVideoProducerId
+  ): Promise<RemoteVideoProducer>;
 
-  updateStageMemberVideoProducer(
-    id: StageMemberVideoProducerId,
-    update: Partial<Omit<StageMemberVideoProducer, "_id">>
+  updateRemoteVideoProducer(
+    id: RemoteVideoProducerId,
+    update: Partial<Omit<RemoteVideoProducer, "_id">>
   ): Promise<void>;
 
-  deleteStageMemberVideoProducer(id: StageMemberVideoProducerId): Promise<void>;
+  deleteRemoteVideoProducer(id: RemoteVideoProducerId): Promise<void>;
 
   // Customized elements for each stage member
   createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup>;
@@ -290,49 +281,49 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   deleteCustomStageMember(id: CustomStageMemberId): Promise<void>;
 
-  createCustomStageMemberAudioProducer(
-    initial: Omit<CustomStageMemberAudioProducer, "_id">
-  ): Promise<CustomStageMemberAudioProducer>;
+  createCustomRemoteAudioProducer(
+    initial: Omit<CustomRemoteAudioProducer, "_id">
+  ): Promise<CustomRemoteAudioProducer>;
 
-  readCustomStageMemberAudioProducer(
-    id: CustomStageMemberAudioProducerId
-  ): Promise<CustomStageMemberAudioProducer>;
+  readCustomRemoteAudioProducer(
+    id: CustomRemoteAudioProducerId
+  ): Promise<CustomRemoteAudioProducer>;
 
-  setCustomStageMemberAudioProducer(
+  setCustomRemoteAudioProducer(
     userId: UserId,
-    stageMemberAudioProducerId: StageMemberAudioProducerId,
-    update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>
+    RemoteAudioProducerId: RemoteAudioProducerId,
+    update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
   ): Promise<void>;
 
-  updateCustomStageMemberAudioProducer(
-    id: CustomStageMemberAudioProducerId,
-    update: Partial<Omit<CustomStageMemberAudioProducer, "_id">>
+  updateCustomRemoteAudioProducer(
+    id: CustomRemoteAudioProducerId,
+    update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
   ): Promise<void>;
 
-  deleteCustomStageMemberAudioProducer(
-    id: CustomStageMemberAudioProducerId
+  deleteCustomRemoteAudioProducer(
+    id: CustomRemoteAudioProducerId
   ): Promise<void>;
 
-  createCustomStageMemberOvTrack(
-    initial: Omit<CustomStageMemberOvTrack, "_id">
-  ): Promise<CustomStageMemberOvTrack>;
+  createCustomRemoteOvTrack(
+    initial: Omit<CustomRemoteOvTrack, "_id">
+  ): Promise<CustomRemoteOvTrack>;
 
-  readCustomStageMemberOvTrack(
-    id: CustomStageMemberOvTrackId
-  ): Promise<CustomStageMemberOvTrack>;
+  readCustomRemoteOvTrack(
+    id: CustomRemoteOvTrackId
+  ): Promise<CustomRemoteOvTrack>;
 
-  setCustomStageMemberOvTrack(
+  setCustomRemoteOvTrack(
     userId: UserId,
-    stageMemberOvTrackId: StageMemberOvTrackId,
-    update: Partial<Omit<CustomStageMemberOvTrack, "_id">>
+    CustomRemoteOvTrackId: CustomRemoteOvTrackId,
+    update: Partial<Omit<CustomRemoteOvTrack, "_id">>
   ): Promise<void>;
 
-  updateCustomStageMemberOvTrack(
-    id: CustomStageMemberOvTrackId,
-    update: Partial<Omit<CustomStageMemberOvTrack, "_id">>
+  updateCustomRemoteOvTrack(
+    id: CustomRemoteOvTrackId,
+    update: Partial<Omit<CustomRemoteOvTrack, "_id">>
   ): Promise<void>;
 
-  deleteCustomStageMemberOvTrack(id: CustomStageMemberOvTrackId): Promise<void>;
+  deleteCustomRemoteOvTrack(id: CustomRemoteOvTrackId): Promise<void>;
 
   // MESSAGING
   sendStageDataToDevice(socket: ITeckosSocket, user: User): Promise<void>;
