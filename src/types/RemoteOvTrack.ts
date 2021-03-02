@@ -9,7 +9,13 @@
  * maybe for integrating webrtc and ov later and use
  * the web audio api panner for 3D audio interpolation later.
  */
-import {StageMemberId, RemoteOvTrackId, OvTrackId, UserId, DeviceId, StageId} from "./IdTypes";
+import {
+  StageMemberId,
+  RemoteOvTrackId,
+  OvTrackId,
+  UserId,
+  StageId,
+} from "./IdTypes";
 import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 
 export interface RemoteOvTrack extends ThreeDimensionAudioProperties {
@@ -20,7 +26,7 @@ export interface RemoteOvTrack extends ThreeDimensionAudioProperties {
 
   online: boolean;
 
-  directivity: 'omni' | 'cardioid'; // Overrides track directivity (for stage)
+  directivity: "omni" | "cardioid"; // Overrides track directivity (for stage)
 
   // Optimizations for performance
   userId: UserId;

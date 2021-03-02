@@ -1,10 +1,10 @@
-import ThreeDimensionAudioProperties from './ThreeDimensionAudioProperties';
+import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 import {
   GlobalAudioProducerId,
   RemoteAudioProducerId,
   StageId,
   StageMemberId,
-  UserId
+  UserId,
 } from "./IdTypes";
 
 export interface RemoteAudioProducer extends ThreeDimensionAudioProperties {

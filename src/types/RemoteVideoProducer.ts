@@ -1,4 +1,10 @@
-import {GlobalVideoProducerId, RemoteVideoProducerId, StageId, StageMemberId, UserId} from "./IdTypes";
+import {
+  GlobalVideoProducerId,
+  RemoteVideoProducerId,
+  StageId,
+  StageMemberId,
+  UserId,
+} from "./IdTypes";
 
 export interface RemoteVideoProducer {
   _id: RemoteVideoProducerId;

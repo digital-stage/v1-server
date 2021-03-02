@@ -1,4 +1,4 @@
-import {RouterId} from "./IdTypes";
+import { RouterId } from "./IdTypes";
 
 export interface Router {
   _id: RouterId;

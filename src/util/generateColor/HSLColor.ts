@@ -1,61 +1,54 @@
 class HSLColor {
-    private readonly _hue: number;
-    private readonly _saturation: number;
-    private readonly _luminance: number;
-    private readonly _alpha: number;
+  private readonly _hue: number;
 
-    constructor(hue: number, saturation = 70, luminance = 80, alpha = 1) {
-        this._hue = hue;
-        this._saturation = saturation;
-        this._luminance = luminance;
-        this._alpha = alpha;
-    }
+  private readonly _saturation: number;
 
-    get h(): number {
-        return this._hue;
-    }
+  private readonly _luminance: number;
 
-    get s(): number {
-        return this._saturation;
-    }
+  private readonly _alpha: number;
 
-    get l(): number {
-        return this._luminance;
-    }
+  constructor(hue: number, saturation = 70, luminance = 80, alpha = 1) {
+    this._hue = hue;
+    this._saturation = saturation;
+    this._luminance = luminance;
+    this._alpha = alpha;
+  }
 
-    get a(): number {
-        return this._alpha;
-    }
+  get h(): number {
+    return this._hue;
+  }
 
-    hue(hue: number): HSLColor {
-        return new HSLColor(hue, this._saturation, this._luminance, this._alpha);
-    }
+  get s(): number {
+    return this._saturation;
+  }
 
-    saturation(saturation: number): HSLColor {
-        return new HSLColor(this._hue, saturation, this._luminance, this._alpha);
-    }
+  get l(): number {
+    return this._luminance;
+  }
 
-    luminance(luminance: number): HSLColor {
-        return new HSLColor(this._hue, this._saturation, luminance, this._alpha);
-    }
+  get a(): number {
+    return this._alpha;
+  }
 
-    alpha(alpha: number): HSLColor {
-        return new HSLColor(this._hue, this._saturation, this._luminance, alpha);
-    }
+  hue(hue: number): HSLColor {
+    return new HSLColor(hue, this._saturation, this._luminance, this._alpha);
+  }
 
-    toString(): string {
-        return (
-            'hsla(' +
-            this._hue +
-            ',' +
-            this._saturation +
-            '%,' +
-            this._luminance +
-            '%,' +
-            this._alpha +
-            ')'
-        );
-    }
+  saturation(saturation: number): HSLColor {
+    return new HSLColor(this._hue, saturation, this._luminance, this._alpha);
+  }
+
+  luminance(luminance: number): HSLColor {
+    return new HSLColor(this._hue, this._saturation, luminance, this._alpha);
+  }
+
+  alpha(alpha: number): HSLColor {
+    return new HSLColor(this._hue, this._saturation, this._luminance, alpha);
+  }
+
+  toString(): string {
+    return `hsla(${this._hue},${this._saturation}%,${this._luminance}%,${this._alpha})`;
+  }
 }
 
 export default HSLColor;

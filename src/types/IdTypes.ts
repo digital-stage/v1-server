@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+import { ObjectId } from "mongodb";
 
 export type StageId = ObjectId;
 export type GroupId = ObjectId;
@@ -21,6 +21,5 @@ export type RemoteAudioProducerId = ObjectId;
 export type RemoteOvTrackId = ObjectId;
 export type CustomRemoteAudioProducerId = ObjectId;
 export type CustomRemoteOvTrackId = ObjectId;
-
 
 export type GlobalProducerId = ObjectId;

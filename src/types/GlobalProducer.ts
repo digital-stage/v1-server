@@ -1,7 +1,13 @@
 /**
  *
  */
-import {DeviceId, GlobalProducerId, RouterId, RouterProducerId, UserId} from "./IdTypes";
+import {
+  DeviceId,
+  GlobalProducerId,
+  RouterId,
+  RouterProducerId,
+  UserId,
+} from "./IdTypes";
 
 export interface GlobalProducer {
   _id: GlobalProducerId;

@@ -1,7 +1,7 @@
 /**
  * A preset for channels / track configuration
  */
-import {SoundCardId, OvTrackPresetId, UserId} from "./IdTypes";
+import { SoundCardId, OvTrackPresetId, UserId } from "./IdTypes";
 
 export interface OvTrackPreset {
   _id: OvTrackPresetId;

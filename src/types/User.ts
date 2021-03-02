@@ -1,4 +1,4 @@
-import {StageId, StageMemberId, UserId} from "./IdTypes";
+import { StageId, StageMemberId, UserId } from "./IdTypes";
 
 export interface User {
   _id: UserId;

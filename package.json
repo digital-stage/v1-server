@@ -4,7 +4,7 @@
   "description": "Stage and device orchestration server for digital-stage.org",
   "main": "index.js",
   "scripts": {
-    "dev": "DEBUG=teckos.*,server.* nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev": "DEBUG=server.* nodemon --watch './src/**/*.ts' --exec 'ts-node' src/index.ts",
     "lint": "npx eslint ./src --ext .js,.ts --fix",
     "build": "tsc",
     "start": "DEBUG=server.* node ./dist/index.js"

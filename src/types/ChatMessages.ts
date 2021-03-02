@@ -1,4 +1,4 @@
-import {StageMemberId, UserId} from "./IdTypes";
+import { StageMemberId, UserId } from "./IdTypes";
 
 export interface ChatMessage {
   userId: UserId;

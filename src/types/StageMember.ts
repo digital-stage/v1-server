@@ -1,4 +1,4 @@
-import {GroupId, StageId, StageMemberId, UserId} from "./IdTypes";
+import { GroupId, StageId, StageMemberId, UserId } from "./IdTypes";
 import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 
 /**
@@ -6,22 +6,22 @@ import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
  * Settings can be only modified by admins.
  */
 export interface StageMember extends ThreeDimensionAudioProperties {
-    _id: StageMemberId;
-    groupId: GroupId; // <--- RELATION
-    userId: UserId; // <--- RELATION
+  _id: StageMemberId;
+  groupId: GroupId; // <--- RELATION
+  userId: UserId; // <--- RELATION
 
-    online: boolean;
+  online: boolean;
 
-    // SETTINGS (modifiable only by admins)
-    isDirector: boolean;
+  // SETTINGS (modifiable only by admins)
+  isDirector: boolean;
 
-    ovStageDeviceId: number; // 0 - 30
+  ovStageDeviceId: number; // 0 - 30
 
-    sendlocal: boolean;
+  sendlocal: boolean;
 
-    // Optimizations for performance
-    stageId: StageId;
-    // videoProducers: StageMemberVideoProducerId[];
-    // audioProducers: StageMemberAudioProducerId[];
-    // ovTracks: StageMemberOvTrackId[];
+  // Optimizations for performance
+  stageId: StageId;
+  // videoProducers: StageMemberVideoProducerId[];
+  // audioProducers: StageMemberAudioProducerId[];
+  // ovTracks: StageMemberOvTrackId[];
 }
