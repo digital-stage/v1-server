@@ -18,7 +18,7 @@ import {
 import { StageManaged, StageUnManaged } from "../../payloads";
 import logger from "../../logger";
 
-const { info, error } = logger("socket:router");
+const { info, error, trace, warn } = logger("socket:router");
 
 class SocketRouterHandler {
   private readonly _serverAddress: string;
@@ -136,9 +136,11 @@ class SocketRouterHandler {
           const objectId = new ObjectId(id);
           return this.getProducer(objectId)
             .then((producer) => {
-              if (!producer) {
+              if (producer) {
+                trace("Router requested existing producer");
                 return callback(null, producer);
               }
+              warn("Could not find producer requested by router");
               throw new Error("Not found");
             })
             .catch((err) => callback(err));
