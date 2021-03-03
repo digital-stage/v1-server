@@ -3,7 +3,7 @@ import debug, { Debugger } from "debug";
 import * as Sentry from "@sentry/node";
 import * as uncaught from "uncaught";
 import * as Tracing from "@sentry/tracing";
-import { CaptureConsole } from "@sentry/integrations";
+import { CaptureConsole, RewriteFrames } from "@sentry/integrations";
 import { SENTRY_DSN, USE_SENTRY } from "./env";
 
 const d = debug("server");
@@ -14,11 +14,15 @@ if (USE_SENTRY) {
   d("Using Sentry for logging");
   Sentry.init({
     dsn: SENTRY_DSN,
+    release: process.env.RELEASE,
 
     integrations: [
       new Tracing.Integrations.Mongo(),
       new CaptureConsole({
         levels: ["warn", "error"],
+      }),
+      new RewriteFrames({
+        root: global.__rootdir__,
       }),
     ],
 

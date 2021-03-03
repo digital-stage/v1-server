@@ -16,6 +16,14 @@ import {
 } from "./env";
 import logger from "./logger";
 
+declare global {
+  namespace NodeJS {
+    interface Global {
+      __rootdir__: string;
+    }
+  }
+}
+
 const { warn, error, info } = logger("A");
 
 if (DEBUG_PAYLOAD) warn("[WARN] Debugging payloads");
