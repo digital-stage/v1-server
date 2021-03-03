@@ -67,7 +67,7 @@ const logger = (
   let warn;
   let error;
   if (USE_SENTRY) {
-    warn = (message) => console.warn(`${namespace}:warm ${message}`);
+    warn = (message) => console.warn(`${namespace}:warn ${message}`);
     error = (message) => console.error(`${namespace}:error ${message}`);
   } else {
     warn = d.extend(`${namespace}warn`);
