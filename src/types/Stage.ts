@@ -13,6 +13,8 @@ export interface Stage {
   height: number;
   absorption: number;
   damping: number;
+
+  renderAmbient: boolean;
   ambientSoundUrl?: string;
   ambientLevel: number;
 

@@ -388,7 +388,7 @@ class SocketDeviceContext {
       senderJitter: 10,
       receiverJitter: 10,
       p2p: true,
-      reverbReverb: true,
+      renderReverb: true,
       reverbGain: 1,
       renderISM: false,
       rawMode: false,
