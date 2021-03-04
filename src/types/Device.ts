@@ -35,7 +35,7 @@ export interface Device {
   senderJitter?: number;
   receiverJitter?: number;
   p2p: boolean;
-  reverbReverb: boolean;
+  renderReverb: boolean;
   reverbGain: number;
   renderISM: boolean;
   rawMode: boolean;

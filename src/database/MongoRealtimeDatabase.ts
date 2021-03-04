@@ -904,7 +904,7 @@ class MongoRealtimeDatabase
     // Update first ;)
     const payload = {
       ...update,
-      user: userId,
+      userId,
       _id: id,
     };
     this.emit(ServerDeviceEvents.DEVICE_CHANGED, payload);
@@ -916,10 +916,6 @@ class MongoRealtimeDatabase
         if (result.modifiedCount > 0) {
           return this.renewOnlineStatus(userId);
         }
-        /*
-                        return this.readDevice(id)
-                          .then((device) => console.log(device));
-                        */
         return null;
       });
   }
@@ -983,6 +979,7 @@ class MongoRealtimeDatabase
       absorption: 0.6,
       damping: 0.7,
       admins: [],
+      renderAmbient: false,
       ambientLevel: 1,
       ...init,
     };
