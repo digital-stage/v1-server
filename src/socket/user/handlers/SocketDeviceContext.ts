@@ -280,13 +280,11 @@ class SocketDeviceContext {
       ClientDeviceEvents.ADD_TRACK,
       (payload: AddTrackPayload, fn: (track: OvTrack) => void) => {
         trace(`${this.user.name}: ${ClientDeviceEvents.ADD_TRACK}`);
-        if (payload.initial.trackPresetId) {
-          // const trackPresetId = new ObjectId(payload.initial.trackPresetId);
-          const soundCardId = new ObjectId(payload.initial.soundCardId);
+        if (payload.soundCardId && payload.channel) {
+          const soundCardId = new ObjectId(payload.soundCardId);
           this.database
             .createOvTrack({
-              channel: payload.initial.channel || 0,
-              // trackPresetId,
+              channel: payload.channel,
               soundCardId,
               userId: this.user._id,
               deviceId: this.device._id,

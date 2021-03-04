@@ -86,15 +86,8 @@ export interface ChangeTrackPresetPayload {
 export type RemoveTrackPresetPayload = string;
 
 export interface AddTrackPayload {
-  id: string;
-  initial: {
-    soundCardId: string;
-    trackPresetId: string;
-    channel: number;
-    gain?: number;
-    volume?: number;
-    directivity: "omni" | "cardioid";
-  };
+  soundCardId: string;
+  channel: number;
 }
 
 export interface ChangeTrackPayload {
