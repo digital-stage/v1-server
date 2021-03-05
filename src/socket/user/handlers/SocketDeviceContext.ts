@@ -60,10 +60,7 @@ class SocketDeviceContext {
         const update = omit(payload, "_id");
         return this.database
           .updateDevice(this.user._id, deviceId, update)
-          .catch((e) => {
-            console.log("HERE IS ERROR:");
-            error(e);
-          });
+          .catch((e) => error(e));
       }
     );
 
@@ -147,7 +144,7 @@ class SocketDeviceContext {
         trace(`${this.user.name}: ${ClientDeviceEvents.SET_SOUND_CARD}`);
 
         this.database
-          .setSoundCard(this.user._id, payload.name, {
+          .setSoundCard(this.user._id, this.device._id, payload.name, {
             deviceId: this.device._id,
             label: "",
             numInputChannels: 0,
