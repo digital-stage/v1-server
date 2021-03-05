@@ -1580,33 +1580,35 @@ class MongoRealtimeDatabase
             name,
             userId,
           },
-        }
+        },
+        { upsert: true, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
           // Return updated document
           this.sendToUser(userId, ServerDeviceEvents.SOUND_CARD_CHANGED, {
             ...update,
-            name,
-            userId,
             _id: result.value._id,
           });
           return result.value;
         }
-        return this._db
-          .collection<SoundCard>(Collections.SOUND_CARDS)
-          .findOne({
-            userId,
-            name,
-          })
-          .then((soundCard) => {
-            this.sendToUser(
-              soundCard.userId,
-              ServerDeviceEvents.SOUND_CARD_ADDED,
-              soundCard
-            );
-            return soundCard;
-          });
+        if (result.ok) {
+          return this._db
+            .collection<SoundCard>(Collections.SOUND_CARDS)
+            .findOne({
+              userId,
+              name,
+            })
+            .then((soundCard) => {
+              this.sendToUser(
+                userId,
+                ServerDeviceEvents.SOUND_CARD_ADDED,
+                soundCard
+              );
+              return soundCard;
+            });
+        }
+        throw new Error("Could not create sound card");
       });
   }
 
