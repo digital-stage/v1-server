@@ -219,11 +219,14 @@ class MongoRealtimeDatabase
 
   renewOnlineStatus(userId: UserId): Promise<void> {
     // Has the user online devices?
+    console.log(`HEY1!${userId}`);
     return this._db
       .collection<User>(Collections.USERS)
       .findOne({ _id: userId }, { projection: { stageMemberId: 1 } })
       .then((user) => {
+        console.log("HEY2!");
         if (user.stageMemberId) {
+          console.log("HEY2.1!");
           // Use is inside stage
           return this._db
             .collection<Device>(Collections.DEVICES)
@@ -234,11 +237,13 @@ class MongoRealtimeDatabase
             .then((numDevicesOnline) => {
               if (numDevicesOnline > 0) {
                 // User is online
+                console.log("HEY3.1!");
                 return this.updateStageMember(user.stageMemberId, {
                   online: true,
                 });
               }
               // User has no more online devices
+              console.log("HEY3.2!");
               return this.updateStageMember(user.stageMemberId, {
                 online: false,
               });
@@ -902,21 +907,17 @@ class MongoRealtimeDatabase
     update: Partial<Omit<Device, "_id">>
   ): Promise<void> {
     // Update first ;)
-    console.log("HEY1!");
     const payload = {
       ...update,
       userId,
       _id: id,
     };
-    console.log("HEY2!");
     this.emit(ServerDeviceEvents.DEVICE_CHANGED, payload);
     this.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, payload);
-    console.log("HEY3!");
     return this._db
       .collection<Device>(Collections.DEVICES)
       .updateOne({ _id: id }, { $set: update })
       .then((result) => {
-        console.log("HEY4!");
         if (result.modifiedCount > 0) {
           return this.renewOnlineStatus(userId);
         }
