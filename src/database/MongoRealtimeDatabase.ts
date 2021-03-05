@@ -1564,24 +1564,25 @@ class MongoRealtimeDatabase
 
   setSoundCard(
     userId: UserId,
+    deviceId: DeviceId,
     name: string,
-    update: Omit<SoundCard, "_id" | "name" | "userId">
+    update: Partial<Omit<SoundCard, "_id" | "name" | "userId">>
   ): Promise<SoundCard> {
     return this._db
       .collection<SoundCard>(Collections.SOUND_CARDS)
       .findOneAndUpdate(
         {
-          userId,
+          deviceId,
           name,
         },
         {
           $set: {
             ...update,
             name,
-            userId,
+            deviceId,
           },
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -1595,10 +1596,24 @@ class MongoRealtimeDatabase
         if (result.ok) {
           return this._db
             .collection<SoundCard>(Collections.SOUND_CARDS)
-            .findOne({
+            .insertOne({
               userId,
+              deviceId,
+              sampleRate: 48000,
+              sampleRates: [48000],
               name,
+              label: name,
+              isDefault: false,
+              driver: "JACK",
+              numInputChannels: 0,
+              numOutputChannels: 0,
+              inputChannels: [],
+              outputChannels: [],
+              periodSize: 96,
+              numPeriods: 2,
+              ...update,
             })
+            .then((insertResult) => insertResult.ops[0] as SoundCard)
             .then((soundCard) => {
               this.sendToUser(
                 userId,
