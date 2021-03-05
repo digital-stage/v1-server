@@ -1766,7 +1766,7 @@ class MongoRealtimeDatabase
           _id: id,
           userId,
         },
-        { projection: { userId: 1 } }
+        { projection: { userId: 1, name: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -1779,15 +1779,19 @@ class MongoRealtimeDatabase
           return Promise.all([
             this._db
               .collection<Device>(Collections.DEVICES)
-              .find({ soundCardId: id })
+              .find({ userId, soundCardNames: result.value.name })
               .toArray()
               .then((devices) =>
                 devices.map((device) => {
-                  const soundCardIds = device.soundCardIds.filter(
-                    (i) => !i.equals(id)
+                  const soundCardNames = device.soundCardNames.filter(
+                    (i) => i !== result.value.name
                   );
                   return this.updateDevice(device.userId, device._id, {
-                    soundCardIds,
+                    soundCardNames,
+                    soundCardName:
+                      device.soundCardName === result.value.name
+                        ? undefined
+                        : device.soundCardName,
                   });
                 })
               ),

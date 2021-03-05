@@ -1,5 +1,5 @@
 import { WebRTCDevice } from "./WebRTCDevice";
-import { DeviceId, SoundCardId, UserId, WebRTCDeviceId } from "./IdTypes";
+import { DeviceId, UserId, WebRTCDeviceId } from "./IdTypes";
 
 export interface Device {
   _id: DeviceId;
@@ -45,6 +45,6 @@ export interface Device {
   server: string;
 
   // OV SoundCards
-  soundCardIds: SoundCardId[];
-  soundCardId?: SoundCardId;
+  soundCardName?: string;
+  soundCardNames: string[];
 }
