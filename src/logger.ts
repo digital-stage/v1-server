@@ -68,7 +68,12 @@ const logger = (
   let error;
   if (USE_SENTRY) {
     warn = (message) => console.warn(`${namespace}:warn ${message}`);
-    error = (message) => console.error(`${namespace}:error ${message}`);
+    error = (message: string | Error) => {
+      if (message) {
+        console.error(`${namespace}:error ${message}`);
+        console.trace(message);
+      }
+    };
   } else {
     warn = d.extend(`${namespace}warn`);
     warn.log = console.warn.bind(console);
