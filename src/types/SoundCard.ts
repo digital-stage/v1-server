@@ -5,6 +5,7 @@ export interface SoundCard {
   _id: SoundCardId;
   deviceId: DeviceId;
   name: string; // unique together with userId
+  label: string;
 
   isDefault?: boolean;
 

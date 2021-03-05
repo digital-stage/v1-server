@@ -163,7 +163,7 @@ class SocketDeviceContext {
             sampleRates: [],
             inputChannels: [],
             outputChannels: [],
-            ...payload.initial,
+            ...payload,
           })
           .then((soundCard) => {
             if (fn) return fn(soundCard);

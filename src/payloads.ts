@@ -38,16 +38,14 @@ export type RemoveVideoProducerPayload = string;
 
 export interface AddSoundCardPayload {
   name: string;
-  initial: {
-    label?: string;
-    driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
-    numInputChannels?: number;
-    numOutputChannels?: number;
-    trackPresetId?: string;
-    sampleRate?: number;
-    periodSize?: number;
-    numPeriods?: number; // default to 2
-  };
+  label?: string;
+  driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
+  numInputChannels?: number;
+  numOutputChannels?: number;
+  trackPresetId?: string;
+  sampleRate?: number;
+  periodSize?: number;
+  numPeriods?: number; // default to 2
 }
 
 export interface ChangeSoundCardPayload {
