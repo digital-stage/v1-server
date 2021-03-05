@@ -219,14 +219,11 @@ class MongoRealtimeDatabase
 
   renewOnlineStatus(userId: UserId): Promise<void> {
     // Has the user online devices?
-    console.log(`HEY1!${userId}`);
     return this._db
       .collection<User>(Collections.USERS)
       .findOne({ _id: userId }, { projection: { stageMemberId: 1 } })
       .then((user) => {
-        console.log("HEY2!");
         if (user.stageMemberId) {
-          console.log("HEY2.1!");
           // Use is inside stage
           return this._db
             .collection<Device>(Collections.DEVICES)
@@ -237,13 +234,11 @@ class MongoRealtimeDatabase
             .then((numDevicesOnline) => {
               if (numDevicesOnline > 0) {
                 // User is online
-                console.log("HEY3.1!");
                 return this.updateStageMember(user.stageMemberId, {
                   online: true,
                 });
               }
               // User has no more online devices
-              console.log("HEY3.2!");
               return this.updateStageMember(user.stageMemberId, {
                 online: false,
               });
