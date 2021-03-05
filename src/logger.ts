@@ -72,6 +72,7 @@ const logger = (
       if (message) {
         console.error(`${namespace}:error ${message}`);
         console.trace(message);
+        Sentry.captureException(message);
       }
     };
   } else {

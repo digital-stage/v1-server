@@ -1162,8 +1162,7 @@ class MongoRealtimeDatabase
             producers.map((producer) =>
               this.deleteRemoteVideoProducer(producer._id)
             )
-          )
-          .catch((e) => error(e));
+          );
         await this._db
           .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_OVS)
           .find({
