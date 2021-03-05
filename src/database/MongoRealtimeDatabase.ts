@@ -1574,7 +1574,13 @@ class MongoRealtimeDatabase
           userId,
           name,
         },
-        { $set: update }
+        {
+          $set: {
+            ...update,
+            name,
+            userId,
+          },
+        }
       )
       .then((result) => {
         if (result.value) {
