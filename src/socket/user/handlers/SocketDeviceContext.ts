@@ -60,7 +60,10 @@ class SocketDeviceContext {
         const update = omit(payload, "_id");
         return this.database
           .updateDevice(this.user._id, deviceId, update)
-          .catch((e) => error(e));
+          .catch((e) => {
+            console.log("HERE IS ERROR:");
+            error(e);
+          });
       }
     );
 
