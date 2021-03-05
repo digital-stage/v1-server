@@ -902,17 +902,21 @@ class MongoRealtimeDatabase
     update: Partial<Omit<Device, "_id">>
   ): Promise<void> {
     // Update first ;)
+    console.log("HEY1!");
     const payload = {
       ...update,
       userId,
       _id: id,
     };
+    console.log("HEY2!");
     this.emit(ServerDeviceEvents.DEVICE_CHANGED, payload);
     this.sendToUser(userId, ServerDeviceEvents.DEVICE_CHANGED, payload);
+    console.log("HEY3!");
     return this._db
       .collection<Device>(Collections.DEVICES)
       .updateOne({ _id: id }, { $set: update })
       .then((result) => {
+        console.log("HEY4!");
         if (result.modifiedCount > 0) {
           return this.renewOnlineStatus(userId);
         }

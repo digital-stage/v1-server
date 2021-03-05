@@ -58,12 +58,8 @@ class SocketDeviceContext {
         if (!payload._id) return Promise.resolve();
         const deviceId = new ObjectId(payload._id);
         const update = omit(payload, "_id");
-        console.log("HEY!");
         return this.database
           .updateDevice(this.user._id, deviceId, update)
-          .then(() => {
-            console.log("HEY 2!");
-          })
           .catch((e) => error(e));
       }
     );
