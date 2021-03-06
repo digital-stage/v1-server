@@ -1604,7 +1604,7 @@ class MongoRealtimeDatabase
               name,
               label: name,
               isDefault: false,
-              driver: "JACK",
+              driver: "jack",
               numInputChannels: 0,
               numOutputChannels: 0,
               inputChannels: [],

@@ -9,7 +9,7 @@ export interface SoundCard {
 
   isDefault?: boolean;
 
-  driver: "JACK" | "ALSA" | "ASIO" | "WEBRTC";
+  driver: "jack" | "alsa" | "asio" | "webrtc";
 
   sampleRate: number;
   sampleRates: number[];

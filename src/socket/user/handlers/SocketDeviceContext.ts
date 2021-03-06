@@ -152,7 +152,7 @@ class SocketDeviceContext {
             sampleRate: 48000,
             periodSize: 96,
             numPeriods: 2,
-            driver: "JACK",
+            driver: "jack",
             isDefault: false,
             sampleRates: [],
             inputChannels: [],
