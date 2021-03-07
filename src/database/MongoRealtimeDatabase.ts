@@ -1022,9 +1022,9 @@ class MongoRealtimeDatabase
       });
 
     const wasUserAlreadyInStage = stageMember !== null;
-    if (!stageMember) {
-      // Create stage member
-      const ovStageDeviceId = await this._db
+    let ovStageDeviceId;
+    if (!stageMember || !stageMember.ovStageDeviceId) {
+      ovStageDeviceId = await this._db
         .collection<StageMember>(Collections.STAGE_MEMBERS)
         .find({ stageId })
         .toArray()
@@ -1041,9 +1041,13 @@ class MongoRealtimeDatabase
           }
           return 0;
         });
-      if (ovStageDeviceId === -1)
-        throw new Error("No more members possible, max of 30 reached");
-
+      // if (ovStageDeviceId === -1)
+      // throw new Error("No more members possible, max of 30 reached");
+    } else {
+      ovStageDeviceId = stageMember.ovStageDeviceId;
+    }
+    if (!stageMember) {
+      // Create stage member
       stageMember = await this.createStageMember({
         userId: user._id,
         stageId: stage._id,
@@ -1079,6 +1083,7 @@ class MongoRealtimeDatabase
       await this.updateStageMember(stageMember._id, {
         groupId,
         online: true,
+        ovStageDeviceId,
       });
       // Always mute the custom stage member
       await this.setCustomStageMember(userId, stageMember._id, {
