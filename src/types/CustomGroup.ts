@@ -9,6 +9,9 @@ export interface CustomGroup extends ThreeDimensionAudioProperties {
   userId: UserId; // <--- RELATION
   groupId: GroupId; // <--- RELATION
 
+  customizeVolume: boolean;
+  customizePosition: boolean;
+
   // Optimizations for performance
   stageId: StageId;
 }

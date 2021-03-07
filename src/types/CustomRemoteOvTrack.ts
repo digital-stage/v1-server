@@ -16,6 +16,9 @@ export interface CustomRemoteOvTrack extends ThreeDimensionAudioProperties {
 
   remoteOvTrackId: RemoteOvTrackId; // <-- RELATION
 
+  customizeVolume: boolean;
+  customizePosition: boolean;
+
   directivity: "omni" | "cardioid"; // Overrides track directivity (for user)
 
   // Optimizations for performance

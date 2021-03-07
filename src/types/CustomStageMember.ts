@@ -6,6 +6,9 @@ export interface CustomStageMember extends ThreeDimensionAudioProperties {
   userId: UserId; // <--- RELATION
   stageMemberId: StageMemberId; // <--- RELATION
 
+  customizeVolume: boolean;
+  customizePosition: boolean;
+
   // Optimizations for performance
   stageId: StageId;
 }

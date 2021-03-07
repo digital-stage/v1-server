@@ -12,6 +12,9 @@ export interface CustomRemoteAudioProducer
   userId: UserId; // <-- RELATION
   remoteAudioProducerId: RemoteAudioProducerId; // <-- RELATION
 
+  customizeVolume: boolean;
+  customizePosition: boolean;
+
   // Optimizations for performance
   stageId: StageId;
 }
