@@ -1,7 +1,7 @@
 import ThreeDimensionProperties from "./types/ThreeDimensionProperties";
 import { ThreeDimensionAudioProperties } from "./types";
 
-export interface StageManaged {
+export interface StageManagedPayload {
   id: string;
   ovServer: {
     ipv4: string;
@@ -11,7 +11,19 @@ export interface StageManaged {
   };
 }
 
-export type StageUnManaged = string;
+export interface ReportLatencyPayload {
+  stageId: string;
+  latency: {
+    [srcOvStageDeviceId: number]: {
+      [desOvStageDeviceId: number]: {
+        latency: number;
+        jitter: number;
+      };
+    };
+  };
+}
+
+export type StageUnManagedPayload = string;
 
 // DEVICE
 export interface AddAudioProducerPayload {

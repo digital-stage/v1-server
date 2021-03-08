@@ -25,13 +25,13 @@ export interface Stage {
     port: number;
     pin: number;
     serverJitter?: number;
+  };
 
-    latency?: {
-      [srcOvStageDeviceId: number]: {
-        [desOvStageDeviceId: number]: {
-          latency: number;
-          jitter: number;
-        };
+  ovLatency?: {
+    [srcOvStageDeviceId: number]: {
+      [desOvStageDeviceId: number]: {
+        latency: number;
+        jitter: number;
       };
     };
   };

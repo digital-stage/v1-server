@@ -15,7 +15,11 @@ import {
   ServerRouterEvents,
   ServerStageEvents,
 } from "../../events";
-import { StageManaged, StageUnManaged } from "../../payloads";
+import {
+  ReportLatencyPayload,
+  StageManagedPayload,
+  StageUnManagedPayload,
+} from "../../payloads";
 import logger from "../../logger";
 
 const { info, error, trace, warn } = logger("socket:router");
@@ -86,28 +90,50 @@ class SocketRouterHandler {
       this._routers.push({ socket, router });
 
       // Attach handlers
-      socket.on(ClientRouterEvents.STAGE_MANAGED, (payload: StageManaged) => {
-        const id = new ObjectId(payload.id);
-        this._database.updateStage(id, {
-          ovServer: {
-            ...payload.ovServer,
-            router: router._id,
-          },
-        });
-        this._database
-          .db()
-          .collection<Router>(Collections.ROUTERS)
-          .findOneAndUpdate(
-            { _id: router._id },
-            {
-              $inc: { availableOVSlots: -1 },
-            }
-          );
-      });
+      socket.on(
+        ClientRouterEvents.STAGE_MANAGED,
+        (payload: StageManagedPayload) => {
+          const id = new ObjectId(payload.id);
+          this._database.updateStage(id, {
+            ovServer: {
+              ...payload.ovServer,
+              router: router._id,
+            },
+          });
+          this._database
+            .db()
+            .collection<Router>(Collections.ROUTERS)
+            .findOneAndUpdate(
+              { _id: router._id },
+              {
+                $inc: { availableOVSlots: -1 },
+              }
+            );
+        }
+      );
+
+      socket.on(
+        ClientRouterEvents.REPORT_LATENCY,
+        (payload: ReportLatencyPayload) => {
+          const stageId = new ObjectId(payload.stageId);
+          this._database.updateStage(stageId, {
+            ovLatency: payload.latency,
+          });
+          this._database
+            .db()
+            .collection<Router>(Collections.ROUTERS)
+            .findOneAndUpdate(
+              { _id: router._id },
+              {
+                $inc: { availableOVSlots: -1 },
+              }
+            );
+        }
+      );
 
       socket.on(
         ClientRouterEvents.STAGE_UN_MANAGED,
-        (payload: StageUnManaged) => {
+        (payload: StageUnManagedPayload) => {
           const id = new ObjectId(payload);
           this._database
             .db()
