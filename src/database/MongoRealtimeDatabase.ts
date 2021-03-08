@@ -2,10 +2,9 @@ import { Db, MongoClient, ObjectId } from "mongodb";
 import { ITeckosProvider, ITeckosSocket } from "teckos";
 import * as EventEmitter from "events";
 import {
-  CustomGroup,
-  CustomStageMember,
-  CustomRemoteAudioProducer,
-  CustomRemoteOvTrack,
+  CustomStageMemberVolume,
+  CustomRemoteAudioProducerVolume,
+  CustomRemoteOvTrackPosition,
   Device,
   GlobalAudioProducer,
   GlobalVideoProducer,
@@ -20,8 +19,10 @@ import {
   StagePackage,
   OvTrack,
   User,
-  ThreeDimensionAudioProperties,
   Router,
+  CustomStageMemberPosition,
+  CustomGroupVolume,
+  CustomGroupPosition,
 } from "../types";
 import {
   ServerDeviceEvents,
@@ -35,15 +36,14 @@ import logger from "../logger";
 import generateColor from "../util/generateColor";
 import {
   CustomGroupId,
-  CustomRemoteAudioProducerId,
   CustomRemoteOvTrackId,
-  CustomStageMemberId,
   DeviceId,
   GlobalAudioProducerId,
   GlobalVideoProducerId,
   GroupId,
   OvTrackId,
   RemoteAudioProducerId,
+  RemoteOvTrackId,
   RemoteVideoProducerId,
   RouterId,
   SoundCardId,
@@ -51,31 +51,38 @@ import {
   StageMemberId,
   UserId,
 } from "../types/IdTypes";
+import ThreeDimensionProperties from "../types/ThreeDimensionProperties";
+import { CustomRemoteOvTrackVolume } from "../types/CustomRemoteOvTrackVolume";
+import { CustomRemoteAudioProducerPosition } from "../types/CustomRemoteAudioProducerPosition";
 
 const { info, error, trace, warn } = logger("database");
 
 export enum Collections {
-  ROUTERS = "routers",
+  ROUTERS = "r",
 
-  USERS = "users",
+  USERS = "u",
 
-  DEVICES = "devices",
-  SOUND_CARDS = "soundcards",
-  TRACK_PRESETS = "trackpresets",
-  TRACKS = "tracks",
-  AUDIO_PRODUCERS = "audioproducers",
-  VIDEO_PRODUCERS = "videoproducers",
+  DEVICES = "d",
+  SOUND_CARDS = "sc",
+  TRACK_PRESETS = "tp",
+  TRACKS = "t",
+  AUDIO_PRODUCERS = "ap",
+  VIDEO_PRODUCERS = "vp",
 
-  STAGES = "stages",
-  GROUPS = "groups",
-  CUSTOM_GROUPS = "customgroup",
-  STAGE_MEMBERS = "stagemembers",
-  CUSTOM_STAGE_MEMBERS = "customstagemembers",
-  STAGE_MEMBER_AUDIOS = "stagememberaudios",
-  STAGE_MEMBER_VIDEOS = "stagemembervideos",
-  STAGE_MEMBER_OVS = "stagememberovs",
-  CUSTOM_STAGE_MEMBER_AUDIOS = "customstagememberaudios",
-  CUSTOM_STAGE_MEMBER_OVS = "customstagememberovs",
+  STAGES = "s",
+  GROUPS = "g",
+  CUSTOM_GROUP_POSITIONS = "c_g_p",
+  CUSTOM_GROUP_VOLUMES = "c_g_v",
+  STAGE_MEMBERS = "sm",
+  CUSTOM_STAGE_MEMBER_POSITIONS = "c_sm_p",
+  CUSTOM_STAGE_MEMBER_VOLUMES = "c_sm_v",
+  REMOTE_AUDIO_PRODUCERS = "r_ap",
+  REMOTE_VIDEO_PRODUCERS = "r_vp",
+  REMOTE_OV_TRACKS = "r_ov",
+  CUSTOM_REMOTE_AUDIO_POSITIONS = "c_r_ap_p",
+  CUSTOM_REMOTE_AUDIO_VOLUMES = "c_r_ap_v",
+  CUSTOM_REMOTE_OV_POSITIONS = "c_r_ov_p",
+  CUSTOM_REMOTE_OV_VOLUMES = "c_r_ov_v",
 }
 
 class MongoRealtimeDatabase
@@ -102,6 +109,214 @@ class MongoRealtimeDatabase
       sslValidate: !!certificate,
       sslCA: certificate,
     });
+  }
+
+  async connect(database: string): Promise<void> {
+    if (this._mongoClient.isConnected()) {
+      warn("Reconnecting");
+      await this.disconnect();
+    }
+    this._mongoClient = await this._mongoClient.connect();
+    this._db = this._mongoClient.db(database);
+    if (this._mongoClient.isConnected()) {
+      info(`Connected to ${database}`);
+      await this.prepareDatabase();
+    }
+    // TODO: Clean up old devices etc.
+  }
+
+  private prepareDatabase() {
+    return Promise.all([
+      this._db
+        .collection<Router>(Collections.ROUTERS)
+        .createIndex({ server: 1 }),
+      this._db
+        .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
+        .createIndex({ globalProducerId: 1 }),
+      this._db
+        .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
+        .createIndex({ globalProducerId: 1 }),
+      this._db
+        .collection<CustomRemoteOvTrackVolume>(
+          Collections.CUSTOM_REMOTE_OV_VOLUMES
+        )
+        .createIndex({ ovTrackId: 1 }),
+      this._db
+        .collection<CustomRemoteOvTrackPosition>(
+          Collections.CUSTOM_REMOTE_OV_POSITIONS
+        )
+        .createIndex({ ovTrackId: 1 }),
+      this._db.collection<Stage>(Collections.STAGES).createIndex({ admins: 1 }),
+      this._db
+        .collection<StageMember>(Collections.STAGE_MEMBERS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<SoundCard>(Collections.SOUND_CARDS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<Device>(Collections.DEVICES)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<Device>(Collections.DEVICES)
+        .createIndex({ server: 1 }),
+      this._db
+        .collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS)
+        .createIndex({ deviceId: 1 }),
+      this._db
+        .collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS)
+        .createIndex({ deviceId: 1 }),
+      this._db
+        .collection<StageMember>(Collections.STAGE_MEMBERS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
+        .createIndex({ globalProducerId: 1 }),
+      this._db
+        .collection<GlobalVideoProducer>(Collections.VIDEO_PRODUCERS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<GlobalAudioProducer>(Collections.AUDIO_PRODUCERS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<OvTrack>(Collections.TRACKS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<Group>(Collections.GROUPS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<Stage>(Collections.STAGES)
+        .createIndex({ "ovServer.router": 1 }),
+      this._db
+        .collection<Stage>(Collections.STAGES)
+        .createIndex({ ovServer: 1 }),
+      this._db
+        .collection<StageMember>(Collections.STAGE_MEMBERS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
+        .createIndex({ userId: 1, groupId: 1 }),
+      this._db
+        .collection<CustomGroupPosition>(Collections.CUSTOM_GROUP_POSITIONS)
+        .createIndex({ userId: 1, groupId: 1 }),
+      this._db
+        .collection<CustomStageMemberVolume>(
+          Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+        )
+        .createIndex({ userId: 1, stageMemberId: 1 }),
+      this._db
+        .collection<CustomGroupPosition>(
+          Collections.CUSTOM_STAGE_MEMBER_POSITIONS
+        )
+        .createIndex({ userId: 1, stageMemberId: 1 }),
+      this._db
+        .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<CustomRemoteAudioProducerVolume>(
+          Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
+        )
+        .createIndex({ userId: 1, remoteAudioProducerId: 1 }),
+      this._db
+        .collection<CustomRemoteAudioProducerPosition>(
+          Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
+        )
+        .createIndex({ userId: 1, remoteAudioProducerId: 1 }),
+      this._db
+        .collection<RemoteOvTrack>(Collections.TRACKS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<CustomRemoteOvTrackVolume>(
+          Collections.CUSTOM_REMOTE_OV_VOLUMES
+        )
+        .createIndex({ userId: 1, remoteOvTrackId: 1 }),
+      this._db
+        .collection<CustomRemoteOvTrackPosition>(
+          Collections.CUSTOM_REMOTE_OV_POSITIONS
+        )
+        .createIndex({ userId: 1, remoteOvTrackId: 1 }),
+      this._db
+        .collection<Group>(Collections.GROUPS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<StageMember>(Collections.STAGE_MEMBERS)
+        .createIndex({ groupId: 1 }),
+      this._db
+        .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
+        .createIndex({ groupId: 1 }),
+      this._db
+        .collection<CustomGroupPosition>(Collections.CUSTOM_GROUP_POSITIONS)
+        .createIndex({ groupId: 1 }),
+      this._db
+        .collection<Device>(Collections.DEVICES)
+        .createIndex({ userId: 1, soundCardNames: 1 }),
+      this._db
+        .collection<OvTrack>(Collections.TRACKS)
+        .createIndex({ soundCardId: 1 }),
+      this._db
+        .collection<CustomStageMemberVolume>(
+          Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+        )
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<CustomStageMemberPosition>(
+          Collections.CUSTOM_STAGE_MEMBER_POSITIONS
+        )
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<CustomRemoteOvTrackVolume>(
+          Collections.CUSTOM_REMOTE_OV_VOLUMES
+        )
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<CustomRemoteOvTrackPosition>(
+          Collections.CUSTOM_REMOTE_OV_POSITIONS
+        )
+        .createIndex({ stageMemberId: 1 }),
+      this._db
+        .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
+        .createIndex({ trackId: 1 }),
+      this._db
+        .collection<StageMember>(Collections.STAGE_MEMBERS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<Group>(Collections.GROUPS)
+        .createIndex({ stageId: 1 }),
+      this._db
+        .collection<SoundCard>(Collections.SOUND_CARDS)
+        .createIndex({ userId: 1 }),
+      this._db
+        .collection<StageMember>(Collections.STAGE_MEMBERS)
+        .createIndex({ stageId: 1 }),
+      this._db.collection<User>(Collections.USERS).createIndex({ stageId: 1 }),
+      this._db
+        .collection<Group>(Collections.GROUPS)
+        .createIndex({ stageId: 1 }),
+    ]);
+  }
+
+  disconnect() {
+    return this._mongoClient.close();
   }
 
   cleanUp(serverAddress: string): Promise<any> {
@@ -350,7 +565,7 @@ class MongoRealtimeDatabase
           );
           // Also delete all published producers
           return this._db
-            .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+            .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
             .find(
               {
                 globalProducerId: id,
@@ -465,7 +680,7 @@ class MongoRealtimeDatabase
           );
           // Also delete all published producers
           return this._db
-            .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+            .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
             .find(
               {
                 globalProducerId: id,
@@ -489,7 +704,7 @@ class MongoRealtimeDatabase
     initial: Omit<RemoteOvTrack, "_id">
   ): Promise<RemoteOvTrack> {
     return this._db
-      .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
+      .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
       .insertOne(initial)
       .then((result) => result.ops[0])
       .then((track) => {
@@ -504,7 +719,7 @@ class MongoRealtimeDatabase
 
   readRemoteOvTrack(id: CustomRemoteOvTrackId): Promise<RemoteOvTrack> {
     return this._db
-      .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
+      .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
       .findOne({
         _id: id,
       });
@@ -515,7 +730,7 @@ class MongoRealtimeDatabase
     update: Partial<Omit<RemoteOvTrack, "_id">>
   ): Promise<void> {
     return this._db
-      .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
+      .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
       .findOneAndUpdate(
         {
           _id: id,
@@ -546,7 +761,7 @@ class MongoRealtimeDatabase
 
   deleteRemoteOvTrack(id: OvTrackId): Promise<any> {
     return this._db
-      .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
+      .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
       .findOneAndDelete({
         _id: id,
       })
@@ -559,11 +774,26 @@ class MongoRealtimeDatabase
           return Promise.all([
             // Delete all stage member tracks
             this._db
-              .collection<RemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+              .collection<CustomRemoteOvTrackVolume>(
+                Collections.CUSTOM_REMOTE_OV_VOLUMES
+              )
               .find({ ovTrackId: id }, { projection: { _id: 1 } })
               .toArray()
               .then((tracks) =>
-                tracks.map((track) => this.deleteCustomRemoteOvTrack(track._id))
+                tracks.map((track) =>
+                  this.deleteCustomRemoteOvTrackVolume(track._id)
+                )
+              ),
+            this._db
+              .collection<CustomRemoteOvTrackPosition>(
+                Collections.CUSTOM_REMOTE_OV_POSITIONS
+              )
+              .find({ ovTrackId: id }, { projection: { _id: 1 } })
+              .toArray()
+              .then((tracks) =>
+                tracks.map((track) =>
+                  this.deleteCustomRemoteOvTrackPosition(track._id)
+                )
               ),
             this.sendToJoinedStageMembers(
               result.value.stageId,
@@ -582,7 +812,7 @@ class MongoRealtimeDatabase
     initial: Omit<RemoteAudioProducer, "_id">
   ): Promise<RemoteAudioProducer> {
     return this._db
-      .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+      .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
       .insertOne(initial)
       .then((result) => result.ops[0])
       .then((producer) => {
@@ -599,7 +829,7 @@ class MongoRealtimeDatabase
     id: RemoteAudioProducerId
   ): Promise<RemoteAudioProducer> {
     return this._db
-      .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+      .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
       .findOne({
         _id: id,
       });
@@ -610,7 +840,7 @@ class MongoRealtimeDatabase
     update: Partial<Omit<RemoteAudioProducer, "_id">>
   ): Promise<void> {
     return this._db
-      .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+      .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
       .findOneAndUpdate(
         {
           _id: id,
@@ -641,7 +871,7 @@ class MongoRealtimeDatabase
 
   deleteRemoteAudioProducer(id: RemoteAudioProducerId): Promise<void> {
     return this._db
-      .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+      .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
       .findOneAndDelete(
         {
           _id: id,
@@ -667,7 +897,7 @@ class MongoRealtimeDatabase
     initial: Omit<RemoteVideoProducer, "_id">
   ): Promise<RemoteVideoProducer> {
     return this._db
-      .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+      .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
       .insertOne(initial)
       .then((result) => result.ops[0])
       .then((producer) => {
@@ -684,7 +914,7 @@ class MongoRealtimeDatabase
     id: RemoteVideoProducerId
   ): Promise<RemoteVideoProducer> {
     return this._db
-      .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+      .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
       .findOne({
         _id: id,
       });
@@ -695,7 +925,7 @@ class MongoRealtimeDatabase
     update: Partial<Omit<RemoteVideoProducer, "_id">>
   ): Promise<void> {
     return this._db
-      .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+      .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
       .findOneAndUpdate(
         {
           _id: id,
@@ -726,7 +956,7 @@ class MongoRealtimeDatabase
 
   deleteRemoteVideoProducer(id: RemoteVideoProducerId): Promise<void> {
     return this._db
-      .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+      .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
       .findOneAndDelete(
         {
           _id: id,
@@ -746,23 +976,6 @@ class MongoRealtimeDatabase
           `Could not find and delete stage member video producer ${id}`
         );
       });
-  }
-
-  async connect(database: string): Promise<void> {
-    if (this._mongoClient.isConnected()) {
-      warn("Reconnecting");
-      await this.disconnect();
-    }
-    this._mongoClient = await this._mongoClient.connect();
-    this._db = this._mongoClient.db(database);
-    if (this._mongoClient.isConnected()) {
-      info(`Connected to ${database}`);
-    }
-    // TODO: Clean up old devices etc.
-  }
-
-  disconnect() {
-    return this._mongoClient.close();
   }
 
   createUser(
@@ -1061,15 +1274,8 @@ class MongoRealtimeDatabase
         ovStageDeviceId,
       });
       // Also create a custom stage member for the same user and mute it per default
-      await this.setCustomStageMember(userId, stageMember._id, {
+      await this.setCustomStageMemberVolume(userId, stageMember._id, {
         muted: true,
-        volume: 0,
-        x: 0,
-        y: -1,
-        z: 0,
-        rX: 0,
-        rY: 0,
-        rZ: -180,
       });
     } else if (!stageMember.groupId.equals(groupId) || !stageMember.online) {
       // Update stage member
@@ -1080,15 +1286,8 @@ class MongoRealtimeDatabase
         online: true,
       });
       // Always mute the custom stage member
-      await this.setCustomStageMember(userId, stageMember._id, {
+      await this.setCustomStageMemberVolume(userId, stageMember._id, {
         muted: true,
-        volume: 0,
-        x: 0,
-        y: -1,
-        z: 0,
-        rX: 0,
-        rY: 0,
-        rZ: -180,
       });
     }
 
@@ -1136,7 +1335,7 @@ class MongoRealtimeDatabase
         // Set old stage member tracks offline (async!)
         // Remove stage member related audio and video
         await this._db
-          .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+          .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
           .find({
             stageMemberId: previousStageMemberId,
           })
@@ -1147,7 +1346,7 @@ class MongoRealtimeDatabase
             )
           );
         await this._db
-          .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+          .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
           .find({
             stageMemberId: previousStageMemberId,
           })
@@ -1158,7 +1357,7 @@ class MongoRealtimeDatabase
             )
           );
         await this._db
-          .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_OVS)
+          .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
           .find({
             stageMemberId: previousStageMemberId,
           })
@@ -1266,7 +1465,7 @@ class MongoRealtimeDatabase
       // Remove old stage member related video and audio
       await Promise.all([
         this._db
-          .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+          .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
           .find({
             stageMemberId: previousStageMemberId,
           })
@@ -1277,7 +1476,7 @@ class MongoRealtimeDatabase
             )
           ),
         this._db
-          .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+          .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
           .find({
             stageMemberId: previousStageMemberId,
           })
@@ -1289,7 +1488,7 @@ class MongoRealtimeDatabase
           ),
         // Set tracks offline
         this._db
-          .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_OVS)
+          .collection<RemoteAudioProducer>(Collections.REMOTE_OV_TRACKS)
           .find({
             stageMemberId: previousStageMemberId,
           })
@@ -1423,16 +1622,36 @@ class MongoRealtimeDatabase
       .collection<User>(Collections.USERS)
       .find({ _id: { $in: stageMemberUserIds } })
       .toArray();
-    const customGroups = await this._db
-      .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
+    const customGroupVolumes = await this._db
+      .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
+      .find({
+        userId,
+        groupId: { $in: groups.map((group) => group._id) },
+      })
+      .toArray();
+    const customGroupPositions = await this._db
+      .collection<CustomGroupPosition>(Collections.CUSTOM_GROUP_POSITIONS)
       .find({
         userId,
         groupId: { $in: groups.map((group) => group._id) },
       })
       .toArray();
 
-    const customStageMembers: CustomStageMember[] = await this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
+    const customStageMemberVolumes: CustomStageMemberVolume[] = await this._db
+      .collection<CustomStageMemberVolume>(
+        Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+      )
+      .find({
+        userId,
+        stageMemberId: {
+          $in: stageMembers.map((stageMember) => stageMember._id),
+        },
+      })
+      .toArray();
+    const customStageMemberPositions: CustomStageMemberPosition[] = await this._db
+      .collection<CustomStageMemberPosition>(
+        Collections.CUSTOM_STAGE_MEMBER_POSITIONS
+      )
       .find({
         userId,
         stageMemberId: {
@@ -1441,24 +1660,35 @@ class MongoRealtimeDatabase
       })
       .toArray();
     const remoteVideoProducers: RemoteVideoProducer[] = await this._db
-      .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+      .collection<RemoteVideoProducer>(Collections.REMOTE_VIDEO_PRODUCERS)
       .find({
         stageId,
       })
       .toArray();
     const remoteAudioProducers: RemoteAudioProducer[] = await this._db
-      .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+      .collection<RemoteAudioProducer>(Collections.REMOTE_AUDIO_PRODUCERS)
       .find({
         stageId,
       })
       .toArray();
-    const customRemoteAudioProducers: CustomRemoteAudioProducer[] = await this._db
-      .collection<CustomRemoteAudioProducer>(
-        Collections.CUSTOM_STAGE_MEMBER_AUDIOS
+    const customRemoteAudioProducerVolumes: CustomRemoteAudioProducerVolume[] = await this._db
+      .collection<CustomRemoteAudioProducerVolume>(
+        Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
       )
       .find({
         userId,
-        RemoteAudioProducerId: {
+        remoteAudioProducerId: {
+          $in: remoteAudioProducers.map((audioProducer) => audioProducer._id),
+        },
+      })
+      .toArray();
+    const customRemoteAudioProducerPositions: CustomRemoteAudioProducerPosition[] = await this._db
+      .collection<CustomRemoteAudioProducerPosition>(
+        Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
+      )
+      .find({
+        userId,
+        remoteAudioProducerId: {
           $in: remoteAudioProducers.map((audioProducer) => audioProducer._id),
         },
       })
@@ -1469,11 +1699,24 @@ class MongoRealtimeDatabase
         stageId,
       })
       .toArray();
-    const customRemoteOvTracks: CustomRemoteOvTrack[] = await this._db
-      .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+    const customRemoteOvTrackVolumes: CustomRemoteOvTrackVolume[] = await this._db
+      .collection<CustomRemoteOvTrackVolume>(
+        Collections.CUSTOM_REMOTE_OV_VOLUMES
+      )
       .find({
         userId,
-        CustomRemoteOvTrackId: {
+        remoteOvTrackId: {
+          $in: remoteOvTracks.map((ovTrack) => ovTrack._id),
+        },
+      })
+      .toArray();
+    const customRemoteOvTrackPositions: CustomRemoteOvTrackPosition[] = await this._db
+      .collection<CustomRemoteOvTrackPosition>(
+        Collections.CUSTOM_REMOTE_OV_POSITIONS
+      )
+      .find({
+        userId,
+        remoteOvTrackId: {
           $in: remoteOvTracks.map((ovTrack) => ovTrack._id),
         },
       })
@@ -1483,13 +1726,17 @@ class MongoRealtimeDatabase
       return {
         users,
         stageMembers,
-        customGroups,
-        customStageMembers,
+        customGroupVolumes,
+        customGroupPositions,
+        customStageMemberVolumes,
+        customStageMemberPositions,
         remoteVideoProducers,
         remoteAudioProducers,
-        customRemoteAudioProducers,
+        customRemoteAudioProducerVolumes,
+        customRemoteAudioProducerPositions,
         remoteOvTracks,
-        customRemoteOvTracks,
+        customRemoteOvTrackVolumes,
+        customRemoteOvTrackPositions,
       };
     }
     return {
@@ -1497,13 +1744,17 @@ class MongoRealtimeDatabase
       stage,
       groups,
       stageMembers,
-      customGroups,
-      customStageMembers,
+      customGroupVolumes,
+      customGroupPositions,
+      customStageMemberVolumes,
+      customStageMemberPositions,
       remoteVideoProducers,
       remoteAudioProducers,
-      customRemoteAudioProducers,
+      customRemoteAudioProducerVolumes,
+      customRemoteAudioProducerPositions,
       remoteOvTracks,
-      customRemoteOvTracks,
+      customRemoteOvTrackVolumes,
+      customRemoteOvTrackPositions,
     };
   }
 
@@ -1760,12 +2011,23 @@ class MongoRealtimeDatabase
                 })
               ),
             this._db
-              .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
+              .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
               .find({ groupId: result.value._id }, { projection: { _id: 1 } })
               .toArray()
-              .then((customGroups) =>
-                customGroups.map((customGroup) =>
-                  this.deleteCustomGroup(customGroup._id)
+              .then((customGroupVolumes) =>
+                customGroupVolumes.map((customGroupVolume) =>
+                  this.deleteCustomGroupVolume(customGroupVolume._id)
+                )
+              ),
+            this._db
+              .collection<CustomGroupPosition>(
+                Collections.CUSTOM_GROUP_POSITIONS
+              )
+              .find({ groupId: result.value._id }, { projection: { _id: 1 } })
+              .toArray()
+              .then((customGroupPositions) =>
+                customGroupPositions.map((customGroupPosition) =>
+                  this.deleteCustomGroupPosition(customGroupPosition._id)
                 )
               ),
             this.sendToStage(
@@ -1848,18 +2110,35 @@ class MongoRealtimeDatabase
           this.emit(ServerStageEvents.STAGE_MEMBER_REMOVED, id);
           return Promise.all([
             this._db
-              .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
+              .collection<CustomStageMemberVolume>(
+                Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+              )
               .find({ stageMemberId: id }, { projection: { _id: 1 } })
               .toArray()
               .then((presets) =>
                 Promise.all(
                   presets.map((preset) =>
-                    this.deleteCustomStageMember(preset._id)
+                    this.deleteCustomStageMemberVolume(preset._id)
                   )
                 )
               ),
             this._db
-              .collection<RemoteVideoProducer>(Collections.STAGE_MEMBER_VIDEOS)
+              .collection<CustomStageMemberPosition>(
+                Collections.CUSTOM_STAGE_MEMBER_POSITIONS
+              )
+              .find({ stageMemberId: id }, { projection: { _id: 1 } })
+              .toArray()
+              .then((presets) =>
+                Promise.all(
+                  presets.map((preset) =>
+                    this.deleteCustomStageMemberPosition(preset._id)
+                  )
+                )
+              ),
+            this._db
+              .collection<RemoteVideoProducer>(
+                Collections.REMOTE_VIDEO_PRODUCERS
+              )
               .find({ stageMemberId: id }, { projection: { _id: 1 } })
               .toArray()
               .then((producers) =>
@@ -1868,7 +2147,9 @@ class MongoRealtimeDatabase
                 )
               ),
             this._db
-              .collection<RemoteAudioProducer>(Collections.STAGE_MEMBER_AUDIOS)
+              .collection<RemoteAudioProducer>(
+                Collections.REMOTE_AUDIO_PRODUCERS
+              )
               .find({ stageMemberId: id }, { projection: { _id: 1 } })
               .toArray()
               .then((producers) =>
@@ -1877,11 +2158,26 @@ class MongoRealtimeDatabase
                 )
               ),
             this._db
-              .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
+              .collection<CustomRemoteOvTrackVolume>(
+                Collections.CUSTOM_REMOTE_OV_VOLUMES
+              )
               .find({ stageMemberId: id }, { projection: { _id: 1 } })
               .toArray()
               .then((tracks) =>
-                tracks.map((track) => this.deleteCustomRemoteOvTrack(track._id))
+                tracks.map((track) =>
+                  this.deleteCustomRemoteOvTrackVolume(track._id)
+                )
+              ),
+            this._db
+              .collection<CustomRemoteOvTrackPosition>(
+                Collections.CUSTOM_REMOTE_OV_POSITIONS
+              )
+              .find({ stageMemberId: id }, { projection: { _id: 1 } })
+              .toArray()
+              .then((tracks) =>
+                tracks.map((track) =>
+                  this.deleteCustomRemoteOvTrackPosition(track._id)
+                )
               ),
             this.sendToJoinedStageMembers(
               result.value.stageId,
@@ -1914,7 +2210,7 @@ class MongoRealtimeDatabase
           );
           // Delete all stage member tracks
           return this._db
-            .collection<RemoteOvTrack>(Collections.STAGE_MEMBER_OVS)
+            .collection<RemoteOvTrack>(Collections.REMOTE_OV_TRACKS)
             .find({ trackId: id }, { projection: { _id: 1 } })
             .toArray()
             .then((tracks) =>
@@ -2138,60 +2434,13 @@ class MongoRealtimeDatabase
   } */
 
   /* CUSTOMIZED STATES FOR EACH STAGE MEMBER */
-
-  createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup> {
-    return this._db
-      .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
-      .insertOne(initial)
-      .then((result) => result.ops[0] as CustomGroup)
-      .then((customGroup) => {
-        this.emit(ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
-        this.sendToUser(
-          customGroup.userId,
-          ServerStageEvents.CUSTOM_GROUP_ADDED,
-          customGroup
-        );
-        return customGroup;
-      });
-  }
-
-  updateCustomGroup(
-    id: CustomGroupId,
-    update: Partial<Omit<CustomGroup, "_id">>
-  ): Promise<void> {
-    return this._db
-      .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
-      .findOneAndUpdate(
-        {
-          _id: id,
-        },
-        { $set: update },
-        { projection: { userId: 1 } }
-      )
-      .then((result) => {
-        if (result.value) {
-          const payload = {
-            ...update,
-            _id: id,
-          };
-          this.emit(ServerStageEvents.CUSTOM_GROUP_CHANGED, payload);
-          return this.sendToUser(
-            result.value.userId,
-            ServerStageEvents.CUSTOM_GROUP_CHANGED,
-            payload
-          );
-        }
-        throw new Error(`Could not find and update custom group ${id}`);
-      });
-  }
-
-  setCustomGroup(
+  setCustomGroupPosition(
     userId: UserId,
     groupId: GroupId,
-    update: Partial<ThreeDimensionAudioProperties>
+    update: Partial<ThreeDimensionProperties>
   ): Promise<void> {
     return this._db
-      .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
+      .collection<CustomGroupPosition>(Collections.CUSTOM_GROUP_POSITIONS)
       .findOneAndUpdate(
         { userId, groupId },
         {
@@ -2206,233 +2455,179 @@ class MongoRealtimeDatabase
             ...update,
             _id: result.value._id,
           };
-          this.emit(ServerStageEvents.CUSTOM_GROUP_CHANGED, payload);
+          this.emit(ServerStageEvents.CUSTOM_GROUP_POSITION_CHANGED, payload);
           return this.sendToUser(
             userId,
-            ServerStageEvents.CUSTOM_GROUP_CHANGED,
+            ServerStageEvents.CUSTOM_GROUP_POSITION_CHANGED,
             payload
           );
         }
         if (result.ok) {
-          // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
-          return this._db
-            .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
-            .findOne({
-              userId,
-              groupId,
-            })
-            .then((customGroup) => {
-              this.emit(ServerStageEvents.CUSTOM_GROUP_ADDED, customGroup);
-              return this.sendToUser(
-                customGroup.userId,
-                ServerStageEvents.CUSTOM_GROUP_ADDED,
-                customGroup
-              );
-            });
+          return this.readGroup(groupId)
+            .then(
+              (group): Omit<CustomGroupPosition, "_id"> => ({
+                userId,
+                groupId,
+                stageId: group.stageId,
+                x: group.x,
+                y: group.y,
+                z: group.z,
+                rX: group.rX,
+                rY: group.rY,
+                rZ: group.rZ,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomGroupPosition>(
+                  Collections.CUSTOM_GROUP_POSITIONS
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_GROUP_POSITION_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_GROUP_POSITION_ADDED,
+                    payload
+                  );
+                })
+            );
         }
         throw new Error(
-          `Could not customize group ${groupId} and user ${userId}`
+          `Could not customize position of group ${groupId} for user ${userId}`
         );
       });
   }
 
-  readCustomGroup(id: CustomGroupId): Promise<CustomGroup> {
+  readCustomGroupPosition(id: CustomGroupId): Promise<CustomGroupPosition> {
     return this._db
-      .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
+      .collection<CustomGroupPosition>(Collections.CUSTOM_GROUP_POSITIONS)
       .findOne({ _id: id });
   }
 
-  deleteCustomGroup(id: CustomGroupId): Promise<void> {
+  deleteCustomGroupPosition(id: CustomGroupId): Promise<void> {
     return this._db
-      .collection<CustomGroup>(Collections.CUSTOM_GROUPS)
+      .collection<CustomGroupPosition>(Collections.CUSTOM_GROUP_POSITIONS)
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          this.emit(ServerStageEvents.CUSTOM_GROUP_REMOVED, id);
+          this.emit(ServerStageEvents.CUSTOM_GROUP_POSITION_REMOVED, id);
           return this.sendToUser(
             result.value.userId,
-            ServerStageEvents.CUSTOM_GROUP_REMOVED,
+            ServerStageEvents.CUSTOM_GROUP_POSITION_REMOVED,
             id
           );
         }
-        throw new Error(`Could not find and delete custom group ${id}`);
+        throw new Error(
+          `Could not find and delete custom group position ${id}`
+        );
       });
   }
 
-  createCustomStageMember(
-    initial: Omit<CustomStageMember, "_id">
-  ): Promise<CustomStageMember> {
-    return this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
-      .insertOne(initial)
-      .then((result) => result.ops[0] as CustomStageMember)
-      .then((customStageMember) => {
-        this.emit(
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
-          customStageMember
-        );
-        this.sendToUser(
-          customStageMember.userId,
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
-          customStageMember
-        );
-        return customStageMember;
-      });
-  }
-
-  updateCustomStageMember(
-    id: CustomStageMemberId,
-    update: Partial<Omit<CustomStageMember, "_id">>
+  setCustomGroupVolume(
+    userId: UserId,
+    groupId: GroupId,
+    update: { volume?: number; muted?: boolean }
   ): Promise<void> {
     return this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
+      .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
       .findOneAndUpdate(
-        { _id: id },
-        { $set: update },
-        { projection: { userId: 1 } }
+        { userId, groupId },
+        {
+          $set: update,
+        },
+        { upsert: true, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
+          // Return updated document
           const payload = {
             ...update,
-            _id: id,
+            _id: result.value._id,
           };
-          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, payload);
+          this.emit(ServerStageEvents.CUSTOM_GROUP_VOLUME_CHANGED, payload);
           return this.sendToUser(
-            result.value.userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED,
+            userId,
+            ServerStageEvents.CUSTOM_GROUP_VOLUME_CHANGED,
             payload
           );
         }
-        throw new Error(`Could not find and update custom stage member ${id}`);
+        if (result.ok) {
+          return this.readGroup(groupId)
+            .then(
+              (group): Omit<CustomGroupVolume, "_id"> => ({
+                userId,
+                groupId,
+                stageId: group.stageId,
+                volume: group.volume,
+                muted: group.muted,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED,
+                    payload
+                  );
+                })
+            );
+        }
+        throw new Error(
+          `Could not customize volume of group ${groupId} for user ${userId}`
+        );
       });
   }
 
-  setCustomStageMember(
+  readCustomGroupVolume(id: CustomGroupId): Promise<CustomGroupVolume> {
+    return this._db
+      .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
+      .findOne({ _id: id });
+  }
+
+  deleteCustomGroupVolume(id: CustomGroupId): Promise<void> {
+    return this._db
+      .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
+      .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
+      .then((result) => {
+        if (result.value) {
+          this.emit(ServerStageEvents.CUSTOM_GROUP_VOLUME_REMOVED, id);
+          return this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_GROUP_VOLUME_REMOVED,
+            id
+          );
+        }
+        throw new Error(`Could not find and delete custom group volume ${id}`);
+      });
+  }
+
+  setCustomStageMemberPosition(
     userId: UserId,
     stageMemberId: StageMemberId,
-    update: Partial<Omit<CustomStageMember, "_id">>
-  ): Promise<void> {
-    if (Object.keys(update).length === 0)
-      return Promise.reject(new Error("No payload"));
-    return this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
-      .findOneAndUpdate(
-        {
-          stageMemberId,
-          userId,
-        },
-        { $set: update },
-        { upsert: true, projection: { _id: 1 } }
-      )
-      .then((result) => {
-        if (result.value) {
-          // Return updated document
-          const payload = {
-            ...update,
-            _id: result.value._id,
-          };
-          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED, payload);
-          return this.sendToUser(
-            userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_CHANGED,
-            payload
-          );
-        }
-        if (result.ok) {
-          // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
-          return this._db
-            .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
-            .findOne({
-              stageMemberId,
-              userId,
-            })
-            .then((customStageMember) => {
-              this.emit(
-                ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
-                customStageMember
-              );
-              return this.sendToUser(
-                userId,
-                ServerStageEvents.CUSTOM_STAGE_MEMBER_ADDED,
-                customStageMember
-              );
-            });
-        }
-        throw new Error(
-          `Could not customize stage member ${stageMemberId} and user ${userId}`
-        );
-      });
-  }
-
-  readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember> {
-    return this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
-      .findOne({ _id: id });
-  }
-
-  deleteCustomStageMember(id: CustomGroupId): Promise<void> {
-    return this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBERS)
-      .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
-      .then((result) => {
-        this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_REMOVED, id);
-        return this.sendToUser(
-          result.value.userId,
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_REMOVED,
-          id
-        );
-      });
-  }
-
-  createCustomRemoteAudioProducer(
-    initial: Omit<CustomRemoteAudioProducer, "_id">
-  ): Promise<CustomRemoteAudioProducer> {
-    return this._db
-      .collection<CustomRemoteAudioProducer>(
-        Collections.CUSTOM_STAGE_MEMBER_AUDIOS
-      )
-      .insertOne(initial)
-      .then((result) => result.ops[0] as CustomRemoteAudioProducer)
-      .then((customRemoteAudioProducer) => {
-        this.emit(
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-          customRemoteAudioProducer
-        );
-        this.sendToUser(
-          customRemoteAudioProducer.userId,
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-          customRemoteAudioProducer
-        );
-        return customRemoteAudioProducer;
-      });
-  }
-
-  readCustomRemoteAudioProducer(
-    id: RemoteAudioProducerId
-  ): Promise<CustomRemoteAudioProducer> {
-    return this._db
-      .collection<CustomRemoteAudioProducer>(
-        Collections.CUSTOM_STAGE_MEMBER_AUDIOS
-      )
-      .findOne({ _id: id });
-  }
-
-  setCustomRemoteAudioProducer(
-    userId: UserId,
-    remoteAudioProducerId: RemoteAudioProducerId,
-    update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
+    update: Partial<ThreeDimensionProperties>
   ): Promise<void> {
     return this._db
-      .collection<CustomRemoteAudioProducer>(
-        Collections.CUSTOM_STAGE_MEMBER_AUDIOS
+      .collection<CustomStageMemberPosition>(
+        Collections.CUSTOM_STAGE_MEMBER_POSITIONS
       )
       .findOneAndUpdate(
+        { userId, stageMemberId },
         {
-          remoteAudioProducerId,
-          userId,
+          $set: update,
         },
-        { $set: update },
         { upsert: true, projection: { _id: 1 } }
       )
       .then((result) => {
@@ -2443,141 +2638,101 @@ class MongoRealtimeDatabase
             _id: result.value._id,
           };
           this.emit(
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_CHANGED,
             payload
           );
           return this.sendToUser(
             userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_CHANGED,
             payload
           );
         }
         if (result.ok) {
-          // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
-          return this._db
-            .collection<CustomRemoteAudioProducer>(
-              Collections.CUSTOM_STAGE_MEMBER_AUDIOS
+          return this.readStageMember(stageMemberId)
+            .then(
+              (stageMember): Omit<CustomStageMemberPosition, "_id"> => ({
+                userId,
+                stageMemberId,
+                stageId: stageMember.stageId,
+                x: stageMember.x,
+                y: stageMember.y,
+                z: stageMember.z,
+                rX: stageMember.rX,
+                rY: stageMember.rY,
+                rZ: stageMember.rZ,
+                ...update,
+              })
             )
-            .findOne({
-              remoteAudioProducerId,
-              userId,
-            })
-            .then((customAudioProducer) => {
-              this.emit(
-                ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-                customAudioProducer
-              );
-              return this.sendToUser(
-                userId,
-                ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_ADDED,
-                customAudioProducer
-              );
-            });
+            .then((payload) =>
+              this._db
+                .collection<CustomStageMemberPosition>(
+                  Collections.CUSTOM_STAGE_MEMBER_POSITIONS
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_ADDED,
+                    payload
+                  );
+                })
+            );
         }
         throw new Error(
-          `Could not customize stage member audio producer ${remoteAudioProducerId} and user ${userId}`
+          `Could not customize position of stage member ${stageMemberId} for user ${userId}`
         );
       });
   }
 
-  updateCustomRemoteAudioProducer(
-    id: CustomRemoteAudioProducerId,
-    update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
-  ): Promise<void> {
+  readCustomStageMemberPosition(
+    id: CustomGroupId
+  ): Promise<CustomStageMemberPosition> {
     return this._db
-      .collection<CustomRemoteAudioProducer>(
-        Collections.CUSTOM_STAGE_MEMBER_AUDIOS
+      .collection<CustomStageMemberPosition>(
+        Collections.CUSTOM_STAGE_MEMBER_POSITIONS
       )
-      .findOneAndUpdate(
-        { _id: id },
-        { $set: update },
-        { projection: { userId: 1 } }
-      )
-      .then((result) => {
-        if (result.value) {
-          const payload = {
-            ...update,
-            _id: id,
-          };
-          this.emit(
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED,
-            payload
-          );
-          return this.sendToUser(
-            result.value.userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_CHANGED,
-            payload
-          );
-        }
-        throw new Error(
-          `Could not find and update custom stage member audio producer ${id}`
-        );
-      });
+      .findOne({ _id: id });
   }
 
-  deleteCustomRemoteAudioProducer(
-    id: CustomRemoteAudioProducerId
-  ): Promise<void> {
+  deleteCustomStageMemberPosition(id: CustomGroupId): Promise<void> {
     return this._db
-      .collection<CustomStageMember>(Collections.CUSTOM_STAGE_MEMBER_AUDIOS)
+      .collection<CustomStageMemberPosition>(
+        Collections.CUSTOM_STAGE_MEMBER_POSITIONS
+      )
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
-        if (result) {
-          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_REMOVED, id);
+        if (result.value) {
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_REMOVED, id);
           return this.sendToUser(
             result.value.userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_REMOVED,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_REMOVED,
             id
           );
         }
         throw new Error(
-          `Can not find and delete custom stage member audio producer ${id}`
+          `Could not find and delete custom stage member position ${id}`
         );
       });
   }
 
-  createCustomRemoteOvTrack(
-    initial: Omit<CustomRemoteOvTrack, "_id">
-  ): Promise<CustomRemoteOvTrack> {
-    return this._db
-      .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
-      .insertOne(initial)
-      .then((result) => result.ops[0] as CustomRemoteOvTrack)
-      .then((customRemoteOvTrack) => {
-        this.emit(
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-          customRemoteOvTrack
-        );
-        this.sendToUser(
-          customRemoteOvTrack.userId,
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-          customRemoteOvTrack
-        );
-        return customRemoteOvTrack;
-      });
-  }
-
-  readCustomRemoteOvTrack(
-    id: CustomRemoteOvTrackId
-  ): Promise<CustomRemoteOvTrack> {
-    return this._db
-      .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
-      .findOne({ _id: id });
-  }
-
-  setCustomRemoteOvTrack(
+  setCustomStageMemberVolume(
     userId: UserId,
-    customRemoteOvTrackId: CustomRemoteOvTrackId,
-    update: Partial<Omit<CustomRemoteOvTrack, "_id">>
+    stageMemberId: StageMemberId,
+    update: { volume?: number; muted?: boolean }
   ): Promise<void> {
     return this._db
-      .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+      .collection<CustomStageMemberVolume>(
+        Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+      )
       .findOneAndUpdate(
+        { userId, stageMemberId },
         {
-          customRemoteOvTrackId,
-          userId,
+          $set: update,
         },
-        { $set: update },
         { upsert: true, projection: { _id: 1 } }
       )
       .then((result) => {
@@ -2587,96 +2742,512 @@ class MongoRealtimeDatabase
             ...update,
             _id: result.value._id,
           };
-          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED, payload);
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_CHANGED,
+            payload
+          );
           return this.sendToUser(
             userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_CHANGED,
             payload
           );
         }
         if (result.ok) {
-          // Return newly created document (result.value is null then, see https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndUpdate/)
-          return this._db
-            .collection<CustomRemoteOvTrack>(
-              Collections.CUSTOM_STAGE_MEMBER_OVS
-            )
-            .findOne({
-              customRemoteOvTrackId,
-              userId,
-            })
-            .then((customOvTrack) => {
-              this.emit(
-                ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-                customOvTrack
-              );
-              return this.sendToUser(
+          return this.readStageMember(stageMemberId)
+            .then(
+              (stageMember): Omit<CustomStageMemberVolume, "_id"> => ({
                 userId,
-                ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED,
-                customOvTrack
-              );
-            });
+                stageMemberId,
+                stageId: stageMember.stageId,
+                volume: stageMember.volume,
+                muted: stageMember.muted,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomStageMemberVolume>(
+                  Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_ADDED,
+                    payload
+                  );
+                })
+            );
         }
         throw new Error(
-          `Could not customize stage member ov track ${customRemoteOvTrackId} for user ${userId}`
+          `Could not customize volume of stage member ${stageMemberId} for user ${userId}`
         );
       });
   }
 
-  updateCustomRemoteOvTrack(
-    id: ObjectId,
-    update: Partial<
-      Pick<
-        CustomRemoteOvTrack,
-        | "stageId"
-        | "userId"
-        | "volume"
-        | "x"
-        | "y"
-        | "z"
-        | "rX"
-        | "rY"
-        | "rZ"
-        | "remoteOvTrackId"
-        | "directivity"
-      >
-    >
-  ): Promise<void> {
+  readCustomStageMemberVolume(
+    id: CustomGroupId
+  ): Promise<CustomStageMemberVolume> {
     return this._db
-      .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
-      .findOneAndUpdate(
-        { _id: id },
-        { $set: update },
-        { projection: { userId: 1 } }
+      .collection<CustomStageMemberVolume>(
+        Collections.CUSTOM_STAGE_MEMBER_VOLUMES
       )
+      .findOne({ _id: id });
+  }
+
+  deleteCustomStageMemberVolume(id: CustomGroupId): Promise<void> {
+    return this._db
+      .collection<CustomStageMemberVolume>(
+        Collections.CUSTOM_STAGE_MEMBER_VOLUMES
+      )
+      .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
         if (result.value) {
-          const payload = {
-            ...update,
-            _id: id,
-          };
-          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_ADDED, payload);
+          this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_REMOVED, id);
           return this.sendToUser(
             result.value.userId,
-            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_CHANGED,
-            payload
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_REMOVED,
+            id
           );
         }
         throw new Error(
-          `Could not find and update custom stage member ov track ${id}`
+          `Could not find and delete custom stage member volume ${id}`
         );
       });
   }
 
-  deleteCustomRemoteOvTrack(id: ObjectId): Promise<void> {
+  setCustomRemoteAudioProducerPosition(
+    userId: UserId,
+    remoteAudioProducerId: RemoteAudioProducerId,
+    update: Partial<ThreeDimensionProperties>
+  ): Promise<void> {
     return this._db
-      .collection<CustomRemoteOvTrack>(Collections.CUSTOM_STAGE_MEMBER_OVS)
+      .collection<CustomRemoteAudioProducerPosition>(
+        Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
+      )
+      .findOneAndUpdate(
+        { userId, remoteAudioProducerId },
+        {
+          $set: update,
+        },
+        { upsert: true, projection: { _id: 1 } }
+      )
+      .then((result) => {
+        if (result.value) {
+          // Return updated document
+          const payload = {
+            ...update,
+            _id: result.value._id,
+          };
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_CHANGED,
+            payload
+          );
+          return this.sendToUser(
+            userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_CHANGED,
+            payload
+          );
+        }
+        if (result.ok) {
+          return this.readRemoteAudioProducer(remoteAudioProducerId)
+            .then(
+              (
+                audioProducer
+              ): Omit<CustomRemoteAudioProducerPosition, "_id"> => ({
+                userId,
+                remoteAudioProducerId,
+                stageId: audioProducer.stageId,
+                stageMemberId: audioProducer.stageMemberId,
+                x: audioProducer.x,
+                y: audioProducer.y,
+                z: audioProducer.z,
+                rX: audioProducer.rX,
+                rY: audioProducer.rY,
+                rZ: audioProducer.rZ,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomRemoteAudioProducerPosition>(
+                  Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_ADDED,
+                    payload
+                  );
+                })
+            );
+        }
+        throw new Error(
+          `Could not customize position of remote audio producer ${remoteAudioProducerId} for user ${userId}`
+        );
+      });
+  }
+
+  readCustomRemoteAudioProducerPosition(
+    id: CustomGroupId
+  ): Promise<CustomRemoteAudioProducerPosition> {
+    return this._db
+      .collection<CustomRemoteAudioProducerPosition>(
+        Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
+      )
+      .findOne({ _id: id });
+  }
+
+  deleteCustomRemoteAudioProducerPosition(id: CustomGroupId): Promise<void> {
+    return this._db
+      .collection<CustomRemoteAudioProducerPosition>(
+        Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
+      )
       .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
       .then((result) => {
-        this.emit(ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_REMOVED, id);
-        return this.sendToUser(
-          result.value.userId,
-          ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_REMOVED,
-          id
+        if (result.value) {
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_REMOVED,
+            id
+          );
+          return this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_REMOVED,
+            id
+          );
+        }
+        throw new Error(
+          `Could not find and delete remote audio producer position ${id}`
+        );
+      });
+  }
+
+  setCustomRemoteAudioProducerVolume(
+    userId: UserId,
+    remoteAudioProducerId: RemoteAudioProducerId,
+    update: { volume?: number; muted?: boolean }
+  ): Promise<void> {
+    return this._db
+      .collection<CustomRemoteAudioProducerVolume>(
+        Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
+      )
+      .findOneAndUpdate(
+        { userId, remoteAudioProducerId },
+        {
+          $set: update,
+        },
+        { upsert: true, projection: { _id: 1 } }
+      )
+      .then((result) => {
+        if (result.value) {
+          // Return updated document
+          const payload = {
+            ...update,
+            _id: result.value._id,
+          };
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_CHANGED,
+            payload
+          );
+          return this.sendToUser(
+            userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_CHANGED,
+            payload
+          );
+        }
+        if (result.ok) {
+          return this.readRemoteAudioProducer(remoteAudioProducerId)
+            .then(
+              (
+                audioProducer
+              ): Omit<CustomRemoteAudioProducerVolume, "_id"> => ({
+                userId,
+                remoteAudioProducerId,
+                stageId: audioProducer.stageId,
+                volume: audioProducer.volume,
+                muted: audioProducer.muted,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomRemoteAudioProducerVolume>(
+                  Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_ADDED,
+                    payload
+                  );
+                })
+            );
+        }
+        throw new Error(
+          `Could not customize volume of remote audio producer ${remoteAudioProducerId} for user ${userId}`
+        );
+      });
+  }
+
+  readCustomRemoteAudioProducerVolume(
+    id: CustomGroupId
+  ): Promise<CustomRemoteAudioProducerVolume> {
+    return this._db
+      .collection<CustomRemoteAudioProducerVolume>(
+        Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
+      )
+      .findOne({ _id: id });
+  }
+
+  deleteCustomRemoteAudioProducerVolume(id: CustomGroupId): Promise<void> {
+    return this._db
+      .collection<CustomRemoteAudioProducerVolume>(
+        Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
+      )
+      .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
+      .then((result) => {
+        if (result.value) {
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_REMOVED,
+            id
+          );
+          return this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_REMOVED,
+            id
+          );
+        }
+        throw new Error(
+          `Could not find and delete custom remote audio producer volume ${id}`
+        );
+      });
+  }
+
+  setCustomRemoteOvTrackPosition(
+    userId: UserId,
+    remoteOvTrackId: RemoteOvTrackId,
+    update: Partial<ThreeDimensionProperties>
+  ): Promise<void> {
+    return this._db
+      .collection<CustomRemoteOvTrackPosition>(
+        Collections.CUSTOM_REMOTE_OV_POSITIONS
+      )
+      .findOneAndUpdate(
+        { userId, remoteOvTrackId },
+        {
+          $set: update,
+        },
+        { upsert: true, projection: { _id: 1 } }
+      )
+      .then((result) => {
+        if (result.value) {
+          // Return updated document
+          const payload = {
+            ...update,
+            _id: result.value._id,
+          };
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_CHANGED,
+            payload
+          );
+          return this.sendToUser(
+            userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_CHANGED,
+            payload
+          );
+        }
+        if (result.ok) {
+          return this.readRemoteOvTrack(remoteOvTrackId)
+            .then(
+              (ovTrack): Omit<CustomRemoteOvTrackPosition, "_id"> => ({
+                userId,
+                remoteOvTrackId,
+                stageId: ovTrack.stageId,
+                stageMemberId: ovTrack.stageMemberId,
+                directivity: ovTrack.directivity,
+                x: ovTrack.x,
+                y: ovTrack.y,
+                z: ovTrack.z,
+                rX: ovTrack.rX,
+                rY: ovTrack.rY,
+                rZ: ovTrack.rZ,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomRemoteOvTrackPosition>(
+                  Collections.CUSTOM_REMOTE_OV_POSITIONS
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_ADDED,
+                    payload
+                  );
+                })
+            );
+        }
+        throw new Error(
+          `Could not customize position of remote ov track ${remoteOvTrackId} for user ${userId}`
+        );
+      });
+  }
+
+  readCustomRemoteOvTrackPosition(
+    id: CustomGroupId
+  ): Promise<CustomRemoteOvTrackPosition> {
+    return this._db
+      .collection<CustomRemoteOvTrackPosition>(
+        Collections.CUSTOM_REMOTE_OV_POSITIONS
+      )
+      .findOne({ _id: id });
+  }
+
+  deleteCustomRemoteOvTrackPosition(id: CustomRemoteOvTrackId): Promise<void> {
+    return this._db
+      .collection<CustomRemoteOvTrackPosition>(
+        Collections.CUSTOM_REMOTE_OV_POSITIONS
+      )
+      .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
+      .then((result) => {
+        if (result.value) {
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_REMOVED,
+            id
+          );
+          return this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_REMOVED,
+            id
+          );
+        }
+        throw new Error(
+          `Could not find and delete remote ov track position ${id}`
+        );
+      });
+  }
+
+  setCustomRemoteOvTrackVolume(
+    userId: UserId,
+    remoteOvTrackId: RemoteOvTrackId,
+    update: { volume?: number; muted?: boolean }
+  ): Promise<void> {
+    return this._db
+      .collection<CustomRemoteOvTrackVolume>(
+        Collections.CUSTOM_REMOTE_OV_VOLUMES
+      )
+      .findOneAndUpdate(
+        { userId, remoteOvTrackId },
+        {
+          $set: update,
+        },
+        { upsert: true, projection: { _id: 1 } }
+      )
+      .then((result) => {
+        if (result.value) {
+          // Return updated document
+          const payload = {
+            ...update,
+            _id: result.value._id,
+          };
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_CHANGED,
+            payload
+          );
+          return this.sendToUser(
+            userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_CHANGED,
+            payload
+          );
+        }
+        if (result.ok) {
+          return this.readRemoteOvTrack(remoteOvTrackId)
+            .then(
+              (remoteOvTrack): Omit<CustomRemoteOvTrackVolume, "_id"> => ({
+                userId,
+                remoteOvTrackId,
+                stageId: remoteOvTrack.stageId,
+                stageMemberId: remoteOvTrack.stageMemberId,
+                volume: remoteOvTrack.volume,
+                muted: remoteOvTrack.muted,
+                ...update,
+              })
+            )
+            .then((payload) =>
+              this._db
+                .collection<CustomRemoteOvTrackVolume>(
+                  Collections.CUSTOM_REMOTE_OV_VOLUMES
+                )
+                .insertOne(payload)
+                .then(() => {
+                  this.emit(
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_ADDED,
+                    payload
+                  );
+                  return this.sendToUser(
+                    userId,
+                    ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_ADDED,
+                    payload
+                  );
+                })
+            );
+        }
+        throw new Error(
+          `Could not customize volume of remote ov track ${remoteOvTrackId} for user ${userId}`
+        );
+      });
+  }
+
+  readCustomRemoteOvTrackVolume(
+    id: CustomGroupId
+  ): Promise<CustomRemoteOvTrackVolume> {
+    return this._db
+      .collection<CustomRemoteOvTrackVolume>(
+        Collections.CUSTOM_REMOTE_OV_VOLUMES
+      )
+      .findOne({ _id: id });
+  }
+
+  deleteCustomRemoteOvTrackVolume(id: CustomGroupId): Promise<void> {
+    return this._db
+      .collection<CustomRemoteOvTrackVolume>(
+        Collections.CUSTOM_REMOTE_OV_VOLUMES
+      )
+      .findOneAndDelete({ _id: id }, { projection: { userId: 1 } })
+      .then((result) => {
+        if (result.value) {
+          this.emit(
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_REMOVED,
+            id
+          );
+          return this.sendToUser(
+            result.value.userId,
+            ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_REMOVED,
+            id
+          );
+        }
+        throw new Error(
+          `Could not find and delete custom remote ov track volume ${id}`
         );
       });
   }
@@ -2696,12 +3267,12 @@ class MongoRealtimeDatabase
         );
     }
     const stageMembers = await this._db
-      .collection(Collections.STAGE_MEMBERS)
+      .collection<StageMember>(Collections.STAGE_MEMBERS)
       .find({ userId: user._id })
       .toArray();
     // Get all managed stages and stages, where the user was or is in
     const stages = await this._db
-      .collection(Collections.STAGES)
+      .collection<Stage>(Collections.STAGES)
       .find({
         $or: [
           {
@@ -2721,7 +3292,7 @@ class MongoRealtimeDatabase
       )
     );
     const groups = await this._db
-      .collection(Collections.GROUPS)
+      .collection<Group>(Collections.GROUPS)
       .find({ stageId: { $in: stages.map((foundStage) => foundStage._id) } })
       .toArray();
     await Promise.all(
@@ -2766,7 +3337,7 @@ class MongoRealtimeDatabase
   ): Promise<any> {
     // Send all sound cards
     await this._db
-      .collection(Collections.SOUND_CARDS)
+      .collection<SoundCard>(Collections.SOUND_CARDS)
       .find({ userId: user._id })
       .toArray()
       .then((foundSoundCard) =>
@@ -2778,6 +3349,7 @@ class MongoRealtimeDatabase
           )
         )
       );
+    /*
     await this._db
       .collection(Collections.TRACK_PRESETS)
       .find({ userId: user._id })
@@ -2790,7 +3362,7 @@ class MongoRealtimeDatabase
             trackPreset
           )
         )
-      );
+      ); */
   }
 
   async sendToStage(

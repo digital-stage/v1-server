@@ -1,5 +1,5 @@
 import { ChatMessage, ChatMessages } from "./ChatMessages";
-import { CustomGroup } from "./CustomGroup";
+import { CustomGroupVolume } from "./CustomGroupVolume";
 import { GlobalProducer } from "./GlobalProducer";
 import { OvTrack } from "./OvTrack";
 import { OvTrackPreset } from "./OvTrackPreset";
@@ -9,9 +9,9 @@ import { SoundCard } from "./SoundCard";
 import { StagePackage } from "./StagePackage";
 import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 import { User } from "./User";
-import { CustomStageMember } from "./CustomStageMember";
-import { CustomRemoteAudioProducer } from "./CustomRemoteAudioProducer";
-import { CustomRemoteOvTrack } from "./CustomRemoteOvTrack";
+import { CustomStageMemberVolume } from "./CustomStageMemberVolume";
+import { CustomRemoteAudioProducerVolume } from "./CustomRemoteAudioProducerVolume";
+import { CustomRemoteOvTrackPosition } from "./CustomRemoteOvTrackPosition";
 import { Device } from "./Device";
 import { Group } from "./Group";
 import { Router } from "./Router";
@@ -22,14 +22,18 @@ import { WebRTCDevice } from "./WebRTCDevice";
 import { GlobalAudioProducer } from "./GlobalAudioProducer";
 import { GlobalVideoProducer } from "./GlobalVideoProducer";
 import { InitialStagePackage } from "./InitialStagePackage";
+import { CustomGroupPosition } from "./CustomGroupPosition";
+import { CustomStageMemberPosition } from "./CustomStageMemberPosition";
 
 export type {
   ChatMessage,
   ChatMessages,
-  CustomGroup,
-  CustomStageMember,
-  CustomRemoteAudioProducer,
-  CustomRemoteOvTrack,
+  CustomGroupVolume,
+  CustomGroupPosition,
+  CustomStageMemberVolume,
+  CustomStageMemberPosition,
+  CustomRemoteAudioProducerVolume,
+  CustomRemoteOvTrackPosition,
   Device,
   Group,
   Router,

@@ -2,13 +2,17 @@ import { User } from "./User";
 import { Stage } from "./Stage";
 import { Group } from "./Group";
 import { StageMember } from "./StageMember";
-import { CustomGroup } from "./CustomGroup";
-import { CustomStageMember } from "./CustomStageMember";
+import { CustomStageMemberVolume } from "./CustomStageMemberVolume";
 import { RemoteVideoProducer } from "./RemoteVideoProducer";
 import { RemoteAudioProducer } from "./RemoteAudioProducer";
-import { CustomRemoteAudioProducer } from "./CustomRemoteAudioProducer";
+import { CustomRemoteAudioProducerVolume } from "./CustomRemoteAudioProducerVolume";
 import { RemoteOvTrack } from "./RemoteOvTrack";
-import { CustomRemoteOvTrack } from "./CustomRemoteOvTrack";
+import { CustomRemoteOvTrackPosition } from "./CustomRemoteOvTrackPosition";
+import { CustomGroupVolume } from "./CustomGroupVolume";
+import { CustomGroupPosition } from "./CustomGroupPosition";
+import { CustomStageMemberPosition } from "./CustomStageMemberPosition";
+import { CustomRemoteAudioProducerPosition } from "./CustomRemoteAudioProducerPosition";
+import { CustomRemoteOvTrackVolume } from "./CustomRemoteOvTrackVolume";
 
 export interface StagePackage {
   users: User[];
@@ -16,11 +20,15 @@ export interface StagePackage {
   stage?: Stage;
   groups?: Group[];
   stageMembers: StageMember[];
-  customGroups: CustomGroup[];
-  customStageMembers: CustomStageMember[];
+  customGroupVolumes: CustomGroupVolume[];
+  customGroupPositions: CustomGroupPosition[];
+  customStageMemberVolumes: CustomStageMemberVolume[];
+  customStageMemberPositions: CustomStageMemberPosition[];
   remoteVideoProducers: RemoteVideoProducer[];
   remoteAudioProducers: RemoteAudioProducer[];
-  customRemoteAudioProducers: CustomRemoteAudioProducer[];
+  customRemoteAudioProducerVolumes: CustomRemoteAudioProducerVolume[];
+  customRemoteAudioProducerPositions: CustomRemoteAudioProducerPosition[];
   remoteOvTracks: RemoteOvTrack[];
-  customRemoteOvTracks: CustomRemoteOvTrack[];
+  customRemoteOvTrackVolumes: CustomRemoteOvTrackVolume[];
+  customRemoteOvTrackPositions: CustomRemoteOvTrackPosition[];
 }

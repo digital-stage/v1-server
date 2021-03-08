@@ -21,10 +21,12 @@ import {
   CustomRemoteOvTrackId,
 } from "../types/IdTypes";
 import {
-  CustomGroup,
-  CustomRemoteAudioProducer,
-  CustomRemoteOvTrack,
-  CustomStageMember,
+  CustomGroupPosition,
+  CustomGroupVolume,
+  CustomRemoteAudioProducerVolume,
+  CustomRemoteOvTrackPosition,
+  CustomStageMemberPosition,
+  CustomStageMemberVolume,
   Device,
   GlobalAudioProducer,
   GlobalVideoProducer,
@@ -37,11 +39,16 @@ import {
   SoundCard,
   Stage,
   StageMember,
-  ThreeDimensionAudioProperties,
   User,
 } from "../types";
+import ThreeDimensionProperties from "../types/ThreeDimensionProperties";
+import { CustomRemoteOvTrackVolume } from "../types/CustomRemoteOvTrackVolume";
+import { CustomRemoteAudioProducerPosition } from "../types/CustomRemoteAudioProducerPosition";
 
 export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
+  connect(database: string): Promise<void>;
+
+  // TODO: REMOVE; JUST A ESLINT TEST
   connect(database: string): Promise<void>;
 
   db(): Db;
@@ -256,86 +263,101 @@ export interface IRealtimeDatabase extends EventEmitter.EventEmitter {
 
   deleteRemoteVideoProducer(id: RemoteVideoProducerId): Promise<void>;
 
-  // Customized elements for each stage member
-  createCustomGroup(initial: Omit<CustomGroup, "_id">): Promise<CustomGroup>;
-
-  readCustomGroup(id: CustomGroupId): Promise<CustomGroup>;
-
-  setCustomGroup(
+  setCustomGroupVolume(
     userId: UserId,
     groupId: GroupId,
-    update: Partial<ThreeDimensionAudioProperties>
+    update: { volume?: number; muted?: boolean }
   ): Promise<void>;
 
-  updateCustomGroup(
-    id: CustomGroupId,
-    update: Partial<Omit<CustomGroup, "_id">>
+  readCustomGroupVolume(id: CustomGroupId): Promise<CustomGroupVolume>;
+
+  deleteCustomGroupVolume(id: CustomGroupId): Promise<void>;
+
+  setCustomGroupPosition(
+    userId: UserId,
+    groupId: GroupId,
+    update: Partial<ThreeDimensionProperties>
   ): Promise<void>;
 
-  deleteCustomGroup(id: CustomGroupId): Promise<void>;
+  readCustomGroupPosition(id: CustomGroupId): Promise<CustomGroupPosition>;
 
-  createCustomStageMember(
-    initial: Omit<CustomStageMember, "_id">
-  ): Promise<CustomStageMember>;
+  deleteCustomGroupPosition(id: CustomGroupId): Promise<void>;
 
-  readCustomStageMember(id: CustomStageMemberId): Promise<CustomStageMember>;
-
-  setCustomStageMember(
+  setCustomStageMemberVolume(
     userId: UserId,
     stageMemberId: StageMemberId,
-    update: Partial<Omit<CustomStageMember, "_id">>
+    update: { volume?: number; muted?: boolean }
   ): Promise<void>;
 
-  updateCustomStageMember(
-    id: CustomStageMemberId,
-    update: Partial<Omit<CustomStageMember, "_id">>
+  readCustomStageMemberVolume(
+    id: CustomStageMemberId
+  ): Promise<CustomStageMemberVolume>;
+
+  deleteCustomStageMemberVolume(id: CustomStageMemberId): Promise<void>;
+
+  setCustomStageMemberPosition(
+    userId: UserId,
+    stageMemberId: StageMemberId,
+    update: Partial<ThreeDimensionProperties>
   ): Promise<void>;
 
-  deleteCustomStageMember(id: CustomStageMemberId): Promise<void>;
+  readCustomStageMemberPosition(
+    id: CustomStageMemberId
+  ): Promise<CustomStageMemberPosition>;
 
-  createCustomRemoteAudioProducer(
-    initial: Omit<CustomRemoteAudioProducer, "_id">
-  ): Promise<CustomRemoteAudioProducer>;
+  deleteCustomStageMemberPosition(id: CustomStageMemberId): Promise<void>;
 
-  readCustomRemoteAudioProducer(
-    id: CustomRemoteAudioProducerId
-  ): Promise<CustomRemoteAudioProducer>;
-
-  setCustomRemoteAudioProducer(
+  setCustomRemoteAudioProducerVolume(
     userId: UserId,
     RemoteAudioProducerId: RemoteAudioProducerId,
-    update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
+    update: { volume?: number; muted?: boolean }
   ): Promise<void>;
 
-  updateCustomRemoteAudioProducer(
-    id: CustomRemoteAudioProducerId,
-    update: Partial<Omit<CustomRemoteAudioProducer, "_id">>
-  ): Promise<void>;
+  readCustomRemoteAudioProducerVolume(
+    id: CustomRemoteAudioProducerId
+  ): Promise<CustomRemoteAudioProducerVolume>;
 
-  deleteCustomRemoteAudioProducer(
+  deleteCustomRemoteAudioProducerVolume(
     id: CustomRemoteAudioProducerId
   ): Promise<void>;
 
-  createCustomRemoteOvTrack(
-    initial: Omit<CustomRemoteOvTrack, "_id">
-  ): Promise<CustomRemoteOvTrack>;
+  setCustomRemoteAudioProducerPosition(
+    userId: UserId,
+    RemoteAudioProducerId: RemoteAudioProducerId,
+    update: Partial<ThreeDimensionProperties>
+  ): Promise<void>;
 
-  readCustomRemoteOvTrack(
-    id: CustomRemoteOvTrackId
-  ): Promise<CustomRemoteOvTrack>;
+  readCustomRemoteAudioProducerPosition(
+    id: CustomRemoteAudioProducerId
+  ): Promise<CustomRemoteAudioProducerPosition>;
 
-  setCustomRemoteOvTrack(
+  deleteCustomRemoteAudioProducerPosition(
+    id: CustomRemoteAudioProducerId
+  ): Promise<void>;
+
+  setCustomRemoteOvTrackVolume(
     userId: UserId,
     CustomRemoteOvTrackId: CustomRemoteOvTrackId,
-    update: Partial<Omit<CustomRemoteOvTrack, "_id">>
+    update: { volume?: number; muted?: boolean }
   ): Promise<void>;
 
-  updateCustomRemoteOvTrack(
-    id: CustomRemoteOvTrackId,
-    update: Partial<Omit<CustomRemoteOvTrack, "_id">>
+  readCustomRemoteOvTrackVolume(
+    id: CustomRemoteOvTrackId
+  ): Promise<CustomRemoteOvTrackVolume>;
+
+  deleteCustomRemoteOvTrackVolume(id: CustomRemoteOvTrackId): Promise<void>;
+
+  setCustomRemoteOvTrackPosition(
+    userId: UserId,
+    CustomRemoteOvTrackId: CustomRemoteOvTrackId,
+    update: Partial<ThreeDimensionProperties>
   ): Promise<void>;
 
-  deleteCustomRemoteOvTrack(id: CustomRemoteOvTrackId): Promise<void>;
+  readCustomRemoteOvTrackPosition(
+    id: CustomRemoteOvTrackId
+  ): Promise<CustomRemoteOvTrackPosition>;
+
+  deleteCustomRemoteOvTrackPosition(id: CustomRemoteOvTrackId): Promise<void>;
 
   // MESSAGING
   sendStageDataToDevice(socket: ITeckosSocket, user: User): Promise<void>;

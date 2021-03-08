@@ -1,7 +1,6 @@
 /**
  * Each user can overwrite the global stage member track settings with personal preferences.
  */
-import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 import {
   CustomRemoteOvTrackId,
   RemoteOvTrackId,
@@ -10,16 +9,14 @@ import {
   UserId,
 } from "./IdTypes";
 
-export interface CustomRemoteOvTrack extends ThreeDimensionAudioProperties {
+export interface CustomRemoteOvTrackVolume {
   _id: CustomRemoteOvTrackId;
   stageMemberId: StageMemberId; // <-- RELATION
 
   remoteOvTrackId: RemoteOvTrackId; // <-- RELATION
 
-  customizeVolume: boolean;
-  customizePosition: boolean;
-
-  directivity: "omni" | "cardioid"; // Overrides track directivity (for user)
+  volume: number;
+  muted: boolean;
 
   // Optimizations for performance
   userId: UserId;

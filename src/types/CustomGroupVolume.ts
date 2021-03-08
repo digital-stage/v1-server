@@ -2,15 +2,14 @@
  * Each user can overwrite the global group settings with personal preferences
  */
 import { CustomGroupId, GroupId, StageId, UserId } from "./IdTypes";
-import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 
-export interface CustomGroup extends ThreeDimensionAudioProperties {
+export interface CustomGroupVolume {
   _id: CustomGroupId;
   userId: UserId; // <--- RELATION
   groupId: GroupId; // <--- RELATION
 
-  customizeVolume: boolean;
-  customizePosition: boolean;
+  volume: number;
+  muted: boolean;
 
   // Optimizations for performance
   stageId: StageId;

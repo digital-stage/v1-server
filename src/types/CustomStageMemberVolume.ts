@@ -1,13 +1,12 @@
 import { CustomStageMemberId, StageId, StageMemberId, UserId } from "./IdTypes";
-import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
 
-export interface CustomStageMember extends ThreeDimensionAudioProperties {
+export interface CustomStageMemberVolume {
   _id: CustomStageMemberId;
   userId: UserId; // <--- RELATION
   stageMemberId: StageMemberId; // <--- RELATION
 
-  customizeVolume: boolean;
-  customizePosition: boolean;
+  volume: number;
+  muted: boolean;
 
   // Optimizations for performance
   stageId: StageId;

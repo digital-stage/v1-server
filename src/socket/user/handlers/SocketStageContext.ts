@@ -13,17 +13,25 @@ import {
   ChangeStagePayload,
   JoinStagePayload,
   LeaveStageForGoodPayload,
-  RemoveCustomGroupPayload,
-  RemoveCustomStageMemberAudioPayload,
-  RemoveCustomStageMemberOvPayload,
-  RemoveCustomStageMemberPayload,
+  RemoveCustomGroupPositionPayload,
+  RemoveCustomGroupVolumePayload,
+  RemoveCustomRemoteAudioPositionPayload,
+  RemoveCustomRemoteAudioVolumePayload,
+  RemoveCustomRemoteOvPositionPayload,
+  RemoveCustomRemoteOvVolumePayload,
+  RemoveCustomStageMemberPositionPayload,
+  RemoveCustomStageMemberVolumePayload,
   RemoveGroupPayload,
   RemoveStagePayload,
   SendChatMessagePayload,
-  SetCustomGroupPayload,
-  SetCustomStageMemberAudioPayload,
-  SetCustomStageMemberOvPayload,
-  SetCustomStageMemberPayload,
+  SetCustomGroupPositionPayload,
+  SetCustomGroupVolumePayload,
+  SetCustomRemoteAudioPositionPayload,
+  SetCustomRemoteAudioVolumePayload,
+  SetCustomRemoteOvPositionPayload,
+  SetCustomRemoteOvVolumePayload,
+  SetCustomStageMemberPositionPayload,
+  SetCustomStageMemberVolumePayload,
 } from "../../../payloads";
 import logger from "../../../logger";
 
@@ -270,26 +278,59 @@ class SocketStageContext {
     );
 
     this.socket.on(
-      ClientStageEvents.SET_CUSTOM_GROUP,
-      (payload: SetCustomGroupPayload) => {
-        trace(`${this.user.name}: ${ClientStageEvents.SET_CUSTOM_GROUP}`);
+      ClientStageEvents.SET_CUSTOM_GROUP_VOLUME,
+      (payload: SetCustomGroupVolumePayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_GROUP_VOLUME}`
+        );
         const groupId = new ObjectId(payload.groupId);
         return this.database
-          .setCustomGroup(this.user._id, groupId, payload.update)
+          .setCustomGroupVolume(this.user._id, groupId, payload.update)
           .catch((e) => error(e));
       }
     );
-
     this.socket.on(
-      ClientStageEvents.REMOVE_CUSTOM_GROUP,
-      (payload: RemoveCustomGroupPayload) => {
-        trace(`${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_GROUP}`);
+      ClientStageEvents.REMOVE_CUSTOM_GROUP_VOLUME,
+      (payload: RemoveCustomGroupVolumePayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_GROUP_VOLUME}`
+        );
         const id = new ObjectId(payload);
         this.database
-          .readCustomGroup(id)
+          .readCustomGroupVolume(id)
           .then((group) => {
             if (group && group.userId.equals(this.user._id)) {
-              return this.database.deleteCustomGroup(id);
+              return this.database.deleteCustomGroupVolume(id);
+            }
+            return null;
+          })
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.SET_CUSTOM_GROUP_POSITION,
+      (payload: SetCustomGroupPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_GROUP_POSITION}`
+        );
+        const groupId = new ObjectId(payload.groupId);
+        return this.database
+          .setCustomGroupPosition(this.user._id, groupId, payload.update)
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.REMOVE_CUSTOM_GROUP_POSITION,
+      (payload: RemoveCustomGroupPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_GROUP_POSITION}`
+        );
+        const id = new ObjectId(payload);
+        this.database
+          .readCustomGroupPosition(id)
+          .then((group) => {
+            if (group && group.userId.equals(this.user._id)) {
+              return this.database.deleteCustomGroupPosition(id);
             }
             return null;
           })
@@ -298,33 +339,73 @@ class SocketStageContext {
     );
 
     this.socket.on(
-      ClientStageEvents.SET_CUSTOM_STAGE_MEMBER,
-      (payload: SetCustomStageMemberPayload) => {
+      ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_VOLUME,
+      (payload: SetCustomStageMemberVolumePayload) => {
         trace(
-          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER}`
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_VOLUME}`
         );
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
         const stageMemberId = new ObjectId(payload.stageMemberId);
         this.database
-          .setCustomStageMember(this.user._id, stageMemberId, payload.update)
+          .setCustomStageMemberVolume(
+            this.user._id,
+            stageMemberId,
+            payload.update
+          )
           .catch((e) => error(e));
       }
     );
-
     this.socket.on(
-      ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER,
-      (payload: RemoveCustomStageMemberPayload) => {
+      ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_VOLUME,
+      (payload: RemoveCustomStageMemberVolumePayload) => {
         trace(
-          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER}`
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_VOLUME}`
         );
         const id = new ObjectId(payload);
         this.database
-          .readCustomStageMember(id)
+          .readCustomStageMemberVolume(id)
           .then((item) => {
             if (item && item.userId.equals(this.user._id)) {
-              return this.database.deleteCustomStageMember(id);
+              return this.database.deleteCustomStageMemberVolume(id);
+            }
+            return null;
+          })
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_POSITION,
+      (payload: SetCustomStageMemberPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_POSITION}`
+        );
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
+        const stageMemberId = new ObjectId(payload.stageMemberId);
+        this.database
+          .setCustomStageMemberPosition(
+            this.user._id,
+            stageMemberId,
+            payload.update
+          )
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_POSITION,
+      (payload: RemoveCustomStageMemberPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_POSITION}`
+        );
+        const id = new ObjectId(payload);
+        this.database
+          .readCustomStageMemberPosition(id)
+          .then((item) => {
+            if (item && item.userId.equals(this.user._id)) {
+              return this.database.deleteCustomStageMemberPosition(id);
             }
             return null;
           })
@@ -333,37 +414,77 @@ class SocketStageContext {
     );
 
     this.socket.on(
-      ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_AUDIO,
-      (payload: SetCustomStageMemberAudioPayload) => {
+      ClientStageEvents.SET_CUSTOM_REMOTE_AUDIO_VOLUME,
+      (payload: SetCustomRemoteAudioVolumePayload) => {
         trace(
-          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_AUDIO}`
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_REMOTE_AUDIO_VOLUME}`
         );
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
-        const stageMemberAudioId = new ObjectId(payload.stageMemberAudioId);
+        const remoteAudioProducerId = new ObjectId(
+          payload.remoteAudioProducerId
+        );
         this.database
-          .setCustomRemoteAudioProducer(
+          .setCustomRemoteAudioProducerVolume(
             this.user._id,
-            stageMemberAudioId,
+            remoteAudioProducerId,
             payload.update
           )
           .catch((e) => error(e));
       }
     );
-
     this.socket.on(
-      ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_AUDIO,
-      (payload: RemoveCustomStageMemberAudioPayload) => {
+      ClientStageEvents.REMOVE_CUSTOM_REMOTE_AUDIO_VOLUME,
+      (payload: RemoveCustomRemoteAudioVolumePayload) => {
         trace(
-          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_AUDIO}`
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_REMOTE_AUDIO_VOLUME}`
         );
         const id = new ObjectId(payload);
         return this.database
-          .readCustomRemoteAudioProducer(id)
+          .readCustomRemoteAudioProducerVolume(id)
           .then((group) => {
             if (group && group.userId.equals(this.user._id)) {
-              return this.database.deleteCustomRemoteAudioProducer(id);
+              return this.database.deleteCustomRemoteAudioProducerVolume(id);
+            }
+            return null;
+          })
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.SET_CUSTOM_REMOTE_AUDIO_POSITION,
+      (payload: SetCustomRemoteAudioPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_REMOTE_AUDIO_POSITION}`
+        );
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
+        const remoteAudioProducerId = new ObjectId(
+          payload.remoteAudioProducerId
+        );
+        this.database
+          .setCustomRemoteAudioProducerPosition(
+            this.user._id,
+            remoteAudioProducerId,
+            payload.update
+          )
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.REMOVE_CUSTOM_REMOTE_AUDIO_POSITION,
+      (payload: RemoveCustomRemoteAudioPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_REMOTE_AUDIO_POSITION}`
+        );
+        const id = new ObjectId(payload);
+        return this.database
+          .readCustomRemoteAudioProducerPosition(id)
+          .then((audioProducer) => {
+            if (audioProducer && audioProducer.userId.equals(this.user._id)) {
+              return this.database.deleteCustomRemoteAudioProducerPosition(id);
             }
             return null;
           })
@@ -372,37 +493,73 @@ class SocketStageContext {
     );
 
     this.socket.on(
-      ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV,
-      (payload: SetCustomStageMemberOvPayload) => {
+      ClientStageEvents.SET_CUSTOM_REMOTE_OV_VOLUME,
+      (payload: SetCustomRemoteOvVolumePayload) => {
         trace(
-          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_STAGE_MEMBER_OV}`
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_REMOTE_OV_VOLUME}`
         );
         if (!payload.update || Object.keys(payload.update).length === 0) {
           return;
         }
-        const stageMemberOvTrackId = new ObjectId(payload.stageMemberOvTrackId);
+        const remoteOvTrackId = new ObjectId(payload.remoteOvTrackId);
         this.database
-          .setCustomRemoteOvTrack(
+          .setCustomRemoteOvTrackVolume(
             this.user._id,
-            stageMemberOvTrackId,
+            remoteOvTrackId,
             payload.update
           )
           .catch((e) => error(e));
       }
     );
-
     this.socket.on(
-      ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV,
-      (payload: RemoveCustomStageMemberOvPayload) => {
+      ClientStageEvents.REMOVE_CUSTOM_REMOTE_OV_VOLUME,
+      (payload: RemoveCustomRemoteOvVolumePayload) => {
         trace(
-          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_STAGE_MEMBER_OV}`
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_REMOTE_OV_VOLUME}`
         );
         const id = new ObjectId(payload);
         return this.database
-          .readCustomRemoteOvTrack(id)
+          .readCustomRemoteOvTrackVolume(id)
           .then((item) => {
             if (item && item.userId.equals(this.user._id)) {
-              return this.database.deleteCustomRemoteOvTrack(id);
+              return this.database.deleteCustomRemoteOvTrackVolume(id);
+            }
+            return null;
+          })
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.SET_CUSTOM_REMOTE_OV_POSITION,
+      (payload: SetCustomRemoteOvPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.SET_CUSTOM_REMOTE_OV_POSITION}`
+        );
+        if (!payload.update || Object.keys(payload.update).length === 0) {
+          return;
+        }
+        const remoteOvTrackId = new ObjectId(payload.remoteOvTrackId);
+        this.database
+          .setCustomRemoteOvTrackPosition(
+            this.user._id,
+            remoteOvTrackId,
+            payload.update
+          )
+          .catch((e) => error(e));
+      }
+    );
+    this.socket.on(
+      ClientStageEvents.REMOVE_CUSTOM_REMOTE_OV_POSITION,
+      (payload: RemoveCustomRemoteOvPositionPayload) => {
+        trace(
+          `${this.user.name}: ${ClientStageEvents.REMOVE_CUSTOM_REMOTE_OV_POSITION}`
+        );
+        const id = new ObjectId(payload);
+        return this.database
+          .readCustomRemoteOvTrackPosition(id)
+          .then((item) => {
+            if (item && item.userId.equals(this.user._id)) {
+              return this.database.deleteCustomRemoteOvTrackPosition(id);
             }
             return null;
           })

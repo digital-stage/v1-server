@@ -2,19 +2,18 @@ import {
   CustomRemoteAudioProducerId,
   RemoteAudioProducerId,
   StageId,
+  StageMemberId,
   UserId,
 } from "./IdTypes";
-import ThreeDimensionAudioProperties from "./ThreeDimensionAudioProperties";
+import ThreeDimensionProperties from "./ThreeDimensionProperties";
 
-export interface CustomRemoteAudioProducer
-  extends ThreeDimensionAudioProperties {
+export interface CustomRemoteAudioProducerPosition
+  extends ThreeDimensionProperties {
   _id: CustomRemoteAudioProducerId;
   userId: UserId; // <-- RELATION
   remoteAudioProducerId: RemoteAudioProducerId; // <-- RELATION
 
-  customizeVolume: boolean;
-  customizePosition: boolean;
-
   // Optimizations for performance
   stageId: StageId;
+  stageMemberId: StageMemberId;
 }
