@@ -121,6 +121,7 @@ class MongoRealtimeDatabase
     if (this._mongoClient.isConnected()) {
       info(`Connected to ${database}`);
       await this.prepareDatabase();
+      info(`Prepared ${database}`);
     }
     // TODO: Clean up old devices etc.
   }
