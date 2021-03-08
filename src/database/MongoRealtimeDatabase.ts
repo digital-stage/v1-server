@@ -120,7 +120,7 @@ class MongoRealtimeDatabase
     this._db = this._mongoClient.db(database);
     if (this._mongoClient.isConnected()) {
       info(`Connected to ${database}`);
-      await this.prepareDatabase();
+      // await this.prepareDatabase();
       info(`Prepared ${database}`);
     }
     // TODO: Clean up old devices etc.
