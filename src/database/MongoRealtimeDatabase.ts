@@ -2485,15 +2485,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_GROUP_POSITIONS
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_GROUP_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_GROUP_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -2573,15 +2573,15 @@ class MongoRealtimeDatabase
               this._db
                 .collection<CustomGroupVolume>(Collections.CUSTOM_GROUP_VOLUMES)
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_GROUP_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -2670,15 +2670,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_STAGE_MEMBER_POSITIONS
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -2771,15 +2771,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_STAGE_MEMBER_VOLUMES
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -2879,15 +2879,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_REMOTE_AUDIO_POSITIONS
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -2985,15 +2985,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_REMOTE_AUDIO_VOLUMES
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_AUDIO_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -3095,15 +3095,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_REMOTE_OV_POSITIONS
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_POSITION_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
@@ -3200,15 +3200,15 @@ class MongoRealtimeDatabase
                   Collections.CUSTOM_REMOTE_OV_VOLUMES
                 )
                 .insertOne(payload)
-                .then(() => {
+                .then((cResult) => {
                   this.emit(
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                   return this.sendToUser(
                     userId,
                     ServerStageEvents.CUSTOM_STAGE_MEMBER_OV_VOLUME_ADDED,
-                    payload
+                    cResult.ops[0]
                   );
                 })
             );
