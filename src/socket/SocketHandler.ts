@@ -7,7 +7,7 @@ import SocketUserHandler from "./user/SocketUserHandler";
 import SocketRouterHandler from "./router/SocketRouterHandler";
 import logger from "../logger";
 
-const { error, warn } = logger("socket");
+const { error, warn, trace } = logger("socket");
 
 interface RouterConnectionPayload {
   apiKey: string;
@@ -62,6 +62,7 @@ class SocketHandler {
 
     socket.on("token", (payload: UserConnectionPayload) => {
       const { token, device } = payload;
+      trace("New connection with token");
       if (token) {
         return this._userHandler.handle(socket, token, device).catch((e) => {
           socket.disconnect();
