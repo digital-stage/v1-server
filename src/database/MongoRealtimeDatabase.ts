@@ -2447,7 +2447,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -2541,7 +2541,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -2629,7 +2629,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -2734,7 +2734,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -2835,7 +2835,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -2946,7 +2946,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -3052,7 +3052,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
@@ -3162,7 +3162,7 @@ class MongoRealtimeDatabase
         {
           $set: update,
         },
-        { upsert: true, projection: { _id: 1 } }
+        { upsert: false, projection: { _id: 1 } }
       )
       .then((result) => {
         if (result.value) {
