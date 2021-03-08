@@ -1,7 +1,6 @@
-import { ThreeDimensionAudioProperties } from "./types";
 import ThreeDimensionProperties from "./types/ThreeDimensionProperties";
+import { ThreeDimensionAudioProperties } from "./types";
 
-// Router
 export interface StageManaged {
   id: string;
   ovServer: {
